@@ -1,0 +1,62 @@
+<div class="header-bar" *ngIf="!cargandoMesa && mesaValida">
+  <div class="mesa-info">
+    <h2>Estás en la Mesa {{ mesaNumero }}</h2> 
+  </div>
+
+  <div class="search-box">
+    <input 
+      type="text" 
+      [(ngModel)]="query" 
+      (input)="onSearchChange()" 
+      placeholder="Escribe el nombre de una canción o artista...">
+  </div>
+</div>
+
+<div class="resultados-busqueda" *ngIf="tracks.length > 0">
+  <div *ngFor="let track of tracks" class="item-resultado" (click)="seleccionarCancion(track)">
+    <img [src]="track.album.images[2]?.url" class="foto-resultado">
+    <div class="info-resultado">
+      <strong>{{ track.name }}</strong>
+      <p>{{ obtenerArtistas(track) }}</p>
+    </div>
+    <div class="add-icon">+</div>
+  </div>
+</div>
+
+<div *ngIf="!cargandoMesa && !mesaValida" class="error-container">
+  <h2>Mesa no encontrada</h2>
+  <p>El código de mesa no es válido o la mesa ha sido desactivada.</p>
+</div>
+
+<hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;">
+
+<div class="mis-pedidos" *ngIf="mesaValida">
+  <h3>Tu historial de pedidos</h3>
+  
+  <div *ngIf="(misCanciones$ | async)?.length === 0" class="no-songs">
+    <p>Aún no has pedido ninguna canción. ¡Anímate!</p>
+  </div>
+
+<div class="lista-historial">
+  <div *ngFor="let solicitud of (misCanciones$ | async); let i = index" class="card-historial">
+    <div class="orden-numero">{{ i + 1 }}</div>
+    
+    <img [src]="solicitud.foto" class="foto-mini">
+    
+    <div class="info-pedida">
+      <strong>{{ solicitud.cancion }}</strong>
+      <p>{{ solicitud.artista }}</p>
+    </div>
+
+    <div class="status-container">
+      <span class="hora-pedido">
+        {{ solicitud.fechaHora?.toDate() | date:'h:mm a' }}
+      </span>
+      
+      <div class="estado-badge" [ngClass]="solicitud.estado">
+        {{ solicitud.estado }}
+      </div>
+    </div>
+  </div>
+</div>
+</div>

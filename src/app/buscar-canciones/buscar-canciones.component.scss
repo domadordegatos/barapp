@@ -1,0 +1,86 @@
+.card-historial {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border-left: 4px solid #1DB954; // Verde Spotify
+
+  .orden-numero {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #888;
+    margin-right: 15px;
+    min-width: 25px;
+  }
+
+  .foto-mini {
+    width: 45px;
+    height: 45px;
+    border-radius: 4px;
+    margin-right: 12px;
+  }
+
+  .info-pedida {
+    flex-grow: 1;
+    strong { display: block; font-size: 0.95rem; }
+    p { margin: 0; font-size: 0.8rem; color: #666; }
+  }
+
+.status-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+
+  .hora-pedido {
+    font-size: 0.75rem;
+    color: #999;
+    font-weight: 500;
+  }
+}
+
+.estado-badge {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 12px;
+  min-width: 80px;
+  text-align: center;
+
+  &.pendiente { 
+    background: #fff3cd; 
+    color: #856404; 
+  }
+  &.reproduciendo { 
+    background: #d4edda; 
+    color: #155724; 
+  }
+}
+}
+
+.resultados-busqueda {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-top: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  position: absolute; // Para que flote sobre el historial
+  width: 100%;
+  z-index: 100;
+
+  .item-resultado {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    &:hover { background: #f0f0f0; }
+
+    .foto-resultado { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
+    .info-resultado { flex: 1; strong { font-size: 0.9rem; } p { font-size: 0.8rem; color: #777; margin: 0; } }
+    .add-icon { color: #1DB954; font-size: 1.5rem; font-weight: bold; }
+  }
+}
