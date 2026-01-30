@@ -1,0 +1,62 @@
+.registro-container {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+
+  h2 { text-align: center; color: #1db954; }
+
+  input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box; // Importante para el padding
+  }
+
+  .captcha-box {
+    background: #f4f4f4;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    margin: 15px 0;
+    p { margin: 0; font-weight: bold; }
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    background: #1db954;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    &:disabled { background: #ccc; }
+  }
+}
+
+.alerta-empleado {
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 10px 0;
+  
+  p {
+    font-size: 0.8rem;
+    color: #856404;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+
+  input {
+    border: 2px solid #856404 !important;
+    letter-spacing: 10px;
+    text-align: center;
+    background: white;
+  }
+}

@@ -31,32 +31,42 @@
 <hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;">
 
 <div class="mis-pedidos" *ngIf="mesaValida">
-  <h3>Tu historial de pedidos</h3>
   
-  <div *ngIf="(misCanciones$ | async)?.length === 0" class="no-songs">
-    <p>Aún no has pedido ninguna canción. ¡Anímate!</p>
-  </div>
-
-<div class="lista-historial">
-  <div *ngFor="let solicitud of (misCanciones$ | async); let i = index" class="card-historial">
-    <div class="orden-numero">{{ i + 1 }}</div>
-    
-    <img [src]="solicitud.foto" class="foto-mini">
-    
-    <div class="info-pedida">
-      <strong>{{ solicitud.cancion }}</strong>
-      <p>{{ solicitud.artista }}</p>
-    </div>
-
-    <div class="status-container">
-      <span class="hora-pedido">
-        {{ solicitud.fechaHora?.toDate() | date:'h:mm a' }}
-      </span>
-      
-      <div class="estado-badge" [ngClass]="solicitud.estado">
-        {{ solicitud.estado }}
+  <h3 class="titulo-cola">Tu turno en la cola</h3>
+  <div class="lista-historial">
+    <ng-container *ngFor="let solicitud of (misCanciones$ | async); let i = index">
+      <div class="card-historial" *ngIf="solicitud.estado === 'pendiente'">
+        <div class="orden-numero">{{ i + 1 }}</div>
+        <img [src]="solicitud.foto" class="foto-mini">
+        <div class="info-pedida">
+          <strong>{{ solicitud.cancion }}</strong>
+          <p>{{ solicitud.artista }}</p>
+        </div>
+        <div class="status-container">
+          <span class="hora-pedido">{{ solicitud.fechaHora?.toDate() | date:'h:mm a' }}</span>
+          <div class="estado-badge pendiente">En espera</div>
+        </div>
       </div>
-    </div>
+    </ng-container>
   </div>
-</div>
+
+  <h3 class="titulo-pasado">Recién procesadas</h3>
+  <div class="lista-historial historial-pasado">
+    <ng-container *ngFor="let solicitud of (misCanciones$ | async | slice:0)?.reverse()">
+      <div class="card-historial gris" *ngIf="solicitud.estado !== 'pendiente'">
+        <img [src]="solicitud.foto" class="foto-mini sepia">
+        <div class="info-pedida">
+          <strong>{{ solicitud.cancion }}</strong>
+          <p>{{ solicitud.artista }}</p>
+        </div>
+        <div class="status-container">
+          <span class="hora-pedido">{{ solicitud.fechaHora?.toDate() | date:'h:mm a' }}</span>
+          <div class="estado-badge" [ngClass]="solicitud.estado">
+            {{ solicitud.estado }}
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
 </div>

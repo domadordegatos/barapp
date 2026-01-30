@@ -1,0 +1,61 @@
+<nav class="navbar-admin">
+  <div class="navbar-content">
+    <div class="brand">
+      <span class="logo-icon">🎵</span>
+      <h2>{{ nombreBar }}</h2>
+    </div>
+    
+    <button class="btn-logout" (click)="logout()">
+      <span class="icon-exit">🚪</span> Cerrar Sesión
+    </button>
+  </div>
+</nav>
+
+<div class="admin-container">
+  <h1>Gestión de Rockola - Pedidos Entrantes</h1>
+
+  <div class="panel-codigo" *ngIf="esAdmin">
+    <h3>🔑 Código de Seguridad del Día</h3>
+    <p>Este código es necesario para que los clientes envíen canciones.</p>
+    
+    <div class="input-group">
+      <input 
+        type="text" 
+        [(ngModel)]="codigoNuevo" 
+        placeholder="Ej: 1234" 
+        maxlength="4"
+        onkeypress="return event.charCode >= 48 && event.charCode <= 57"> 
+        <button (click)="guardarCodigo()" [disabled]="codigoNuevo.length !== 4">
+        Actualizar Código
+      </button>
+    </div>
+  </div>
+
+  <div class="lista-admin">
+    <div *ngFor="let pedido of (pedidos$ | async)" class="card-admin">
+      <div class="mesa-badge">Mesa {{ pedido.mesaNumero }}</div>
+      
+      <img [src]="pedido.foto" class="foto-admin">
+
+      <div class="info-track">
+        <span class="hora">{{ pedido.fechaHora?.toDate() | date:'HH:mm:ss' }}</span>
+        <h3>{{ pedido.cancion }}</h3>
+        <p>{{ pedido.artista }}</p>
+      </div>
+
+      <div class="acciones">
+        <button class="btn-aceptar" (click)="cambiarEstado(pedido.id, 'reproduciendo')">
+          Aceptar
+        </button>
+        
+        <button class="btn-rechazar" (click)="cambiarEstado(pedido.id, 'rechazado')">
+          Rechazar
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="(pedidos$ | async)?.length === 0" class="vacio">
+      <p>No hay canciones pendientes. ¡Buen trabajo!</p>
+    </div>
+  </div>
+</div>

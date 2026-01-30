@@ -1,0 +1,37 @@
+<div class="login-container">
+  <div class="login-box">
+    <div *ngIf="!olvidoModo">
+      <h2>Ingreso Administrativo</h2>
+      <input type="email" [(ngModel)]="correo" placeholder="Correo electrónico">
+      <input type="password" [(ngModel)]="pass" placeholder="Contraseña">
+      
+      <button (click)="entrar()" class="btn-principal">Entrar al Sistema</button>
+      
+      <div class="opciones-inferiores">
+        <p class="link" (click)="olvidoModo = true">¿Olvidaste tu contraseña?</p>
+        <hr>
+        <p>¿No tienes una cuenta?</p>
+        <button class="btn-secundario" routerLink="/registro">Registrar mi Bar</button>
+      </div>
+    </div>
+
+<div *ngIf="olvidoModo">
+  <h2>Recuperar Acceso</h2>
+
+  <div *ngIf="pasoReset === 1">
+    <p>Ingresa tu correo para recibir un código de seguridad.</p>
+    <input type="email" [(ngModel)]="correo" placeholder="Correo registrado">
+    <button (click)="recuperar()" class="btn-principal">Enviar Código</button>
+  </div>
+
+  <div *ngIf="pasoReset === 2">
+    <p>Ingresa el código de 6 dígitos y tu nueva contraseña.</p>
+    <input type="text" [(ngModel)]="codigoReset" placeholder="Código de 6 dígitos">
+    <input type="password" [(ngModel)]="nuevaPass" placeholder="Nueva Contraseña">
+    <button (click)="confirmarCambio()" class="btn-principal">Cambiar Contraseña</button>
+  </div>
+
+  <p class="link" (click)="olvidoModo = false; pasoReset = 1">Volver al Login</p>
+</div>
+  </div>
+</div>

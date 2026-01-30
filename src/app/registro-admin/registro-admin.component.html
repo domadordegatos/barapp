@@ -1,0 +1,40 @@
+<div class="registro-container">
+  <form (ngSubmit)="registrarUsuario()" #registroForm="ngForm">
+    <h2>Registro de Establecimiento</h2>
+
+    <input 
+  type="text" 
+  name="nombreBar" 
+  [(ngModel)]="datos.nombreBar" 
+  (blur)="revisarNombreBar()" 
+  placeholder="Nombre del Bar" 
+  required>
+
+<div class="alerta-empleado" *ngIf="barExiste">
+  <p>⚠️ Este bar ya está registrado. Ingresa el código de 4 dígitos proporcionado por tu administrador para unirte como empleado.</p>
+  <input 
+    type="password" 
+    name="codigoEmp" 
+    [(ngModel)]="codigoRequerido" 
+    placeholder="Código de 4 dígitos" 
+    maxlength="4">
+</div>
+    <input type="email" name="correo" [(ngModel)]="datos.correo" placeholder="Correo Electrónico" required>
+    <input type="password" name="password" [(ngModel)]="datos.password" placeholder="Contraseña" required>
+    
+
+    <div class="captcha-box">
+      <p>¿Cuánto es {{ num1 }} + {{ num2 }}?</p>
+      <input type="number" name="captcha" [(ngModel)]="captchaRespuesta" placeholder="Resultado" required>
+    </div>
+
+    <button type="submit" [disabled]="!registroForm.valid" class="btn-registro">
+      Registrar Solicitud
+    </button>
+
+    <div class="footer-registro">
+      <p>¿Ya tienes tu bar registrado?</p>
+      <a routerLink="/" class="link-login">Iniciar Sesión</a>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,82 @@
+.login-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #121212; // Estilo oscuro tipo Spotify
+
+  .login-box {
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 350px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+
+    h2 { color: #1db954; margin-bottom: 20px; }
+    input { 
+      width: 100%; 
+      padding: 12px; 
+      margin: 10px 0; 
+      border-radius: 5px; 
+      border: 1px solid #ddd;
+      box-sizing: border-box;
+    }
+
+    .btn-principal {
+      width: 100%;
+      padding: 12px;
+      background: #1db954;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .link {
+      margin-top: 15px;
+      color: #666;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-decoration: underline;
+      &:hover { color: #1db954; }
+    }
+  }
+}
+.opciones-inferiores {
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+
+  p {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 10px;
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid #f0f0f0;
+    margin: 15px 0;
+  }
+}
+
+.btn-secundario {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  color: #1db954;
+  border: 2px solid #1db954;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s;
+
+  &:hover {
+    background: #1db954;
+    color: white;
+  }
+}

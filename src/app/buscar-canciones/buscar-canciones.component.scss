@@ -1,3 +1,27 @@
+.titulo-pasado {
+  margin-top: 30px;
+  font-size: 1rem;
+  color: #888;
+}
+
+.card-historial.gris {
+  background: #f0f0f0; // Fondo más oscuro/gris
+  border-left: 4px solid #999; // Borde gris en lugar de verde
+  opacity: 0.7; // Un poco de transparencia
+
+  .foto-mini.sepia {
+    filter: grayscale(100%); // Foto en blanco y negro
+  }
+
+  .info-pedida {
+    strong, p { color: #777; }
+  }
+}
+
+.estado-badge {
+  &.reproduciendo { background: #d4edda; color: #155724; } // Verde suave
+  &.rechazado { background: #f8d7da; color: #721c24; }     // Rojo suave
+}
 .card-historial {
   display: flex;
   align-items: center;
@@ -40,24 +64,33 @@
     font-weight: 500;
   }
 }
-
-.estado-badge {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  padding: 4px 8px;
-  border-radius: 12px;
-  min-width: 80px;
-  text-align: center;
-
-  &.pendiente { 
-    background: #fff3cd; 
-    color: #856404; 
+&.gris {
+    background: #f8f9fa;
+    opacity: 0.8;
+    border-left: 4px solid #dee2e6;
+    
+    .foto-mini.sepia { filter: grayscale(100%); }
   }
+.estado-badge {
   &.reproduciendo { 
-    background: #d4edda; 
-    color: #155724; 
+    background: #1db954; // Verde Spotify
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 0 8px rgba(29, 185, 84, 0.4);
+    animation: pulse 2s infinite; // Un pequeño pulso para avisar que está sonando
+  }
+  &.rechazado { 
+    background: #f8d7da; 
+    color: #721c24; 
   }
 }
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
 }
 
 .resultados-busqueda {

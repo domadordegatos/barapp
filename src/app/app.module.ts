@@ -9,11 +9,14 @@ import { AppRoutingModule } from './app-routing.module';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { NgModule } from '@angular/core';
+import { AdminPedidosComponent } from './admin-pedidos/admin-pedidos.component';
+import { RegistroAdminComponent } from './registro-admin/registro-admin.component';
+import { LoginComponent } from './login/login.component';
 
 @NgModule({
   declarations: [
     AppComponent, 
-    BuscarCancionesComponent // Ahora que no son standalone, Angular no protestará aquí
+    BuscarCancionesComponent, AdminPedidosComponent, RegistroAdminComponent, LoginComponent // Ahora que no son standalone, Angular no protestará aquí
   ],
   imports: [
     BrowserModule,

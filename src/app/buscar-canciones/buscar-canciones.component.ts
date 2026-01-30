@@ -68,7 +68,7 @@ export class BuscarCancionesComponent implements OnInit {
 
   private ejecutarBusqueda(termino: string) {
     // IMPORTANTE: Asegúrate de que el token sea vigente (duran 60 min)
-    const token = 'BQDiEwQDskYi2jmIlgxYdeP4BrwnaHS0vPyh8Q2y3m4gvzuszAy2qx7NPXAH6K8x61O_qB0StXvZi5GamFtoGCPX7TiWlWvpqUoCIIYCOjgLLGl0IKHf3i4SVDNNo4Gd0f5UWGcO7uWbHfpKLyES7NWLrKOQGUIZvUSyd9JpD_Go453ifiw9FX0QsUZqkIYsOUPZd9zdOWU0eKKgMXm5O-5MtsA4a0TWhvnwaL9GQjzRQvt1IsmvcHSBAoQEm97DgvD0fX27apPMlNwdLJN8KJSPXu706zlMTJTzRpdVKnOxJRvZpCFrxsz5hlbR7nZXUJX3'; 
+    const token = 'BQA9vopJ5ewJK-kz0gZWXEdt4DlKyGjWO1PE_Oe5GiLlD-rD4rnkb97-bmLpa7b9X1MoQq_HLoCc-WYWYECP4-zcb3GDHYW3xKPdBBUGmdiT6wcThe4Sqc2eKSMKoGOPBHu9uNSL68tMOsNueup7lMu67aWS2PGqq-7djlToYvaR7oLzAFcEZMzQIBBB0sh0PJ-cGltoS0KsmRnrShdB_dVUYsuvejHsrVm08RbOTHH4sS-Qsjk4sAX-CRrvVAl-KiHvlREbb4aj7wIeHEy3ZD-iEmFDyDgqV3dhZQk1yRgAR3gw_xteF0NI9Xhd2-dESwsA'; 
     
     // CORRECCIÓN DE URL: Se debe usar backticks (``) y el endpoint oficial
     const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(termino)}&type=track&limit=10`;
