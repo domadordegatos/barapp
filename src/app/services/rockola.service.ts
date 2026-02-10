@@ -2,68 +2,135 @@ import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import firebase from 'firebase/compat/app';
 import { firstValueFrom, map } from 'rxjs';
-import { Track } from '../buscar-canciones/buscar-canciones.component';
+import { Track } from '../music/buscar-canciones/buscar-canciones.component';
 import emailjs from '@emailjs/browser';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RockolaService {
+
+  readonly CORREO_MASTER = 'admin@admin.com'; // Sustituye por el tuyo
   constructor(private firestore: AngularFirestore) {}
 
 // rockola.service.ts
 
-// 1. Verificar si el bar ya tiene un administrador y está en bares_activos
+// rockola.service.ts
+
+async validarCodigoBar(nombreBar: string, codigoCliente: string): Promise<boolean> {
+  const barRef = this.firestore.collection('bares_activos').doc(nombreBar.toLowerCase().trim());
+  const doc = await firstValueFrom(barRef.get());
+
+  if (!doc.exists) return false;
+
+  const data: any = doc.data();
+  
+  // Convertimos AMBOS a string y quitamos espacios por si acaso
+  const codigoBD = data.codigoSeguridad.toString().trim();
+  const codigoUser = codigoCliente.toString().trim();
+
+  return codigoBD === codigoUser;
+}
+
+// rockola.service.ts
+
 async verificarExistenciaBar(nombreBar: string) {
+  // Siempre buscamos el ID del documento en minúsculas y sin espacios
+  const idLimpio = nombreBar.toLowerCase().replace(/\s+/g, '');
   const doc = await firstValueFrom(
-    this.firestore.collection('bares_activos').doc(nombreBar.toLowerCase().trim()).get()
+    this.firestore.collection('bares_activos').doc(idLimpio).get()
   );
   return doc.exists ? doc.data() : null;
 }
 
 // 2. Registro con validación de código para empleados
+// Lógica de registro inteligente
 async registrarUsuarioConValidacion(datos: any, codigoIngresado?: string) {
-  const nombreLimpio = datos.nombreBar.toLowerCase().trim();
-  const barActivo: any = await this.verificarExistenciaBar(nombreLimpio);
+  const nombreBusqueda = datos.nombreBar.toLowerCase().trim();
+  const existeAdmin = await this.verificarSiAdminExiste(nombreBusqueda);
 
   let tipoAsignado = 'admin';
+  let estadoInicial = true; // El primer admin se activa (puedes cambiarlo a false si prefieres)
 
-  if (barActivo) {
-    // Si el bar existe, validamos el código del día
-    if (barActivo.codigoSeguridad !== codigoIngresado) {
-      throw new Error("El código del bar es incorrecto. Pídelo al administrador.");
+  if (existeAdmin) {
+    // Si ya existe admin, validamos el código para crear un 'user'
+    const adminDoc = await firstValueFrom(
+      this.firestore.collection('usuarios_bares', ref => 
+        ref.where('nombreBar', '==', nombreBusqueda).where('tipo', '==', 'admin')
+      ).get()
+    );
+    
+    const adminData = adminDoc.docs[0].data() as any;
+    const codigoSecreto = adminData.codigoRegistroInvitados || "0000";
+
+    if (codigoSecreto.toString() !== codigoIngresado?.toString()) {
+      throw new Error("El código de autorización para empleados es incorrecto.");
     }
-    tipoAsignado = 'user'; // Es empleado porque el bar ya existía
+    
+    tipoAsignado = 'user';
+    estadoInicial = false; // Los empleados siempre requieren activación
   }
 
-  // Registramos en usuarios_bares
   return this.firestore.collection('usuarios_bares').add({
-    ...datos,
-    nombreBar: nombreLimpio,
+    nombreBar: nombreBusqueda,
+    correo: datos.correo.toLowerCase().trim(),
+    password: datos.password,
     tipo: tipoAsignado,
-    estado: false, // Sigue requiriendo tu activación manual en BD
+    estado: estadoInicial,
     fechaHora: firebase.firestore.FieldValue.serverTimestamp(),
-    codigo: barActivo ? barActivo.codigoSeguridad : "" // Hereda el código si es empleado
+    codigoRegistroInvitados: tipoAsignado === 'admin' ? "1234" : "" 
   });
 }
-actualizarCodigoDia(nombreBar: string, nuevoCodigo: string, userId: string) {
+
+// Esta función ahora crea el bar en 'bares_activos' si no existe
+async actualizarCodigoDia(nombreBar: string, nuevoCodigo: string, userId: string) {
   const batch = this.firestore.firestore.batch();
-
-  // 1. Referencia al usuario en 'usuarios_bares'
-  const userRef = this.firestore.collection('usuarios_bares').doc(userId).ref;
-  batch.update(userRef, { codigo: nuevoCodigo });
-
-  // 2. Referencia en la nueva colección 'bares_activos'
-  // Usamos el nombre del bar como ID del documento para que sea único y fácil de buscar
-  const barRef = this.firestore.collection('bares_activos').doc(nombreBar.toLowerCase()).ref;
   
-  batch.set(barRef, {
-    nombreBar: nombreBar,
-    codigoSeguridad: nuevoCodigo,
-    ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+  // ID Limpio para la base de datos (sin espacios): "lachula"
+  const idLimpio = nombreBar.toLowerCase().trim().replace(/\s+/g, '');
+  
+  // Nombre Real para mostrar: "La Chula"
+  const nombreReal = nombreBar.trim();
+
+  const barRef = this.firestore.collection('bares_activos').doc(idLimpio).ref;
+  
+  // Usamos 'set' con { merge: true } para que si no existe lo cree, 
+  // y si existe solo actualice el código y la fecha.
+  batch.set(barRef, { 
+    nombreBar: nombreReal,
+    codigoSeguridad: nuevoCodigo, 
+    ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp() 
   }, { merge: true });
 
+  // Limpiar pedidos antiguos si existen
+  const snapshot = await this.firestore.collection('solicitudes', ref => 
+    ref.where('nombreBar', '==', idLimpio).where('finalizado', '==', false)
+  ).get().toPromise();
+
+  snapshot?.forEach(doc => {
+    batch.update(doc.ref, { finalizado: true, estado: 'expirado_por_cambio_dia' });
+  });
+
   return batch.commit();
+}
+
+// NUEVA FUNCIÓN: Solo para el código de invitación (empleados)
+async actualizarCodigoInvitacion(userId: string, nuevoCodigoInvitacion: string) {
+  return this.firestore.collection('usuarios_bares').doc(userId).update({
+    codigoRegistroInvitados: nuevoCodigoInvitacion
+  });
+}
+
+// Función para el componente de registro
+async verificarSiAdminExiste(nombreBar: string): Promise<boolean> {
+  const nombreBusqueda = nombreBar.toLowerCase().trim();
+  const snapshot = await firstValueFrom(
+    this.firestore.collection('usuarios_bares', ref => 
+      ref.where('nombreBar', '==', nombreBusqueda)
+         .where('tipo', '==', 'admin')
+    ).get()
+  );
+  return !snapshot.empty;
 }
 // Método para Login Manual
 async loginUsuario(correo: string, pass: string) {
@@ -170,11 +237,18 @@ async registrarNuevoUsuario(datos: any) {
   });
 }
 
-obtenerPedidosPendientes() {
+// rockola.service.ts
+
+// rockola.service.ts
+
+obtenerPedidosPendientes(nombreBar: string) {
+  // Normalizamos el nombre para asegurar la coincidencia con la BD
+  const nombreLimpio = nombreBar.toLowerCase().trim().replace(/\s+/g, '');
+
   return this.firestore.collection('solicitudes', ref => 
-    ref.where('estado', '==', 'pendiente')
-       .where('finalizado', '==', false) // Solo de la sesión actual
-       .orderBy('fechaHora', 'asc')      // Prioridad a la más antigua
+    ref.where('nombreBar', '==', nombreLimpio)
+       .where('finalizado', '==', false) // Trae todo lo activo
+       .orderBy('fechaHora', 'asc')
   ).snapshotChanges().pipe(
     map(actions => actions.map(a => {
       const data = a.payload.doc.data() as any;
@@ -192,11 +266,13 @@ actualizarEstadoPedido(idPedido: string, nuevoEstado: string) {
 }
 
 // rockola.service.ts
-obtenerMisSolicitudes(codigoMesa: string) {
+
+obtenerMisSolicitudes(nombreBar: string, idMesaTecnico: string) {
   return this.firestore.collection('solicitudes', ref => 
-    ref.where('mesaCodigo', '==', codigoMesa)
+    ref.where('nombreBar', '==', nombreBar.toLowerCase().trim())
+       .where('mesaCodigo', '==', idMesaTecnico) // Filtramos por el código de la URL
        .where('finalizado', '==', false)
-       .orderBy('fechaHora', 'asc') // CAMBIO: 'asc' para que la primera sea la #1
+       .orderBy('fechaHora', 'asc')
   ).valueChanges();
 }
 
@@ -222,18 +298,28 @@ obtenerMisSolicitudes(codigoMesa: string) {
     }
   }
 
-  async enviarSolicitud(track: Track, codigoMesa: string, numeroMesa: number) {
-    return this.firestore.collection('solicitudes').add({
-      spotifyId: track.id,
-      artista: track.artists[0].name,
-      cancion: track.name,
-      foto: track.album.images[0]?.url,
-      dia: new Date().toISOString().split('T')[0],
-      estado: "pendiente",
-      finalizado: false,
-      fechaHora: firebase.firestore.FieldValue.serverTimestamp(),
-      mesaCodigo: codigoMesa, // El ID del documento (F32KPWVCP6)
-      mesaNumero: numeroMesa  // El número real (1)
-    });
-  }
+// rockola.service.ts
+
+// 1. Guardamos AMBOS datos en la solicitud
+async enviarSolicitud(track: any, nombreBar: string, idMesaTecnico: string, numeroMesaVisible: string | number) {
+  return this.firestore.collection('solicitudes').add({
+    spotifyId: track.id,
+    artista: track.artists[0].name,
+    cancion: track.name,
+    foto: track.album.images[0]?.url,
+    nombreBar: nombreBar.toLowerCase().trim(),
+    
+    // LA CLAVE: Guardamos el ID para el cliente y el Numero para el admin
+    mesaCodigo: idMesaTecnico,       // Ejemplo: "F32KPWVCP6" (Para el cliente)
+    mesaNumero: numeroMesaVisible,   // Ejemplo: 1 (Para el admin)
+    
+    dia: new Date().toISOString().split('T')[0], 
+    fechaHora: firebase.firestore.FieldValue.serverTimestamp(),
+    estado: "pendiente",
+    finalizado: false,
+    uri: track.uri 
+  });
+}
+
+
 }

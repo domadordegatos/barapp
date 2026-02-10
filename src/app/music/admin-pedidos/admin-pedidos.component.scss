@@ -94,3 +94,35 @@
     }
   }
 }
+.divisor-discreto {
+  border: 0;
+  border-top: 1px solid #eee;
+  margin: 20px 0 10px;
+}
+
+.form-mini {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; // Lo manda a la derecha
+  gap: 10px;
+  font-size: 0.75rem;
+  color: #999;
+
+  .input-oculto {
+    width: 60px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 2px 5px;
+    text-align: center;
+    background: transparent;
+  }
+
+  .btn-xs {
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 2px 8px;
+    &:hover { background: #e0e0e0; }
+  }
+}

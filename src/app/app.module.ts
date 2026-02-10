@@ -12,11 +12,13 @@ import { NgModule } from '@angular/core';
 import { AdminPedidosComponent } from './admin-pedidos/admin-pedidos.component';
 import { RegistroAdminComponent } from './registro-admin/registro-admin.component';
 import { LoginComponent } from './login/login.component';
+import { SuperAdminComponent } from './auth/super-admin/super-admin.component';
+import { FiltroUsuariosPipe } from './pipes/filtro-usuarios.pipe';
 
 @NgModule({
   declarations: [
     AppComponent, 
-    BuscarCancionesComponent, AdminPedidosComponent, RegistroAdminComponent, LoginComponent // Ahora que no son standalone, Angular no protestará aquí
+    BuscarCancionesComponent, AdminPedidosComponent, RegistroAdminComponent, LoginComponent, SuperAdminComponent, FiltroUsuariosPipe // Ahora que no son standalone, Angular no protestará aquí
   ],
   imports: [
     BrowserModule,

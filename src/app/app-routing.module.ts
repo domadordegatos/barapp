@@ -1,43 +1,36 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { BuscarCancionesComponent } from './buscar-canciones/buscar-canciones.component';
-import { AdminPedidosComponent } from './admin-pedidos/admin-pedidos.component';
-import { RegistroAdminComponent } from './registro-admin/registro-admin.component';
-import { LoginComponent } from './login/login.component';
-import { AuthGuard } from './auth.guard'; // Importalo arriba
+import { BuscarCancionesComponent } from './music/buscar-canciones/buscar-canciones.component';
+import { AdminPedidosComponent } from './music/admin-pedidos/admin-pedidos.component';
+import { RegistroAdminComponent } from './auth/registro-admin/registro-admin.component';
+import { LoginComponent } from './auth/login/login.component';
+import { AuthGuard } from './guards/auth.guard'; // Importalo arriba
+import { SuperAdminComponent } from './auth/super-admin/super-admin.component';
+import { SuperAdminGuard } from './guards/super-admin.guard';
 
 const routes: Routes = [
-  // 1. La raíz ahora es el Login
+  { path: '', component: LoginComponent, pathMatch: 'full' },
+  { path: 'registro', component: RegistroAdminComponent },
   { 
-    path: '', 
-    component: LoginComponent, // Asegúrate de haber creado este componente
-    pathMatch: 'full' 
+    path: 'super-admin-panel', 
+    component: SuperAdminComponent, 
+    canActivate: [SuperAdminGuard] 
   },
 
-  // 2. Ruta explícita para registro
+  // CORRECCIÓN: Subimos la ruta de Admin ANTES de la de Cliente
   { 
-    path: 'registro', 
-    component: RegistroAdminComponent 
+    path: ':nombreBar/admin/gestion', 
+    component: AdminPedidosComponent,
+    canActivate: [AuthGuard] 
   },
 
-  // 3. Cliente (Mesa)
+  // Ruta de Cliente (Mesa) - Se queda abajo por ser más genérica
   { 
-    path: 'mesa/:id', 
-    component: BuscarCancionesComponent 
+    path: ':nombreBar/:idMesa', 
+    component: BuscarCancionesComponent
   },
   
-  // 4. Admin
-  { 
-    path: 'admin/gestion', 
-    component: AdminPedidosComponent,
-    canActivate: [AuthGuard] // <--- AQUÍ activamos el cerrojo
-  },
-
-  // 5. Comodín: Cualquier error vuelve al Login
-  { 
-    path: '**', 
-    redirectTo: '' 
-  }
+  { path: '**', redirectTo: '' }
 ];
 
 @NgModule({

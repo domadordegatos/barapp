@@ -1,0 +1,89 @@
+<div class="contenedor-principal">
+
+  <div class="pantalla-estado" *ngIf="cargandoValidacion">
+    <div class="loader-simple"></div>
+    <p>Sincronizando con el bar...</p>
+  </div>
+
+  <div class="pantalla-estado" *ngIf="!barValido && !cargandoValidacion">
+    <div class="card-error">
+      <span class="icon">🚫</span>
+      <h2>¡Ups! Algo salió mal</h2>
+      <p>{{ errorMensaje }}</p>
+      <button routerLink="/" class="btn-volver">Ir al inicio</button>
+    </div>
+  </div>
+
+  <div *ngIf="barValido && !cargandoValidacion">
+
+    <div class="pantalla-bloqueo" *ngIf="!accesoAutorizado">
+      <div class="card-acceso">
+        <h2>{{ nombreBarReal }} - Mesa {{ numeroMesaReal || 'Cargando...' }}</h2>
+        <p class="mesa-label">Mesa #{{ idMesaUrl }}</p>
+        
+        <div class="input-container">
+          <label>Ingresa el código del día:</label>
+          <input 
+            type="text" 
+            [(ngModel)]="codigoIngresado" 
+            maxlength="4" 
+            placeholder="0000"
+            onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+            class="input-codigo">
+          
+          <button 
+            (click)="validarAcceso()" 
+            [disabled]="codigoIngresado.length !== 4"
+            class="btn-ingresar">
+            Acceder a la Rockola
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="vista-autorizada" *ngIf="accesoAutorizado">
+      <div class="header-bar">
+        <div class="mesa-info">
+          <h2>{{ nombreBarReal }} - Mesa {{ numeroMesaReal || '...' }}</h2> 
+        </div>
+
+        <div class="search-box">
+          <input 
+            type="text" 
+            [(ngModel)]="query" 
+            (input)="onSearchChange()" 
+            placeholder="Busca artista o canción...">
+        </div>
+      </div>
+
+      <div class="resultados-busqueda" *ngIf="tracks.length > 0">
+        <div *ngFor="let track of tracks" class="item-resultado" (click)="seleccionarCancion(track)">
+          <img [src]="track.album.images[2]?.url" class="foto-resultado">
+          <div class="info-resultado">
+            <strong>{{ track.name }}</strong>
+            <p>{{ obtenerArtistas(track) }}</p>
+          </div>
+          <div class="add-icon">+</div>
+        </div>
+      </div>
+
+      <div class="mis-pedidos">
+        <h3 class="titulo-cola">En cola de reproducción</h3>
+        <div class="lista-historial">
+          <ng-container *ngFor="let solicitud of (misCanciones$ | async); let i = index">
+            <div class="card-historial" *ngIf="solicitud.estado === 'pendiente'">
+              <div class="orden-numero">{{ i + 1 }}</div>
+              <img [src]="solicitud.foto" class="foto-mini">
+              <div class="info-pedida">
+                <strong>{{ solicitud.cancion }}</strong>
+                <p>{{ solicitud.artista }}</p>
+              </div>
+              <div class="status-container">
+                <span class="hora-pedido">{{ solicitud.fechaHora?.toDate() | date:'h:mm a' }}</span>
+                <div class="estado-badge pendiente">Pendiente</div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div> </div> </div>

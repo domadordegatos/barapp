@@ -1,0 +1,91 @@
+<div class="admin-wrapper">
+
+  <div class="pantalla-error-admin" *ngIf="!barValido">
+    <div class="card-alerta">
+      <span class="icon">⚠️</span>
+      <h2>Acceso Denegado</h2>
+      <p>{{ errorMensaje }}</p>
+      <button class="btn-regresar" (click)="logout()">Volver al Inicio</button>
+    </div>
+  </div>
+
+  <ng-container *ngIf="barValido">
+
+    <nav class="navbar-admin">
+      <div class="navbar-content">
+        <div class="brand">
+          <span class="logo-icon">🎵</span>
+          <h2>{{ nombreBarReal }}</h2>
+        </div>
+        <button class="btn-logout" (click)="logout()">
+          <span class="icon-exit">🚪</span> Cerrar Sesión
+        </button>
+      </div>
+    </nav>
+
+    <div class="admin-container">
+      <header class="admin-header">
+        <h1>Gestión de Rockola - Pedidos Entrantes</h1>
+        <div class="status-badge">En Línea</div>
+      </header>
+
+      <div class="panel-codigo">
+        <div class="codigo-header">
+          <div class="codigo-info">
+            <h3>🔑 Código Vigente: <span class="codigo-resaltado">{{ codigoActual }}</span></h3>
+            <p class="ultima-actualizacion" *ngIf="ultimaActualizacion">
+              📅 Actualizado: {{ ultimaActualizacion | date:'dd/MM' }} a las {{ ultimaActualizacion | date:'shortTime' }}
+            </p>
+          </div>
+          <span class="status-tag active">Recepción Activa</span>
+        </div>
+
+        <div class="form-actualizar">
+          <p>Para iniciar una nueva jornada o cambiar el acceso, ingresa un nuevo código:</p>
+          <div class="input-group">
+            <input type="text" [(ngModel)]="codigoNuevo" placeholder="Ej: 1234" maxlength="4"
+              onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+            <button (click)="guardarCodigo()" [disabled]="codigoNuevo.length !== 4" class="btn-actualizar">
+              Actualizar y Reiniciar Lista
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-invitados-secreto" *ngIf="esAdmin">
+          <hr class="divisor-discreto">
+          <div class="form-mini">
+            <label>Código de registro (Solo para nuevos empleados):</label>
+            <div class="input-mini-group">
+              <input type="password" [(ngModel)]="codigoInvitacionNuevo" placeholder="****" maxlength="4"
+                class="input-oculto">
+              <button (click)="guardarCodigoInvitacion()" class="btn-xs" title="Actualizar código secreto">🔑</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lista-admin">
+        <div *ngFor="let pedido of (pedidos$ | async)" class="card-admin">
+          <div class="mesa-badge">Mesa {{ pedido.mesaNumero }}</div>
+          <img [src]="pedido.foto" class="foto-admin" alt="Portada album">
+          <div class="info-track">
+            <span class="hora">🕒 {{ pedido.fechaHora?.toDate() | date:'HH:mm:ss' }}</span>
+            <h3>{{ pedido.cancion }}</h3>
+            <p>{{ pedido.artista }}</p>
+          </div>
+          <div class="acciones">
+            <button class="btn-aceptar" (click)="cambiarEstado(pedido.id, 'reproduciendo')">✅ Aceptar</button>
+            <button class="btn-rechazar" (click)="cambiarEstado(pedido.id, 'rechazado')">❌ Rechazar</button>
+          </div>
+        </div>
+
+        <div *ngIf="(pedidos$ | async)?.length === 0" class="vacio">
+          <div class="vacio-content">
+            <span class="vacio-icon">🎉</span>
+            <p>No hay canciones pendientes. ¡Todo está al día!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

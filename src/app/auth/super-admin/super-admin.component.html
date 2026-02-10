@@ -1,0 +1,59 @@
+<div class="super-admin-wrapper">
+  <nav class="navbar-super-admin">
+    <div class="navbar-content">
+      <div class="brand">
+        <span class="logo-icon">👑</span>
+        <h2>Panel Maestro: {{ rockolaService.CORREO_MASTER }}</h2>
+      </div>
+
+      <button class="btn-logout" (click)="logout()">
+        <span class="icon-exit">🚪</span> Cerrar Sesión Master
+      </button>
+    </div>
+  </nav>
+
+  <div class="super-admin-container">
+    <header class="header-maestro">
+      <h1>Control Global de Establecimientos</h1>
+      <p>Gestión total de usuarios, permisos y estados del sistema.</p>
+    </header>
+    
+    <div class="busqueda">
+      <input type="text" [(ngModel)]="filtroNombre" placeholder="Filtrar por nombre de bar o correo...">
+    </div>
+
+    <table class="tabla-maestra">
+      <thead>
+        <tr>
+          <th>Establecimiento</th>
+          <th>Correo</th>
+          <th>Código Invitación</th>
+          <th>Tipo</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of usuarios | filtroUsuarios:filtroNombre">
+          <td><input [(ngModel)]="u.nombreBar" class="td-input"></td>
+          <td><input [(ngModel)]="u.correo" class="td-input"></td>
+          <td><input [(ngModel)]="u.codigoRegistroInvitados" class="td-input" placeholder="Sin código"></td>
+          <td>
+            <select [(ngModel)]="u.tipo">
+              <option value="admin">Admin (Dueño)</option>
+              <option value="user">User (Invitado)</option>
+            </select>
+          </td>
+          <td>
+            <button [class]="u.estado ? 'btn-activo' : 'btn-inactivo'" (click)="u.estado = !u.estado">
+              {{ u.estado ? 'Activo' : 'Inactivo' }}
+            </button>
+          </td>
+          <td>
+            <button class="btn-guardar" (click)="actualizarUsuario(u)">💾 Guardar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

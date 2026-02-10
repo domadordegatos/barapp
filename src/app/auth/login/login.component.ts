@@ -41,19 +41,26 @@ async confirmarCambio() {
   }
 }
 
-// login.component.ts -> Dentro del método entrar()
+// login.component.ts
 
 async entrar() {
   try {
     const user = await this.rockolaService.loginUsuario(this.correo, this.pass);
-    
-    // GUARDAMOS LA SESIÓN: Guardamos el ID o el objeto completo convertido a texto
     sessionStorage.setItem('usuarioAdmin', JSON.stringify(user));
-    
-    alert(`Bienvenido, ${user.nombreBar}`);
-    this.router.navigate(['/admin/gestion']);
-  } catch (error: any) {
-    alert(error.message);
+
+    if (user.correo === this.rockolaService.CORREO_MASTER) {
+      this.router.navigate(['/super-admin-panel']);
+    } else {
+      // 1. Limpiamos el nombre para la URL: "La Chula" -> "lachula"
+      const nombreUrl = user.nombreBar.toLowerCase().trim().replace(/\s+/g, '');
+      
+      // 2. Navegamos a la ruta exacta del Routing: :nombreBar/admin/gestion
+      this.router.navigate([nombreUrl, 'admin', 'gestion']);
+    }
+  } catch (e: any) {
+    alert(e.message);
   }
 }
+
+
 }
