@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { RockolaService } from '../services/rockola.service';
+import { RockolaService } from '../../services/rockola.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, Subject, firstValueFrom } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { RockolaService } from '../services/rockola.service';
+import { RockolaService } from '../../services/rockola.service';
 import { Router } from '@angular/router';
 // IMPORTANTE: Agregamos la importación que faltaba
 import { firstValueFrom } from 'rxjs'; 

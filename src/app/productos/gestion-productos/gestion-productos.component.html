@@ -1,0 +1,60 @@
+<div class="admin-container">
+  <header class="admin-header">
+    <h1>Gestión de Productos y Menú</h1>
+    <button class="btn-actualizar" (click)="mostrandoForm = !mostrandoForm">
+      {{ mostrandoForm ? 'Cerrar Formulario' : '➕ Agregar Producto' }}
+    </button>
+  </header>
+
+  <div class="panel-codigo" *ngIf="mostrandoForm">
+    <h3>Nuevo Producto</h3>
+    <div class="form-actualizar">
+      <div class="input-group-vertical">
+        <input type="text" [(ngModel)]="producto.nombre" placeholder="Nombre del producto">
+        <input type="number" [(ngModel)]="producto.precio" placeholder="Precio de venta">
+        
+        <select [(ngModel)]="producto.categoria">
+          <option *ngFor="let cat of categorias" [value]="cat">{{ cat }}</option>
+        </select>
+
+        <div class="check-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="producto.controlInventario"> 
+            Manejar existencias (Bodega)
+          </label>
+        </div>
+
+        <input type="number" *ngIf="producto.controlInventario" 
+               [(ngModel)]="producto.existencias" placeholder="Cantidad actual">
+      </div>
+      <button class="btn-actualizar" (click)="guardarProducto()">💾 Guardar Producto</button>
+    </div>
+  </div>
+
+  <div class="lista-admin">
+    <div class="card-admin-full">
+      <table class="tabla-maestra">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of (productos$ | async)">
+            <td>{{ p.nombre }}</td>
+            <td>{{ p.categoria }}</td>
+            <td>{{ p.precio | currency }}</td>
+            <td>{{ p.controlInventario ? p.existencias : '∞' }}</td>
+            <td>
+              <button (click)="eliminar(p.id)">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

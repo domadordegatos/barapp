@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RockolaService } from '../services/rockola.service';
+import { RockolaService } from '../../services/rockola.service';
 import { Router } from '@angular/router';
 
 @Component({
