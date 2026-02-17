@@ -43,16 +43,17 @@
              <div class="search-box">
                 <input type="text" [(ngModel)]="query" (input)="onSearchChange()" placeholder="Busca tu canción...">
              </div>
-          </div>
 
-          <div class="resultados-busqueda" *ngIf="tracks && tracks.length > 0">
-            <div *ngFor="let track of tracks" class="item-resultado" (click)="seleccionarCancion(track)">
-              <img [src]="track.album.images[2]?.url" class="foto-resultado">
-              <div class="info-resultado">
-                <strong>{{ track.name }}</strong>
-                <p>{{ obtenerArtistas(track) }}</p>
-              </div>
-            </div>
+             <div class="resultados-busqueda" *ngIf="tracks && tracks.length > 0">
+               <div *ngFor="let track of tracks" class="item-resultado" (click)="seleccionarCancion(track)">
+                 <img [src]="track.album.images[2]?.url" class="foto-resultado">
+                 <div class="info-resultado">
+                   <strong>{{ track.name }}</strong>
+                   <p>{{ obtenerArtistas(track) }}</p>
+                 </div>
+                 <div class="add-icon">+</div>
+               </div>
+             </div>
           </div>
 
           <div class="mis-pedidos">
@@ -62,8 +63,9 @@
               <div *ngFor="let solicitud of lista" 
                    class="card-historial" 
                    [ngClass]="{
-                     'pedido-gris': solicitud.estado?.toLowerCase() !== 'pendiente',
-                     'pedido-activo': solicitud.estado?.toLowerCase() === 'pendiente'
+                     'pedido-finalizado': solicitud.estado?.toLowerCase() !== 'pendiente',
+                     'pedido-aprobado': solicitud.estado?.toLowerCase() === 'reproduciendo' || solicitud.estado?.toLowerCase() === 'aprobado',
+                     'pedido-rechazado': solicitud.estado?.toLowerCase() === 'rechazado'
                    }">
                 
                 <img [src]="solicitud.foto" class="foto-mini">
@@ -74,13 +76,15 @@
                 </div>
 
                 <div class="status-container">
-                  <span class="hora-pedido" *ngIf="solicitud.timestamp">
-                    {{ (solicitud.timestamp?.toDate ? solicitud.timestamp.toDate() : solicitud.timestamp) | date:'h:mm a' }}
+                  <span class="hora-pedido">
+                    {{ (solicitud.timestamp?.toDate ? solicitud.timestamp.toDate() : 
+                        (solicitud.fechaHora?.toDate ? solicitud.fechaHora.toDate() : solicitud.timestamp)) 
+                        | date:'h:mm a' }}
                   </span>
                   
-                  <div class="estado-badge">
+                  <div class="estado-badge" [ngClass]="solicitud.estado?.toLowerCase()">
                     <span *ngIf="solicitud.estado?.toLowerCase() === 'pendiente'">En espera</span>
-                    <span *ngIf="solicitud.estado?.toLowerCase() === 'reproduciendo'">Se reprodujo</span>
+                    <span *ngIf="solicitud.estado?.toLowerCase() === 'reproduciendo' || solicitud.estado?.toLowerCase() === 'aprobado'">Se reprodujo</span>
                     <span *ngIf="solicitud.estado?.toLowerCase() === 'rechazado'">No disponible</span>
                   </div>
                 </div>
