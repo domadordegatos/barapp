@@ -16,11 +16,15 @@ import { SuperAdminComponent } from './auth/super-admin/super-admin.component';
 import { FiltroUsuariosPipe } from './pipes/filtro-usuarios.pipe';
 import { GestionMusicaComponent } from './music/gestion-music/gestion-music.component';
 import { GestionProductosComponent } from './productos/gestion-productos/gestion-productos.component';
+import { FiltroProductosPipe } from './pipes/filtro-productos.pipe';
+import { DashboardMesaComponent } from './dashboard-mesa/dashboard-mesa.component';
+import { ListaProductosComponent } from './lista-productos/lista-productos.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
     AppComponent, 
-    BuscarCancionesComponent, AdminPedidosComponent, RegistroAdminComponent, LoginComponent, SuperAdminComponent, FiltroUsuariosPipe, GestionMusicaComponent, GestionProductosComponent // Ahora que no son standalone, Angular no protestará aquí
+    BuscarCancionesComponent, AdminPedidosComponent, RegistroAdminComponent, LoginComponent, SuperAdminComponent, FiltroUsuariosPipe, GestionMusicaComponent, GestionProductosComponent, FiltroProductosPipe, DashboardMesaComponent, ListaProductosComponent // Ahora que no son standalone, Angular no protestará aquí
   ],
   imports: [
     BrowserModule,
@@ -28,7 +32,8 @@ import { GestionProductosComponent } from './productos/gestion-productos/gestion
     HttpClientModule,
     FormsModule,
     AngularFireModule.initializeApp(environment.firebase),
-    AngularFirestoreModule
+    AngularFirestoreModule,
+    BrowserAnimationsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

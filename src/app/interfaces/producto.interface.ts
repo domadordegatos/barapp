@@ -6,4 +6,5 @@ export interface Producto {
   existencias: number;
   controlInventario: boolean; // Si es false, no descuenta stock
   disponible: boolean;
+  visible: boolean;
 }

@@ -9,13 +9,27 @@ import firebase from 'firebase/compat/app';
 export class VentasService {
 
   constructor(private firestore: AngularFirestore) {}
+// Obtener las categorías de un bar específico
+obtenerCategorias(nombreBarLimpio: string) {
+  return this.firestore.collection('categorias_bares', ref => 
+    ref.where('nombreBar', '==', nombreBarLimpio)
+  ).valueChanges({ idField: 'id' });
+}
 
+// Agregar una nueva categoría
+async agregarCategoria(nombreBarLimpio: string, nombreCategoria: string) {
+  return this.firestore.collection('categorias_bares').add({
+    nombreBar: nombreBarLimpio,
+    nombre: nombreCategoria,
+    fechaCreacion: new Date()
+  });
+}
+
+// Eliminar categoría
+async eliminarCategoria(id: string) {
+  return this.firestore.collection('categorias_bares').doc(id).delete();
+}
   // --- GESTIÓN DE CATEGORÍAS ---
-
-  // Obtiene o crea el documento de categorías para un bar
-  obtenerCategorias(nombreBarLimpio: string) {
-    return this.firestore.collection('categorias_bar').doc(nombreBarLimpio).valueChanges();
-  }
 
   async actualizarCategorias(nombreBarLimpio: string, categorias: string[]) {
     return this.firestore.collection('categorias_bar').doc(nombreBarLimpio).set({
@@ -26,6 +40,15 @@ export class VentasService {
   }
 
   // --- GESTIÓN DE PRODUCTOS ---
+
+  // ventas.service.ts
+
+// Cambiar visibilidad de la categoría
+async cambiarEstadoCategoria(id: string, nuevoEstado: boolean) {
+  return this.firestore.collection('categorias_bares').doc(id).update({
+    activo: nuevoEstado
+  });
+}
 
   // Agregar un producto nuevo
   async agregarProducto(nombreBarLimpio: string, producto: any) {

@@ -18,8 +18,8 @@
 
     <div class="pantalla-bloqueo" *ngIf="!accesoAutorizado">
       <div class="card-acceso">
-        <h2>{{ nombreBarReal }} - Mesa {{ numeroMesaReal || 'Cargando...' }}</h2>
-        <p class="mesa-label">Mesa #{{ idMesaUrl }}</p>
+        <h2>{{ nombreBarReal }}</h2>
+        <p class="mesa-label">Mesa #{{ numeroMesaReal || '...' }}</p>
         
         <div class="input-container">
           <label>Ingresa el código del día:</label>
@@ -44,7 +44,7 @@
     <div class="vista-autorizada" *ngIf="accesoAutorizado">
       <div class="header-bar">
         <div class="mesa-info">
-          <h2>{{ nombreBarReal }} - Mesa {{ numeroMesaReal || '...' }}</h2> 
+          <h2>{{ nombreBarReal }} - Mesa {{ numeroMesaReal }}</h2> 
         </div>
 
         <div class="search-box">
@@ -68,22 +68,37 @@
       </div>
 
       <div class="mis-pedidos">
-        <h3 class="titulo-cola">En cola de reproducción</h3>
+        
         <div class="lista-historial">
-          <ng-container *ngFor="let solicitud of (misCanciones$ | async); let i = index">
-            <div class="card-historial" *ngIf="solicitud.estado === 'pendiente'">
-              <div class="orden-numero">{{ i + 1 }}</div>
-              <img [src]="solicitud.foto" class="foto-mini">
-              <div class="info-pedida">
-                <strong>{{ solicitud.cancion }}</strong>
-                <p>{{ solicitud.artista }}</p>
-              </div>
-              <div class="status-container">
-                <span class="hora-pedido">{{ solicitud.fechaHora?.toDate() | date:'h:mm a' }}</span>
-                <div class="estado-badge pendiente">Pendiente</div>
+          <div *ngFor="let solicitud of (misCanciones$ | async); let i = index" 
+               class="card-historial"
+               [ngClass]="{
+                 'pedido-finalizado': solicitud.estado !== 'pendiente',
+                 'pedido-aprobado': solicitud.estado === 'aprobado',
+                 'pedido-rechazado': solicitud.estado === 'rechazado'
+               }">
+            
+            <img [src]="solicitud.foto" class="foto-mini">
+            
+            <div class="info-pedida">
+              <strong>{{ solicitud.cancion }}</strong>
+              <p>{{ solicitud.artista }}</p>
+            </div>
+
+            <div class="status-container">
+              <span class="hora-pedido">{{ solicitud.fechaHora?.toDate() | date:'h:mm a' }}</span>
+              
+              <div class="estado-badge" [ngClass]="solicitud.estado">
+                {{ solicitud.estado === 'pendiente' ? 'Esperando' : 
+                   solicitud.estado === 'aprobado' ? 'En Cola' : 'No disponible' }}
               </div>
             </div>
-          </ng-container>
+          </div>
         </div>
+
+        <div class="vacio" *ngIf="!(misCanciones$ | async)?.length">
+          <p>Aún no has pedido canciones. ¡Busca una arriba!</p>
+        </div>
+
       </div>
     </div> </div> </div>

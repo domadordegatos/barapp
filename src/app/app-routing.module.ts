@@ -7,6 +7,7 @@ import { LoginComponent } from './auth/login/login.component';
 import { AuthGuard } from './guards/auth.guard'; // Importalo arriba
 import { SuperAdminComponent } from './auth/super-admin/super-admin.component';
 import { SuperAdminGuard } from './guards/super-admin.guard';
+import { DashboardMesaComponent } from './dashboard-mesa/dashboard-mesa.component';
 
 const routes: Routes = [
   { path: '', component: LoginComponent, pathMatch: 'full' },
@@ -27,7 +28,7 @@ const routes: Routes = [
   // Ruta de Cliente (Mesa) - Se queda abajo por ser más genérica
   { 
     path: ':nombreBar/:idMesa', 
-    component: BuscarCancionesComponent
+    component: DashboardMesaComponent
   },
   
   { path: '**', redirectTo: '' }

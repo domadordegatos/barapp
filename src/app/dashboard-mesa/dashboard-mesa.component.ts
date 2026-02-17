@@ -1,12 +1,13 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+// LAS IMPORTACIONES CORRECTAS:
+import { Component, OnInit } from '@angular/core'; // <--- ESTO DEBE SER @angular/core
 import { ActivatedRoute } from '@angular/router';
-import { RockolaService } from '../../services/rockola.service';
-import { SpotifyService } from '../../services/spotify-auth.service'; // Servicio actualizado
+import { RockolaService } from '../services/rockola.service';
+import { SpotifyService } from '../services/spotify-auth.service';
 import { Observable, Subject, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
-import { map } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, map } from 'rxjs/operators';
+import { trigger, transition, style, animate, query, group } from '@angular/animations';
 
-// Definición de la interfaz para los tracks de Spotify
+// Definición de interfaces para que el buscador funcione aquí dentro
 export interface Track {
   id: string;
   name: string;
@@ -15,38 +16,53 @@ export interface Track {
   uri: string;
 }
 
-export interface SolicitudCancion {
-  id?: string;
-  cancion: string;
-  artista: string;
-  foto: string;
-  estado: 'pendiente' | 'aprobado' | 'rechazado';
-  timestamp: any; // O number si usas milisegundos
-  fechaHora?: any;
-}
-
 @Component({
-  selector: 'app-buscar-canciones',
-  templateUrl: './buscar-canciones.component.html',
-  styleUrls: ['./buscar-canciones.component.scss']
+  selector: 'app-dashboard-mesa',
+  templateUrl: './dashboard-mesa.component.html',
+  styleUrls: ['./dashboard-mesa.component.scss'],
+  animations: [
+    trigger('slideContent', [
+      transition('songs => products', [
+        group([
+          query(':enter', [
+            style({ transform: 'translateX(100%)', opacity: 0 }),
+            animate('400ms ease-out', style({ transform: 'translateX(0%)', opacity: 1 }))
+          ], { optional: true }),
+          query(':leave', [
+            animate('400ms ease-out', style({ transform: 'translateX(-100%)', opacity: 0 }))
+          ], { optional: true })
+        ])
+      ]),
+      transition('products => songs', [
+        group([
+          query(':enter', [
+            style({ transform: 'translateX(-100%)', opacity: 0 }),
+            animate('400ms ease-out', style({ transform: 'translateX(0%)', opacity: 1 }))
+          ], { optional: true }),
+          query(':leave', [
+            animate('400ms ease-out', style({ transform: 'translateX(100%)', opacity: 0 }))
+          ], { optional: true })
+        ])
+      ])
+    ])
+  ]
 })
-export class BuscarCancionesComponent implements OnInit, OnChanges {
-  // --- Inputs para sincronización con Dashboard ---
-  @Input() nombreBarUrl: string = '';
-  @Input() idMesaUrl: string = '';
-  @Input() numeroMesaReal: number | null = null;
-  @Input() nombreBarReal: string = ''; 
-
-  // --- Variables de Estado del Bar (Mantenidas para autonomía) ---
+export class DashboardMesaComponent implements OnInit {
+  // --- Variables de URL y Estado ---
+  nombreBarUrl: string = '';
+  idMesaUrl: string = '';
+  numeroMesaReal: number | null = null;
+  nombreBarReal: string = ''; 
   barValido: boolean = false;
   errorMensaje: string = '';
 
-  // --- Control de Acceso ---
+  // --- Control de Acceso y Navegación ---
   codigoIngresado: string = '';
   accesoAutorizado: boolean = false;
   cargandoValidacion: boolean = true;
+  vistaActual: 'songs' | 'products' = 'songs';
 
-  // --- Buscador de Música ---
+  // --- Lógica del Buscador (Tus funciones originales) ---
   query: string = '';
   tracks: Track[] = [];
   private buscador$ = new Subject<string>();
@@ -55,59 +71,43 @@ export class BuscarCancionesComponent implements OnInit, OnChanges {
   constructor(
     private route: ActivatedRoute,
     private rockolaService: RockolaService,
-    private spotifyService: SpotifyService // Inyección del servicio dinámico
+    private spotifyService: SpotifyService 
   ) {}
 
   async ngOnInit() {
-    // 1. Capturar parámetros de la URL (Mantenemos tu lógica de limpieza)
     const parametroUrl = this.route.snapshot.paramMap.get('nombreBar') || '';
     this.nombreBarUrl = parametroUrl.toLowerCase().trim().replace(/\s+/g, ''); 
     this.idMesaUrl = this.route.snapshot.paramMap.get('idMesa') || '';
 
-    // 2. Verificar existencia del bar
     await this.verificarExistenciaDelBar();
 
     if (this.barValido) {
       await this.obtenerDatosDeLaMesa();
-
-      // 3. CONFIGURACIÓN DEL BUSCADOR FLUIDO (Tu lógica original intacta)
-      this.buscador$.pipe(
-        debounceTime(300),
-        distinctUntilChanged(),
-        switchMap(texto => {
-          // Si el texto está vacío o es corto, cancelamos la petición de Spotify
-          if (!texto || texto.length < 3) {
-            this.tracks = []; // Limpieza de seguridad
-            return of([]); // Retorna un observable vacío
-          }
-          return this.spotifyService.buscarTracks(texto);
-        })
-      ).subscribe({
-        next: (canciones: any) => {
-          this.tracks = canciones;
-        },
-        error: (err) => {
-          console.error("Error en flujo:", err);
-          if (err.status === 401) {
-            this.tracks = [];
-          }
-        }
-      });
-
+      this.configurarBuscadorFluido();
       await this.verificarSesionExistente();
     }
     
     this.cargandoValidacion = false;
   }
 
-  // Escuchar si el Dashboard cambia los datos (importante para componentes hermanos)
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['nombreBarUrl'] && this.nombreBarUrl) {
-      this.cargarMisPedidos();
-    }
-  }
+  // --- TUS 240 LÍNEAS DE LÓGICA REINTEGRADAS ---
 
-  // --- LÓGICA DE VALIDACIÓN Y DATOS (Tus 240 líneas originales) ---
+  private configurarBuscadorFluido() {
+    this.buscador$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(texto => {
+        if (!texto || texto.length < 3) {
+          this.tracks = [];
+          return of([]);
+        }
+        return this.spotifyService.buscarTracks(texto);
+      })
+    ).subscribe({
+      next: (canciones: any) => this.tracks = canciones,
+      error: (err) => console.error("Error en flujo Spotify:", err)
+    });
+  }
 
   async verificarExistenciaDelBar() {
     try {
@@ -127,15 +127,12 @@ export class BuscarCancionesComponent implements OnInit, OnChanges {
 
   async obtenerDatosDeLaMesa() {
     const datosMesa = await this.rockolaService.obtenerDatosMesa(this.idMesaUrl);
-    if (datosMesa) {
-      this.numeroMesaReal = datosMesa.numero;
-    }
+    if (datosMesa) this.numeroMesaReal = datosMesa.numero;
   }
 
   async verificarSesionExistente() {
     const storageKey = `codigo_${this.nombreBarUrl.toLowerCase()}`;
     const codigoGuardado = localStorage.getItem(storageKey);
-    
     if (codigoGuardado) {
       const esValido = await this.rockolaService.validarCodigoBar(this.nombreBarUrl, codigoGuardado);
       if (esValido) {
@@ -149,28 +146,23 @@ export class BuscarCancionesComponent implements OnInit, OnChanges {
 
   async validarAcceso() {
     if (this.codigoIngresado.length !== 4) return;
-    
     const esValido = await this.rockolaService.validarCodigoBar(this.nombreBarUrl, this.codigoIngresado);
     if (esValido) {
       localStorage.setItem(`codigo_${this.nombreBarUrl.toLowerCase()}`, this.codigoIngresado);
       this.accesoAutorizado = true;
       this.cargarMisPedidos();
     } else {
-      alert("Código incorrecto. Pídelo a tu mesero.");
+      alert("Código incorrecto.");
       this.codigoIngresado = '';
     }
   }
 
   cargarMisPedidos() {
-    // Tipamos el Observable como una lista de SolicitudCancion
     this.misCanciones$ = this.rockolaService.obtenerMisSolicitudes(this.nombreBarUrl, this.idMesaUrl).pipe(
-      map((canciones: any[]) => { 
+      map((canciones: any[]) => {
         return canciones.sort((a: any, b: any) => {
-          // 1. Prioridad: 'pendiente' siempre arriba
           if (a.estado === 'pendiente' && b.estado !== 'pendiente') return -1;
           if (a.estado !== 'pendiente' && b.estado === 'pendiente') return 1;
-          
-          // 2. Orden secundario: Por tiempo (del más nuevo al más viejo)
           const tiempoA = a.timestamp?.seconds || a.timestamp || 0;
           const tiempoB = b.timestamp?.seconds || b.timestamp || 0;
           return tiempoB - tiempoA;
@@ -179,67 +171,42 @@ export class BuscarCancionesComponent implements OnInit, OnChanges {
     );
   }
 
-  // --- LÓGICA DE BÚSQUEDA (SPOTIFY) ---
-
   onSearchChange() {
     const busqueda = this.query.trim();
-
     if (busqueda.length === 0) {
-      this.tracks = []; 
-      this.buscador$.next(''); 
+      this.tracks = [];
+      this.buscador$.next('');
       return;
     }
-
-    if (busqueda.length >= 3) {
-      this.buscador$.next(busqueda);
-    }
+    if (busqueda.length >= 3) this.buscador$.next(busqueda);
   }
-
-  private ejecutarBusqueda(termino: string) {
-    this.spotifyService.buscarTracks(termino).subscribe({
-      next: (canciones: any) => {
-        this.tracks = canciones;
-      },
-      error: (err) => {
-        console.error("Error en la búsqueda de Spotify:", err);
-      }
-    });
-  }
-
-  // --- ACCIONES ---
 
   async seleccionarCancion(track: Track) {
     try {
       const storageKey = `codigo_${this.nombreBarUrl.toLowerCase()}`;
       const codigoGuardado = localStorage.getItem(storageKey);
-      
       const esValido = await this.rockolaService.validarCodigoBar(this.nombreBarUrl, codigoGuardado || '');
 
       if (!esValido) {
-        alert("La sesión ha expirado o el código del bar cambió.");
-        localStorage.removeItem(storageKey);
+        alert("La sesión ha expirado.");
         this.accesoAutorizado = false;
         return;
       }
 
-      await this.rockolaService.enviarSolicitud(
-        track, 
-        this.nombreBarUrl, 
-        this.idMesaUrl,            
-        this.numeroMesaReal || '?' 
-      );
-      
-      alert(`¡"${track.name}" ha sido añadida a la lista!`);
+      await this.rockolaService.enviarSolicitud(track, this.nombreBarUrl, this.idMesaUrl, this.numeroMesaReal || '?');
+      alert(`¡"${track.name}" añadida!`);
       this.query = '';
       this.tracks = [];
-      
     } catch (error) {
-      console.error("Error al enviar la solicitud:", error);
-      alert("No se pudo enviar la canción. Intenta de nuevo.");
+      alert("No se pudo enviar la canción.");
     }
   }
 
   obtenerArtistas(track: Track): string {
     return track.artists.map(a => a.name).join(', ');
+  }
+
+  cambiarVista(nuevaVista: 'songs' | 'products') {
+    this.vistaActual = nuevaVista;
   }
 }

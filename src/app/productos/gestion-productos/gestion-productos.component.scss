@@ -1,0 +1,87 @@
+.categorias-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.chip-categoria {
+  background: rgba(0, 212, 255, 0.15);
+  color: #00d4ff;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid #00d4ff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+
+  .btn-borrar-cat {
+    cursor: pointer;
+    font-weight: bold;
+    color: #ff4d4d;
+    &:hover { color: #fff; }
+  }
+}
+.grid-formulario {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  
+  label {
+    font-size: 0.9rem;
+    color: #aaa;
+    font-weight: 500;
+  }
+}
+
+.checkbox-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+}
+
+.btn-guardar-full {
+  grid-column: 1 / -1;
+  margin-top: 1rem;
+}
+
+.tabla-maestra {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  color: black;
+
+  th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  th { color: #00d4ff; text-transform: uppercase; font-size: 0.8rem; }
+  
+  .badge-categoria {
+    background: rgba(0, 212, 255, 0.2);
+    color: #00d4ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+  }
+}
+
+.btn-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: transform 0.2s;
+  &:hover { transform: scale(1.2); }
+}

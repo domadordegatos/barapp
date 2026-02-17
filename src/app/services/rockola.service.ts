@@ -241,13 +241,15 @@ async registrarNuevoUsuario(datos: any) {
 
 // rockola.service.ts
 
+// rockola.service.ts
+
 obtenerPedidosPendientes(nombreBar: string) {
-  // Normalizamos el nombre para asegurar la coincidencia con la BD
   const nombreLimpio = nombreBar.toLowerCase().trim().replace(/\s+/g, '');
 
   return this.firestore.collection('solicitudes', ref => 
     ref.where('nombreBar', '==', nombreLimpio)
-       .where('finalizado', '==', false) // Trae todo lo activo
+       .where('estado', '==', 'pendiente') // <--- CAMBIO CLAVE: Solo traer lo pendiente
+       .where('finalizado', '==', false) 
        .orderBy('fechaHora', 'asc')
   ).snapshotChanges().pipe(
     map(actions => actions.map(a => {
@@ -257,7 +259,6 @@ obtenerPedidosPendientes(nombreBar: string) {
     }))
   );
 }
-
 actualizarEstadoPedido(idPedido: string, nuevoEstado: string) {
   // Al cambiar el estado, desaparecerá de la vista gracias al filtro 'pendiente'
   return this.firestore.collection('solicitudes').doc(idPedido).update({

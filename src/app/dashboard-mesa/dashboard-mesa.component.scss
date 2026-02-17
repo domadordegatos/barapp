@@ -1,0 +1,170 @@
+$spotify-green: #1db954;
+$bg-light: #f4f7f6;
+$text-dark: #333;
+$text-muted: #888;
+$pending-gold: #f1c40f;
+
+.contenedor-principal {
+  height: 100vh;
+  width: 100%;
+  background-color: $bg-light;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.full-layout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pantalla-estado, .pantalla-bloqueo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.card-acceso {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 24px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  width: 90%;
+  max-width: 380px;
+  text-align: center;
+  h2 { margin: 0 0 10px; color: $text-dark; }
+  .mesa-label { color: $text-muted; margin-bottom: 25px; font-weight: bold; }
+}
+
+.input-codigo {
+  letter-spacing: 12px;
+  text-align: center;
+  font-size: 2.5rem;
+  padding: 10px;
+  border: 2px solid #eee;
+  border-radius: 16px;
+  width: 100%;
+  margin: 20px 0;
+  outline: none;
+  &:focus { border-color: $spotify-green; }
+}
+
+.btn-ingresar {
+  background: $spotify-green;
+  color: white;
+  border: none;
+  padding: 15px;
+  border-radius: 50px;
+  width: 100%;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.tab-selector {
+  display: flex;
+  background: white;
+  button {
+    flex: 1;
+    padding: 18px;
+    border: none;
+    background: none;
+    font-weight: bold;
+    color: $text-muted;
+    border-bottom: 3px solid transparent;
+    &.active {
+      color: $spotify-green;
+      border-bottom-color: $spotify-green;
+    }
+  }
+}
+
+.window-slider {
+  flex: 1;
+  overflow-y: auto;
+  background: #f8f9fa;
+}
+
+.slide-section { padding: 15px; }
+
+.search-box input {
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 50px;
+  border: 1px solid #ddd;
+}
+
+/* HISTORIAL DE PEDIDOS */
+.card-historial {
+  display: flex;
+  align-items: center;
+  background: white;
+  padding: 12px;
+  border-radius: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  transition: 0.3s;
+
+  .foto-mini { width: 46px; height: 46px; border-radius: 6px; margin-right: 12px; object-fit: cover; }
+  
+  .info-pedida {
+    flex: 1;
+    strong { display: block; font-size: 0.9rem; color: $text-dark; }
+    p { margin: 0; font-size: 0.8rem; color: $text-muted; }
+  }
+
+  .status-container {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+
+    .hora-pedido {
+      font-size: 0.7rem;
+      color: #999;
+    }
+  }
+
+  /* ESTADO PENDIENTE (CON COLOR) */
+  &.pedido-activo {
+    border-left: 5px solid $pending-gold;
+    .estado-badge {
+      background: #fff3cd;
+      color: #856404;
+    }
+  }
+
+  /* ESTADOS FINALIZADOS (GRIS) */
+  &.pedido-gris {
+    opacity: 0.6;
+    filter: grayscale(1);
+    background: #f9f9f9;
+    border-left: 5px solid #ccc;
+    .estado-badge {
+      background: #e0e0e0;
+      color: #666;
+    }
+  }
+}
+
+.estado-badge {
+  font-size: 0.6rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.titulo-seccion { margin: 20px 0 10px; font-size: 1rem; color: $text-dark; }
+.loader-simple {
+  width: 30px; height: 30px;
+  border: 3px solid #eee;
+  border-top-color: $spotify-green;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

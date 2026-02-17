@@ -1,0 +1,107 @@
+<div class="contenedor-principal">
+
+  <div class="pantalla-estado" *ngIf="cargandoValidacion">
+    <div class="loader-simple"></div>
+    <p>Sincronizando con el bar...</p>
+  </div>
+
+  <div class="pantalla-estado" *ngIf="!barValido && !cargandoValidacion">
+    <div class="card-error">
+      <h2>🚫 ¡Ups!</h2>
+      <p>{{ errorMensaje }}</p>
+      <button routerLink="/" class="btn-volver">Ir al inicio</button>
+    </div>
+  </div>
+
+  <div *ngIf="barValido && !cargandoValidacion" class="full-layout">
+
+    <div class="pantalla-bloqueo" *ngIf="!accesoAutorizado">
+      <div class="card-acceso">
+        <h2>{{ nombreBarReal }}</h2>
+        <p class="mesa-label">Mesa #{{ numeroMesaReal || '...' }}</p>
+        <div class="input-container">
+          <input type="text" [(ngModel)]="codigoIngresado" maxlength="4" class="input-codigo" placeholder="0000">
+          <button (click)="validarAcceso()" [disabled]="codigoIngresado.length !== 4" class="btn-ingresar">
+            Entrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="vista-autorizada-container" *ngIf="accesoAutorizado">
+      
+      <div class="tab-selector">
+        <button [class.active]="vistaActual === 'songs'" (click)="cambiarVista('songs')">🎵 Música</button>
+        <button [class.active]="vistaActual === 'products'" (click)="cambiarVista('products')">🍻 Productos</button>
+      </div>
+
+      <div class="window-slider">
+        
+        <div class="slide-section" *ngIf="vistaActual === 'songs'">
+          
+          <div class="header-bar">
+             <div class="search-box">
+                <input type="text" [(ngModel)]="query" (input)="onSearchChange()" placeholder="Busca tu canción...">
+             </div>
+          </div>
+
+          <div class="resultados-busqueda" *ngIf="tracks && tracks.length > 0">
+            <div *ngFor="let track of tracks" class="item-resultado" (click)="seleccionarCancion(track)">
+              <img [src]="track.album.images[2]?.url" class="foto-resultado">
+              <div class="info-resultado">
+                <strong>{{ track.name }}</strong>
+                <p>{{ obtenerArtistas(track) }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mis-pedidos">
+            <h4 class="titulo-seccion">Mis pedidos recientes</h4>
+            
+            <div *ngIf="(misCanciones$ | async) as lista; else cargandoH">
+              <div *ngFor="let solicitud of lista" 
+                   class="card-historial" 
+                   [ngClass]="{
+                     'pedido-gris': solicitud.estado?.toLowerCase() !== 'pendiente',
+                     'pedido-activo': solicitud.estado?.toLowerCase() === 'pendiente'
+                   }">
+                
+                <img [src]="solicitud.foto" class="foto-mini">
+                
+                <div class="info-pedida">
+                  <strong>{{ solicitud.cancion }}</strong>
+                  <p>{{ solicitud.artista }}</p>
+                </div>
+
+                <div class="status-container">
+                  <span class="hora-pedido" *ngIf="solicitud.timestamp">
+                    {{ (solicitud.timestamp?.toDate ? solicitud.timestamp.toDate() : solicitud.timestamp) | date:'h:mm a' }}
+                  </span>
+                  
+                  <div class="estado-badge">
+                    <span *ngIf="solicitud.estado?.toLowerCase() === 'pendiente'">En espera</span>
+                    <span *ngIf="solicitud.estado?.toLowerCase() === 'reproduciendo'">Se reprodujo</span>
+                    <span *ngIf="solicitud.estado?.toLowerCase() === 'rechazado'">No disponible</span>
+                  </div>
+                </div>
+              </div>
+
+              <div *ngIf="lista.length === 0" class="vacio-mensaje">
+                <p>No has pedido canciones aún.</p>
+              </div>
+            </div>
+            <ng-template #cargandoH><p class="text-center">Actualizando lista...</p></ng-template>
+          </div>
+        </div>
+
+        <div class="slide-section" *ngIf="vistaActual === 'products'">
+          <div class="menu-productos">
+                <h3>Menú Digital</h3>
+                <p>Cargando productos de {{ nombreBarReal }}...</p>
+          </div>
+        </div>
+
+      </div> 
+    </div>
+  </div>
+</div>

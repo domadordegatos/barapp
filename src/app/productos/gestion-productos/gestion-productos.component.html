@@ -1,60 +1,174 @@
 <div class="admin-container">
   <header class="admin-header">
-    <h1>Gestión de Productos y Menú</h1>
-    <button class="btn-actualizar" (click)="mostrandoForm = !mostrandoForm">
-      {{ mostrandoForm ? 'Cerrar Formulario' : '➕ Agregar Producto' }}
+    <div class="header-info">
+      <h1>Gestión de Menú e Inventario</h1>
+      <p class="subtitle">Controla la visibilidad de tus productos y categorías en tiempo real</p>
+    </div>
+    <button class="btn-actualizar" (click)="mostrandoForm = !mostrandoForm; editando ? cancelarEdicion() : null">
+      {{ mostrandoForm ? '❌ Cerrar Formulario' : '➕ Nuevo Producto' }}
     </button>
   </header>
 
-  <div class="panel-codigo" *ngIf="mostrandoForm">
-    <h3>Nuevo Producto</h3>
+  <div class="panel-codigo categorias-section">
+    <div class="codigo-header">
+      <h3>📁 Secciones del Menú (Categorías)</h3>
+      <span class="status-tag info">Elige qué secciones ve el cliente</span>
+    </div>
+    
+    <div class="form-actualizar">
+      <div class="input-group">
+        <input type="text" [(ngModel)]="nuevaCategoriaNombre" placeholder="Nueva categoría (ej: Cervezas)..." (keyup.enter)="crearCategoria()">
+        <button class="btn-actualizar" (click)="crearCategoria()" [disabled]="!nuevaCategoriaNombre.trim()">
+          Agregar
+        </button>
+      </div>
+
+      <div class="categorias-list">
+        <div class="chip-categoria" *ngFor="let cat of (categorias$ | async)" [class.inactivo]="!cat.activo">
+          <span class="indicador-estado" [class.online]="cat.activo"></span>
+          <span class="cat-name">{{ cat.nombre }}</span>
+          <button class="btn-toggle-eye" (click)="toggleCategoria(cat.id, cat.activo)" 
+                  [title]="cat.activo ? 'Ocultar categoría y sus productos' : 'Mostrar categoría'">
+            {{ cat.activo ? '👁️' : '🙈' }}
+          </button>
+        </div>
+      </div>
+      <p class="helper-text" *ngIf="(categorias$ | async)?.length">
+        * Al desactivar una categoría (👁️), los productos asociados no aparecerán en el menú del cliente.
+      </p>
+    </div>
+  </div>
+
+  <hr class="divisor-discreto">
+
+  <div class="panel-codigo form-producto-card" *ngIf="mostrandoForm" [class.modo-edicion]="editando">
+    <div class="codigo-header">
+      <h3>{{ editando ? '✏️ Editando: ' + producto.nombre : '✨ Registrar Nuevo Producto' }}</h3>
+    </div>
+    
     <div class="form-actualizar">
       <div class="input-group-vertical">
-        <input type="text" [(ngModel)]="producto.nombre" placeholder="Nombre del producto">
-        <input type="number" [(ngModel)]="producto.precio" placeholder="Precio de venta">
+        <div class="field">
+          <label>Nombre del Producto</label>
+          <input type="text" [(ngModel)]="producto.nombre" placeholder="Ej: Cerveza Club Colombia">
+        </div>
+
+        <div class="field">
+          <label>Precio</label>
+          <input type="number" [(ngModel)]="producto.precio" placeholder="0.00">
+        </div>
         
-        <select [(ngModel)]="producto.categoria">
-          <option *ngFor="let cat of categorias" [value]="cat">{{ cat }}</option>
-        </select>
+        <div class="field">
+          <label>Categoría</label>
+          <select [(ngModel)]="producto.categoria">
+            <option value="" disabled selected>Seleccionar...</option>
+            <ng-container *ngFor="let cat of (categorias$ | async)">
+              <option *ngIf="cat.activo" [value]="cat.nombre">{{ cat.nombre }}</option>
+            </ng-container>
+          </select>
+        </div>
 
         <div class="check-group">
-          <label>
+          <label class="custom-checkbox">
             <input type="checkbox" [(ngModel)]="producto.controlInventario"> 
+            <span class="checkmark"></span>
             Manejar existencias (Bodega)
           </label>
         </div>
 
-        <input type="number" *ngIf="producto.controlInventario" 
-               [(ngModel)]="producto.existencias" placeholder="Cantidad actual">
+        <div class="field animated-fade" *ngIf="producto.controlInventario">
+          <label>Cantidad en Stock</label>
+          <input type="number" [(ngModel)]="producto.existencias" placeholder="Cantidad actual">
+        </div>
       </div>
-      <button class="btn-actualizar" (click)="guardarProducto()">💾 Guardar Producto</button>
+      
+      <div class="form-actions">
+        <button class="btn-guardar-prod" (click)="guardarProducto()" 
+                [disabled]="!producto.nombre || !producto.precio || !producto.categoria">
+          {{ editando ? '💾 Actualizar Cambios' : '💾 Guardar Producto' }}
+        </button>
+        <button *ngIf="editando" class="btn-cancelar" (click)="cancelarEdicion()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-busqueda">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" [(ngModel)]="filtroBusqueda" 
+             placeholder="Buscar por nombre, categoría, precio o stock...">
     </div>
   </div>
 
   <div class="lista-admin">
     <div class="card-admin-full">
-      <table class="tabla-maestra">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>Categoría</th>
-            <th>Precio</th>
-            <th>Stock</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let p of (productos$ | async)">
-            <td>{{ p.nombre }}</td>
-            <td>{{ p.categoria }}</td>
-            <td>{{ p.precio | currency }}</td>
-            <td>{{ p.controlInventario ? p.existencias : '∞' }}</td>
-            <td>
-              <button (click)="eliminar(p.id)">🗑️</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-responsive">
+        <table class="tabla-maestra">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th>Precio</th>
+              <th>Stock</th>
+              <th>Menú Cliente</th> 
+              <th>Vigencia</th> 
+              <th class="txt-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of (productos$ | async | filtroProductos:filtroBusqueda)" 
+                [class.producto-archivado]="!p.visible">
+              
+              <td class="bold">
+                {{ p.nombre }}
+                <span *ngIf="!p.visible" class="tag-archivado">Archivado</span>
+              </td>
+              <td><span class="badge-cat">{{ p.categoria }}</span></td>
+              <td>{{ p.precio | currency:'USD':'symbol':'1.0-0' }}</td>
+              <td>
+                <span [class]="p.controlInventario ? 'stock-label' : 'infinity-label'">
+                  {{ p.controlInventario ? p.existencias : '∞' }}
+                </span>
+              </td>
+
+              <td>
+                <button class="btn-toggle" [class.on]="p.disponible" 
+                        (click)="toggleDisponibilidad(p.id, p.disponible)"
+                        [disabled]="!p.visible">
+                  {{ p.disponible ? '✅ Visible' : '❌ Oculto' }}
+                </button>
+              </td>
+
+              <td>
+                <button class="btn-vigencia" (click)="toggleVigencia(p.id, p.visible)">
+                  {{ p.visible ? '📦 Activo' : '📁 Recuperar' }}
+                </button>
+              </td>
+
+<td class="txt-center">
+  <div class="btns-acciones">
+    <button class="btn-edit" (click)="prepararEdicion(p)" *ngIf="p.visible" title="Editar">
+      ✏️
+    </button>
+    
+    <button class="btn-del" (click)="toggleVigencia(p.id, p.visible)" title="Archivar/Recuperar">
+      {{ p.visible ? '📦' : '📤' }}
+    </button>
+  </div>
+</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="!(productos$ | async)?.length" class="vacio">
+        <div class="vacio-content">
+          <span class="vacio-icon">🍺</span>
+          <p>No hay productos en esta lista.</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
