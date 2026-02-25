@@ -1,0 +1,36 @@
+.admin-container {
+  padding: 20px;
+  background: white;
+  min-height: 100vh;
+
+  .header-filtros {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+
+    input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+    button { background: #1db954; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; }
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    th { text-align: left; padding: 12px; border-bottom: 2px solid #eee; }
+    td { padding: 12px; border-bottom: 1px solid #eee; }
+  }
+
+  .badge {
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    &.badge-warning { background: #fff3cd; color: #856404; }
+    &.badge-success { background: #d4edda; color: #155724; }
+  }
+}

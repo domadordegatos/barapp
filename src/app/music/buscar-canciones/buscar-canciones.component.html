@@ -1,60 +1,12 @@
-<div class="contenedor-principal">
-
-  <div class="pantalla-estado" *ngIf="cargandoValidacion">
-    <div class="loader-simple"></div>
-    <p>Sincronizando con el bar...</p>
-  </div>
-
-  <div class="pantalla-estado" *ngIf="!barValido && !cargandoValidacion">
-    <div class="card-error">
-      <span class="icon">🚫</span>
-      <h2>¡Ups! Algo salió mal</h2>
-      <p>{{ errorMensaje }}</p>
-      <button routerLink="/" class="btn-volver">Ir al inicio</button>
-    </div>
-  </div>
-
-  <div *ngIf="barValido && !cargandoValidacion">
-
-    <div class="pantalla-bloqueo" *ngIf="!accesoAutorizado">
-      <div class="card-acceso">
-        <h2>{{ nombreBarReal }}</h2>
-        <p class="mesa-label">Mesa #{{ numeroMesaReal || '...' }}</p>
-        
-        <div class="input-container">
-          <label>Ingresa el código del día:</label>
-          <input 
-            type="text" 
-            [(ngModel)]="codigoIngresado" 
-            maxlength="4" 
-            placeholder="0000"
-            onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-            class="input-codigo">
-          
-          <button 
-            (click)="validarAcceso()" 
-            [disabled]="codigoIngresado.length !== 4"
-            class="btn-ingresar">
-            Acceder a la Rockola
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="vista-autorizada" *ngIf="accesoAutorizado">
-      <div class="header-bar">
-        <div class="mesa-info">
-          <h2>{{ nombreBarReal }} - Mesa {{ numeroMesaReal }}</h2> 
-        </div>
-
-        <div class="search-box">
-          <input 
-            type="text" 
-            [(ngModel)]="query" 
-            (input)="onSearchChange()" 
-            placeholder="Busca artista o canción...">
-        </div>
-      </div>
+<div class="vista-autorizada">
+  
+  <div class="header-bar">
+    <div class="search-box">
+      <input 
+        type="text" 
+        [(ngModel)]="query" 
+        (input)="onSearchChange()" 
+        placeholder="Busca artista o canción...">
 
       <div class="resultados-busqueda" *ngIf="tracks.length > 0">
         <div *ngFor="let track of tracks" class="item-resultado" (click)="seleccionarCancion(track)">
@@ -66,39 +18,48 @@
           <div class="add-icon">+</div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div class="mis-pedidos">
+  <div class="mis-pedidos">
+    <h4 class="titulo-seccion">Mis pedidos recientes</h4>
+    
+    <div *ngIf="(misCanciones$ | async) as lista; else cargandoH">
+      <div *ngFor="let solicitud of lista" 
+           class="card-historial" 
+           [ngClass]="{
+             'pedido-finalizado': solicitud.estado?.toLowerCase() !== 'pendiente',
+             'pedido-aprobado': solicitud.estado?.toLowerCase() === 'reproduciendo' || solicitud.estado?.toLowerCase() === 'aprobado',
+             'pedido-rechazado': solicitud.estado?.toLowerCase() === 'rechazado'
+           }">
         
-        <div class="lista-historial">
-          <div *ngFor="let solicitud of (misCanciones$ | async); let i = index" 
-               class="card-historial"
-               [ngClass]="{
-                 'pedido-finalizado': solicitud.estado !== 'pendiente',
-                 'pedido-aprobado': solicitud.estado === 'aprobado',
-                 'pedido-rechazado': solicitud.estado === 'rechazado'
-               }">
-            
-            <img [src]="solicitud.foto" class="foto-mini">
-            
-            <div class="info-pedida">
-              <strong>{{ solicitud.cancion }}</strong>
-              <p>{{ solicitud.artista }}</p>
-            </div>
+        <img [src]="solicitud.foto" class="foto-mini">
+        
+        <div class="info-pedida">
+          <strong>{{ solicitud.cancion }}</strong>
+          <p>{{ solicitud.artista }}</p>
+        </div>
 
-            <div class="status-container">
-              <span class="hora-pedido">{{ solicitud.fechaHora?.toDate() | date:'h:mm a' }}</span>
-              
-              <div class="estado-badge" [ngClass]="solicitud.estado">
-                {{ solicitud.estado === 'pendiente' ? 'Esperando' : 
-                   solicitud.estado === 'aprobado' ? 'En Cola' : 'No disponible' }}
-              </div>
-            </div>
+        <div class="status-container">
+          <span class="hora-pedido">
+            {{ (solicitud.timestamp?.toDate ? solicitud.timestamp.toDate() : 
+                (solicitud.fechaHora?.toDate ? solicitud.fechaHora.toDate() : solicitud.timestamp)) 
+                | date:'h:mm a' }}
+          </span>
+          
+          <div class="estado-badge" [ngClass]="solicitud.estado?.toLowerCase()">
+            <span *ngIf="solicitud.estado?.toLowerCase() === 'pendiente'">Esperando</span>
+            <span *ngIf="solicitud.estado?.toLowerCase() === 'reproduciendo' || solicitud.estado?.toLowerCase() === 'aprobado'">Se reprodujo</span>
+            <span *ngIf="solicitud.estado?.toLowerCase() === 'rechazado'">No disponible</span>
           </div>
         </div>
-
-        <div class="vacio" *ngIf="!(misCanciones$ | async)?.length">
-          <p>Aún no has pedido canciones. ¡Busca una arriba!</p>
-        </div>
-
       </div>
-    </div> </div> </div>
+
+      <div *ngIf="lista.length === 0" class="vacio-mensaje">
+        <p>No has pedido canciones aún.</p>
+      </div>
+    </div>
+    <ng-template #cargandoH><p>Actualizando lista...</p></ng-template>
+  </div>
+
+</div>

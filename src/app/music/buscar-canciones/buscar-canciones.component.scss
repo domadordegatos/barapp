@@ -1,16 +1,20 @@
-// Contenedor del buscador
-.header-bar {
-  position: sticky;
-  top: 0;
-  background: #f4f7f6;
-  padding: 15px;
-  z-index: 100;
+$spotify-green: #1db954;
+$bg-gris: #f4f7f6;
 
-  .mesa-info h2 {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-    color: #333;
-  }
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; // Evita scroll lateral en el componente
+}
+
+.header-bar {
+  position: relative; // Referencia para los resultados absolutos
+  background: $bg-gris;
+  padding: 15px;
+  z-index: 1000; // Por encima del historial
+  flex-shrink: 0;
 
   .search-box {
     position: relative;
@@ -21,22 +25,25 @@
       border: 1px solid #ddd;
       outline: none;
       box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      &:focus { border-color: #1db954; }
+      box-sizing: border-box;
+      &:focus { border-color: $spotify-green; }
     }
   }
 }
 
-// Resultados flotantes de Spotify
+// RESULTADOS: Ahora garantizado debajo del input
 .resultados-busqueda {
+  position: absolute; 
+  top: 100%; // Justo debajo del padding del header-bar
+  left: 15px;
+  right: 15px;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  margin: 0 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
   max-height: 300px;
   overflow-y: auto;
-  position: absolute; 
-  width: calc(100% - 30px);
-  z-index: 200;
+  z-index: 1100; // Superior al input y al historial
+  margin-top: 5px;
 
   .item-resultado {
     display: flex;
@@ -52,17 +59,23 @@
       strong { font-size: 0.9rem; color: #333; display: block; } 
       p { font-size: 0.8rem; color: #777; margin: 0; } 
     }
-    .add-icon { color: #1db954; font-size: 1.4rem; }
+    .add-icon { color: $spotify-green; font-size: 1.4rem; font-weight: bold; }
   }
 }
 
-// Historial de pedidos
+/* HISTORIAL CON SCROLL PROPIO */
 .mis-pedidos {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden; // Bloqueo total de scroll lateral
   padding: 15px;
+  background: #fdfdfd;
+  box-sizing: border-box;
 
   .titulo-seccion {
-    font-size: 1rem;
-    color: #666;
+    font-size: 0.9rem;
+    color: #999;
+    text-transform: uppercase;
     margin-bottom: 15px;
   }
 }
@@ -70,60 +83,51 @@
 .card-historial {
   display: flex;
   align-items: center;
-  padding: 12px;
   background: white;
-  border-radius: 12px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-  transition: all 0.3s ease;
-  border-left: 5px solid #f1c40f; // Pendiente por defecto
+  padding: 12px;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-left: 5px solid #f1c40f; 
+  transition: all 0.4s ease;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
 
-  .foto-mini {
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
-    margin-right: 12px;
-  }
-
+  .foto-mini { width: 50px; height: 50px; border-radius: 8px; margin-right: 12px; object-fit: cover; }
   .info-pedida {
     flex: 1;
     strong { display: block; font-size: 0.95rem; color: #333; }
     p { margin: 0; font-size: 0.8rem; color: #888; }
   }
 
-  .status-container {
-    text-align: right;
-    .hora-pedido { font-size: 0.7rem; color: #bbb; display: block; margin-bottom: 4px; }
+  /* --- ITEMS FINALIZADOS: GRISES Y DESPLAZADOS HACIA LA DERECHA --- */
+  &.pedido-finalizado {
+    filter: grayscale(100%);
+    opacity: 0.5;
+    transform: translateX(20px); // Se corre a la derecha
+    width: calc(100% - 22px);    // Compensación para evitar el overflow-x
+    background: #f8f8f8;
+    box-shadow: none;
+
+    .estado-badge {
+      background: #e0e0e0 !important;
+      color: #777 !important;
+    }
   }
-}
 
-// Estados de la solicitud
-.pedido-finalizado {
-  opacity: 0.7;
-  transform: scale(0.98);
-  background: #fafafa;
+  &.pedido-aprobado { border-left-color: #2ecc71; }
+  &.pedido-rechazado { border-left-color: #e74c3c; }
 }
-
-.pedido-aprobado { border-left-color: #2ecc71; }
-.pedido-rechazado { border-left-color: #e74c3c; }
 
 .estado-badge {
   font-size: 0.65rem;
   padding: 3px 8px;
-  border-radius: 20px;
+  border-radius: 10px;
+  font-weight: 700;
   text-transform: uppercase;
-  font-weight: bold;
-  
-  &.pendiente { background: #fff9e6; color: #f1c40f; }
-  &.aprobado { 
-    background: #eafaf1; color: #2ecc71; 
-    &.reproduciendo { animation: pulse 2s infinite; background: #1db954; color: white; }
-  }
-  &.rechazado { background: #fdedec; color: #e74c3c; }
-}
 
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
+  &.pendiente { background: #fff9e6; color: #f1c40f; }
+  &.reproduciendo, &.aprobado { background: #eafaf1; color: #2ecc71; }
+  &.rechazado { background: #fdedec; color: #e74c3c; }
 }

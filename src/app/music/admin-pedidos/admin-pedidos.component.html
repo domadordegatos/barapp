@@ -1,13 +1,4 @@
 <div class="admin-wrapper">
-  <div class="pantalla-error-admin" *ngIf="!barValido">
-    <div class="card-alerta">
-      <span class="icon">⚠️</span>
-      <h2>Acceso Denegado</h2>
-      <p>{{ errorMensaje }}</p>
-      <button class="btn-regresar" (click)="logout()">Volver al Inicio</button>
-    </div>
-  </div>
-
   <ng-container *ngIf="barValido">
     <nav class="navbar-admin">
       <div class="navbar-content">
@@ -23,6 +14,9 @@
           <button (click)="seccionActiva = 'productos'" [class.active]="seccionActiva === 'productos'">
             🍻 Productos
           </button>
+          <button (click)="seccionActiva = 'facturacion'" [class.active]="seccionActiva === 'facturacion'">
+            🧾 Facturación
+          </button>
         </div>
 
         <button class="btn-logout" (click)="logout()">
@@ -31,9 +25,14 @@
       </div>
     </nav>
 
-    <div class="admin-main-container">
-      <app-gestion-musica *ngIf="seccionActiva === 'musica'"></app-gestion-musica>
-      <app-gestion-productos *ngIf="seccionActiva === 'productos'"></app-gestion-productos>
-    </div>
+<div class="admin-main-container">
+  <app-gestion-musica *ngIf="seccionActiva === 'musica'"></app-gestion-musica>
+  <app-gestion-productos *ngIf="seccionActiva === 'productos'"></app-gestion-productos>
+  
+  <app-admin-facturacion 
+    *ngIf="seccionActiva === 'facturacion'"
+    [nombreBar]="nombreBarReal"> 
+  </app-admin-facturacion>
+</div>
   </ng-container>
 </div>

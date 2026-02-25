@@ -1,0 +1,41 @@
+<div class="admin-container">
+    <div class="header-filtros">
+        <h2>Gestión de Facturación</h2>
+        <div class="inputs-rango">
+            <input type="date" [(ngModel)]="fechaInicio" (change)="buscarSesiones()">
+            <input type="date" [(ngModel)]="fechaFin" (change)="buscarSesiones()">
+            <button (click)="buscarSesiones()">Buscar Turnos</button>
+        </div>
+    </div>
+
+    <div class="tabla-facturas" *ngIf="!cargando && facturas.length > 0">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mesa</th>
+                    <th>Apertura</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let f of facturas">
+                    <td>Mesa #{{ f.numeroMesa }}</td>
+                    <td>{{ (f.fechaApertura?.toDate ? f.fechaApertura.toDate() : f.fechaApertura) | date:'shortTime' }}</td>
+                    <td>
+                        <span class="badge" [ngClass]="obtenerClaseEstado(f.estado)">
+                            {{ f.estado | uppercase }}
+                        </span>
+                    </td>
+                    <td>
+                        <button (click)="verDetalle(f)">👁 Ver Detalle</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div *ngIf="!cargando && facturas.length === 0" class="no-data">
+        <p>No se encontraron cuentas para el bar "{{ nombreBar }}" en estas fechas.</p>
+    </div>
+</div>

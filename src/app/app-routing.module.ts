@@ -8,6 +8,7 @@ import { AuthGuard } from './guards/auth.guard'; // Importalo arriba
 import { SuperAdminComponent } from './auth/super-admin/super-admin.component';
 import { SuperAdminGuard } from './guards/super-admin.guard';
 import { DashboardMesaComponent } from './dashboard-mesa/dashboard-mesa.component';
+import { AdminFacturacionComponent } from './productos/admin-facturacion/admin-facturacion.component';
 
 const routes: Routes = [
   { path: '', component: LoginComponent, pathMatch: 'full' },

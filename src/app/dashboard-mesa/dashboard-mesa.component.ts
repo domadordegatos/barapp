@@ -1,20 +1,7 @@
-// LAS IMPORTACIONES CORRECTAS:
-import { Component, OnInit } from '@angular/core'; // <--- ESTO DEBE SER @angular/core
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { RockolaService } from '../services/rockola.service';
-import { SpotifyService } from '../services/spotify-auth.service';
-import { Observable, Subject, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, map } from 'rxjs/operators';
 import { trigger, transition, style, animate, query, group } from '@angular/animations';
-
-// Definición de interfaces para que el buscador funcione aquí dentro
-export interface Track {
-  id: string;
-  name: string;
-  artists: { name: string }[];
-  album: { images: { url: string }[] };
-  uri: string;
-}
 
 @Component({
   selector: 'app-dashboard-mesa',
@@ -48,66 +35,50 @@ export interface Track {
   ]
 })
 export class DashboardMesaComponent implements OnInit {
-  // --- Variables de URL y Estado ---
+  // Datos del Bar y Mesa
   nombreBarUrl: string = '';
   idMesaUrl: string = '';
   numeroMesaReal: number | null = null;
   nombreBarReal: string = ''; 
+
+  // Estados de carga y validación
   barValido: boolean = false;
   errorMensaje: string = '';
+  cargandoValidacion: boolean = true;
 
-  // --- Control de Acceso y Navegación ---
+  // Control de Acceso
   codigoIngresado: string = '';
   accesoAutorizado: boolean = false;
-  cargandoValidacion: boolean = true;
+  
+  // Navegación
   vistaActual: 'songs' | 'products' = 'songs';
-
-  // --- Lógica del Buscador (Tus funciones originales) ---
-  query: string = '';
-  tracks: Track[] = [];
-  private buscador$ = new Subject<string>();
-  misCanciones$: Observable<any[]> | null = null;
 
   constructor(
     private route: ActivatedRoute,
-    private rockolaService: RockolaService,
-    private spotifyService: SpotifyService 
+    private rockolaService: RockolaService
   ) {}
 
   async ngOnInit() {
+    // 1. Obtener parámetros de la URL
     const parametroUrl = this.route.snapshot.paramMap.get('nombreBar') || '';
     this.nombreBarUrl = parametroUrl.toLowerCase().trim().replace(/\s+/g, ''); 
     this.idMesaUrl = this.route.snapshot.paramMap.get('idMesa') || '';
 
+    // 2. Validar si el bar existe
     await this.verificarExistenciaDelBar();
 
     if (this.barValido) {
       await this.obtenerDatosDeLaMesa();
-      this.configurarBuscadorFluido();
       await this.verificarSesionExistente();
     }
     
     this.cargandoValidacion = false;
   }
 
-  // --- TUS 240 LÍNEAS DE LÓGICA REINTEGRADAS ---
-
-  private configurarBuscadorFluido() {
-    this.buscador$.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap(texto => {
-        if (!texto || texto.length < 3) {
-          this.tracks = [];
-          return of([]);
-        }
-        return this.spotifyService.buscarTracks(texto);
-      })
-    ).subscribe({
-      next: (canciones: any) => this.tracks = canciones,
-      error: (err) => console.error("Error en flujo Spotify:", err)
-    });
-  }
+  // En dashboard-mesa.component.ts, añade este método o lógica
+get codigoAccesoVigente(): string {
+  return localStorage.getItem(`codigo_${this.nombreBarUrl.toLowerCase()}`) || '';
+}
 
   async verificarExistenciaDelBar() {
     try {
@@ -127,17 +98,19 @@ export class DashboardMesaComponent implements OnInit {
 
   async obtenerDatosDeLaMesa() {
     const datosMesa = await this.rockolaService.obtenerDatosMesa(this.idMesaUrl);
-    if (datosMesa) this.numeroMesaReal = datosMesa.numero;
+    if (datosMesa) {
+      this.numeroMesaReal = datosMesa.numero;
+    }
   }
 
   async verificarSesionExistente() {
     const storageKey = `codigo_${this.nombreBarUrl.toLowerCase()}`;
     const codigoGuardado = localStorage.getItem(storageKey);
+    
     if (codigoGuardado) {
       const esValido = await this.rockolaService.validarCodigoBar(this.nombreBarUrl, codigoGuardado);
       if (esValido) {
         this.accesoAutorizado = true;
-        this.cargarMisPedidos();
       } else {
         localStorage.removeItem(storageKey);
       }
@@ -146,64 +119,15 @@ export class DashboardMesaComponent implements OnInit {
 
   async validarAcceso() {
     if (this.codigoIngresado.length !== 4) return;
+    
     const esValido = await this.rockolaService.validarCodigoBar(this.nombreBarUrl, this.codigoIngresado);
     if (esValido) {
       localStorage.setItem(`codigo_${this.nombreBarUrl.toLowerCase()}`, this.codigoIngresado);
       this.accesoAutorizado = true;
-      this.cargarMisPedidos();
     } else {
-      alert("Código incorrecto.");
+      alert("Código incorrecto. Pídelo a tu mesero.");
       this.codigoIngresado = '';
     }
-  }
-
-  cargarMisPedidos() {
-    this.misCanciones$ = this.rockolaService.obtenerMisSolicitudes(this.nombreBarUrl, this.idMesaUrl).pipe(
-      map((canciones: any[]) => {
-        return canciones.sort((a: any, b: any) => {
-          if (a.estado === 'pendiente' && b.estado !== 'pendiente') return -1;
-          if (a.estado !== 'pendiente' && b.estado === 'pendiente') return 1;
-          const tiempoA = a.timestamp?.seconds || a.timestamp || 0;
-          const tiempoB = b.timestamp?.seconds || b.timestamp || 0;
-          return tiempoB - tiempoA;
-        });
-      })
-    );
-  }
-
-  onSearchChange() {
-    const busqueda = this.query.trim();
-    if (busqueda.length === 0) {
-      this.tracks = [];
-      this.buscador$.next('');
-      return;
-    }
-    if (busqueda.length >= 3) this.buscador$.next(busqueda);
-  }
-
-  async seleccionarCancion(track: Track) {
-    try {
-      const storageKey = `codigo_${this.nombreBarUrl.toLowerCase()}`;
-      const codigoGuardado = localStorage.getItem(storageKey);
-      const esValido = await this.rockolaService.validarCodigoBar(this.nombreBarUrl, codigoGuardado || '');
-
-      if (!esValido) {
-        alert("La sesión ha expirado.");
-        this.accesoAutorizado = false;
-        return;
-      }
-
-      await this.rockolaService.enviarSolicitud(track, this.nombreBarUrl, this.idMesaUrl, this.numeroMesaReal || '?');
-      alert(`¡"${track.name}" añadida!`);
-      this.query = '';
-      this.tracks = [];
-    } catch (error) {
-      alert("No se pudo enviar la canción.");
-    }
-  }
-
-  obtenerArtistas(track: Track): string {
-    return track.artists.map(a => a.name).join(', ');
   }
 
   cambiarVista(nuevaVista: 'songs' | 'products') {

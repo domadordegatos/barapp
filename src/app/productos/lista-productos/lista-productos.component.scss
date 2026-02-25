@@ -1,0 +1,132 @@
+$spotify-green: #1db954;
+$bg-gris: #f4f7f6;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.modulo-productos {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: white;
+}
+
+.header-productos {
+  padding: 15px;
+  background: $bg-gris;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  .btn-regresar { border: none; background: none; font-weight: bold; color: $spotify-green; }
+  .titulo-vista { font-weight: bold; color: #333; }
+}
+
+.contenedor-menu {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px 15px 100px 15px; // Espacio para el botón flotante
+}
+
+/* CATEGORÍAS */
+.card-categoria {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+
+  .info-cat h3 { margin: 0; font-size: 1.1rem; }
+  .info-cat p { margin: 0; font-size: 0.8rem; color: #888; }
+  .arrow { color: $spotify-green; font-weight: bold; }
+}
+
+/* PRODUCTOS */
+.card-producto {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+  cursor: pointer; // Indica que es clickeable
+
+  &:active {
+    background-color: #f0f0f0; // Efecto de pulsación
+  }
+
+  .info-prod {
+    flex: 1;
+    strong { display: block; font-size: 1rem; color: #333; }
+    p { color: $spotify-green; font-weight: bold; margin: 0; }
+  }
+}
+
+/* CONTROLES CARRITO */
+.controles-carrito {
+  display: flex;
+  align-items: center;
+  gap: 15px; // Espacio entre el menos y el número
+
+  .btn-circular {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid $spotify-green;
+    background: white;
+    color: $spotify-green;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    &:active { background: $spotify-green; color: white; }
+
+    &.btn-menos {
+      border-color: #e74c3c;
+      color: #e74c3c;
+      transition: transform 0.1s active;
+    
+      &:active {
+        transform: scale(0.9); // Efecto visual de clic
+      }
+    }
+  }
+
+  .cantidad-label {
+    font-size: 1.2rem;
+    font-weight: 800; // Un poco más negrita para que se note el cambio
+    color: #1db954;
+    min-width: 25px;
+    text-align: center;
+  }
+}
+
+/* BOTÓN SOLICITAR */
+.footer-accion {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 100;
+
+  .btn-solicitar {
+    width: 100%;
+    padding: 15px;
+    border-radius: 30px;
+    background: $spotify-green;
+    color: white;
+    border: none;
+    font-weight: bold;
+    font-size: 1rem;
+    box-shadow: 0 4px 15px rgba(29, 185, 84, 0.4);
+  }
+}

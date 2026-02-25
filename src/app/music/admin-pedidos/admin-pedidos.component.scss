@@ -126,3 +126,21 @@
     &:hover { background: #e0e0e0; }
   }
 }
+
+.nav-links {
+  button {
+    // Tus estilos actuales...
+    
+    &[class*="facturacion"] {
+      // Opcional: un color sutilmente diferente o un borde
+      border-bottom-color: #f1c40f; 
+    }
+  }
+}
+
+// Asegúrate de que el contenedor principal permita el scroll si la tabla de facturas es larga
+.admin-main-container {
+  padding: 20px;
+  overflow-y: auto;
+  height: calc(100vh - 70px); // Ajusta según la altura de tu navbar
+}

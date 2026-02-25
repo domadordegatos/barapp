@@ -7,7 +7,8 @@
 
   <div class="pantalla-estado" *ngIf="!barValido && !cargandoValidacion">
     <div class="card-error">
-      <h2>🚫 ¡Ups!</h2>
+      <span class="icon">🚫</span>
+      <h2>¡Ups! Algo salió mal</h2>
       <p>{{ errorMensaje }}</p>
       <button routerLink="/" class="btn-volver">Ir al inicio</button>
     </div>
@@ -19,9 +20,20 @@
       <div class="card-acceso">
         <h2>{{ nombreBarReal }}</h2>
         <p class="mesa-label">Mesa #{{ numeroMesaReal || '...' }}</p>
+        
         <div class="input-container">
-          <input type="text" [(ngModel)]="codigoIngresado" maxlength="4" class="input-codigo" placeholder="0000">
-          <button (click)="validarAcceso()" [disabled]="codigoIngresado.length !== 4" class="btn-ingresar">
+          <label>Ingresa el código del día:</label>
+          <input 
+            type="text" 
+            [(ngModel)]="codigoIngresado" 
+            maxlength="4" 
+            placeholder="0000"
+            class="input-codigo">
+          
+          <button 
+            (click)="validarAcceso()" 
+            [disabled]="codigoIngresado.length !== 4"
+            class="btn-ingresar">
             Entrar
           </button>
         </div>
@@ -31,81 +43,31 @@
     <div class="vista-autorizada-container" *ngIf="accesoAutorizado">
       
       <div class="tab-selector">
-        <button [class.active]="vistaActual === 'songs'" (click)="cambiarVista('songs')">🎵 Música</button>
-        <button [class.active]="vistaActual === 'products'" (click)="cambiarVista('products')">🍻 Productos</button>
+        <button [class.active]="vistaActual === 'songs'" (click)="cambiarVista('songs')">
+          <span>🎵 Música</span>
+        </button>
+        <button [class.active]="vistaActual === 'products'" (click)="cambiarVista('products')">
+          <span>🍻 Productos</span>
+        </button>
       </div>
 
-      <div class="window-slider">
+      <div class="window-slider" [@slideContent]="vistaActual">
         
         <div class="slide-section" *ngIf="vistaActual === 'songs'">
-          
-          <div class="header-bar">
-             <div class="search-box">
-                <input type="text" [(ngModel)]="query" (input)="onSearchChange()" placeholder="Busca tu canción...">
-             </div>
-
-             <div class="resultados-busqueda" *ngIf="tracks && tracks.length > 0">
-               <div *ngFor="let track of tracks" class="item-resultado" (click)="seleccionarCancion(track)">
-                 <img [src]="track.album.images[2]?.url" class="foto-resultado">
-                 <div class="info-resultado">
-                   <strong>{{ track.name }}</strong>
-                   <p>{{ obtenerArtistas(track) }}</p>
-                 </div>
-                 <div class="add-icon">+</div>
-               </div>
-             </div>
-          </div>
-
-          <div class="mis-pedidos">
-            <h4 class="titulo-seccion">Mis pedidos recientes</h4>
-            
-            <div *ngIf="(misCanciones$ | async) as lista; else cargandoH">
-              <div *ngFor="let solicitud of lista" 
-                   class="card-historial" 
-                   [ngClass]="{
-                     'pedido-finalizado': solicitud.estado?.toLowerCase() !== 'pendiente',
-                     'pedido-aprobado': solicitud.estado?.toLowerCase() === 'reproduciendo' || solicitud.estado?.toLowerCase() === 'aprobado',
-                     'pedido-rechazado': solicitud.estado?.toLowerCase() === 'rechazado'
-                   }">
-                
-                <img [src]="solicitud.foto" class="foto-mini">
-                
-                <div class="info-pedida">
-                  <strong>{{ solicitud.cancion }}</strong>
-                  <p>{{ solicitud.artista }}</p>
-                </div>
-
-                <div class="status-container">
-                  <span class="hora-pedido">
-                    {{ (solicitud.timestamp?.toDate ? solicitud.timestamp.toDate() : 
-                        (solicitud.fechaHora?.toDate ? solicitud.fechaHora.toDate() : solicitud.timestamp)) 
-                        | date:'h:mm a' }}
-                  </span>
-                  
-                  <div class="estado-badge" [ngClass]="solicitud.estado?.toLowerCase()">
-                    <span *ngIf="solicitud.estado?.toLowerCase() === 'pendiente'">En espera</span>
-                    <span *ngIf="solicitud.estado?.toLowerCase() === 'reproduciendo' || solicitud.estado?.toLowerCase() === 'aprobado'">Se reprodujo</span>
-                    <span *ngIf="solicitud.estado?.toLowerCase() === 'rechazado'">No disponible</span>
-                  </div>
-                </div>
-              </div>
-
-              <div *ngIf="lista.length === 0" class="vacio-mensaje">
-                <p>No has pedido canciones aún.</p>
-              </div>
-            </div>
-            <ng-template #cargandoH><p class="text-center">Actualizando lista...</p></ng-template>
-          </div>
+          <app-buscar-canciones 
+            [nombreBarUrl]="nombreBarUrl"
+            [idMesaUrl]="idMesaUrl"
+            [numeroMesaReal]="numeroMesaReal"
+            [nombreBarReal]="nombreBarReal">
+          </app-buscar-canciones>
         </div>
 
-        <div class="slide-section" *ngIf="vistaActual === 'products'">
-          <div class="menu-productos">
-                <h3>Menú Digital</h3>
-                <p>Cargando productos de {{ nombreBarReal }}...</p>
-          </div>
-        </div>
+      <div class="slide-section" *ngIf="vistaActual === 'products'">
+        <app-lista-productos 
+  [nombreBarUrl]="nombreBarUrl"
+  [idMesaUrl]="idMesaUrl"
+  [numeroMesaReal]="numeroMesaReal"
+  [codigoAcceso]="codigoAccesoVigente"> </app-lista-productos>
+      </div>
 
-      </div> 
-    </div>
-  </div>
-</div>
+      </div> </div> </div> </div>

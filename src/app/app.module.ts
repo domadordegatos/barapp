@@ -18,13 +18,14 @@ import { GestionMusicaComponent } from './music/gestion-music/gestion-music.comp
 import { GestionProductosComponent } from './productos/gestion-productos/gestion-productos.component';
 import { FiltroProductosPipe } from './pipes/filtro-productos.pipe';
 import { DashboardMesaComponent } from './dashboard-mesa/dashboard-mesa.component';
-import { ListaProductosComponent } from './lista-productos/lista-productos.component';
+import { ListaProductosComponent } from './productos/lista-productos/lista-productos.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { AdminFacturacionComponent } from './productos/admin-facturacion/admin-facturacion.component';
 
 @NgModule({
   declarations: [
     AppComponent, 
-    BuscarCancionesComponent, AdminPedidosComponent, RegistroAdminComponent, LoginComponent, SuperAdminComponent, FiltroUsuariosPipe, GestionMusicaComponent, GestionProductosComponent, FiltroProductosPipe, DashboardMesaComponent, ListaProductosComponent // Ahora que no son standalone, Angular no protestará aquí
+    BuscarCancionesComponent, AdminPedidosComponent, RegistroAdminComponent, LoginComponent, SuperAdminComponent, FiltroUsuariosPipe, GestionMusicaComponent, GestionProductosComponent, FiltroProductosPipe, DashboardMesaComponent, ListaProductosComponent, AdminFacturacionComponent // Ahora que no son standalone, Angular no protestará aquí
   ],
   imports: [
     BrowserModule,
