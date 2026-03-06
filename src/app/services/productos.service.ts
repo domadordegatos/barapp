@@ -16,45 +16,60 @@ async guardarPedidoEnCuenta(
   idMesa: string, 
   numeroMesa: number | null, 
   items: any[],
-  token: string // <--- Nuevo argumento
+  token: string
 ) {
   const cuentaRef = this.firestore.collection('cuentas_activas').doc(idMesa);
   
-  const nuevoPedido = {
-    idPedido: this.firestore.createId(),
-    items: items.map(item => ({
-      idProd: item.id,
-      nombre: item.nombre,
-      precioUnit: item.precio,
-      cantidad: item.cantidad,
-      subtotal: item.precio * item.cantidad
-    })),
-    solicitadoPor: 'usuario',
-    horaSolicitud: new Date().toLocaleTimeString(),
-    estado: 'pendiente'
-  };
+// productos.service.ts
+// productos.service.ts
+
+const nuevoPedido = {
+  idPedido: this.firestore.createId(),
+  items: items.map(item => ({
+    idProd: item.id,
+    nombre: item.nombre,
+    precioUnit: item.precio,
+    cantidad: item.cantidad,
+    subtotal: item.precio * item.cantidad
+  })),
+  solicitadoPor: 'usuario',
+  
+  // CAMBIO AQUÍ: Formato 12 horas con AM/PM
+  horaSolicitud: new Date().toLocaleTimeString('en-US', { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    hour12: true 
+  }),
+  
+  fechaSolicitud: new Date().toLocaleDateString('es-ES', { 
+    day: '2-digit', 
+    month: 'long' 
+  }),
+  estado: 'pendiente'
+};
 
   const doc = await cuentaRef.get().toPromise();
 
   if (!doc?.exists) {
-    // Si la cuenta es nueva, grabamos el token que inició la sesión
+    // CUENTA NUEVA: Inicializamos con la notificación en true
     return cuentaRef.set({
       idMesa,
       numeroMesa,
       nombreBar,
-      tokenSesion: token, // <--- AQUÍ SE GUARDA EL TOKEN
+      tokenSesion: token,
       idSesion: `SES-${Date.now()}`,
       estado: 'abierta',
       fechaApertura: new Date(),
-      totalAcumulado: 0,
+      total: 0, // Aseguramos que el total inicial sea 0
+      notificacionPendiente: true, // <--- CAMPO NUEVO
       visibilidadPreciosUsuario: false, 
       pedidos: [nuevoPedido]
     });
   } else {
-    // Si la cuenta ya existe, solo anexamos el pedido. 
-    // El token ya está en el documento desde que se abrió.
+    // CUENTA EXISTENTE: Anexamos pedido y ACTIVAMOS la notificación
     return cuentaRef.update({
-      pedidos: firebase.firestore.FieldValue.arrayUnion(nuevoPedido)
+      pedidos: firebase.firestore.FieldValue.arrayUnion(nuevoPedido),
+      notificacionPendiente: true // <--- CAMPO NUEVO (Esto activa la alerta visual del admin)
     });
   }
 }

@@ -1,41 +1,159 @@
 <div class="admin-container">
-    <div class="header-filtros">
-        <h2>Gestión de Facturación</h2>
-        <div class="inputs-rango">
-            <input type="date" [(ngModel)]="fechaInicio" (change)="buscarSesiones()">
-            <input type="date" [(ngModel)]="fechaFin" (change)="buscarSesiones()">
-            <button (click)="buscarSesiones()">Buscar Turnos</button>
-        </div>
+  <div class="header-filtros">
+    <div class="titulo-seccion">
+      <h2>Gestión de Facturación</h2>
+      <span class="bar-name">📍 {{ nombreBar | uppercase }}</span>
     </div>
 
-    <div class="tabla-facturas" *ngIf="!cargando && facturas.length > 0">
-        <table>
+    <div class="inputs-rango">
+      <div class="date-group">
+        <label>Desde</label>
+        <input type="date" [(ngModel)]="fechaInicio" (change)="buscarSesiones()">
+      </div>
+      <div class="date-group">
+        <label>Hasta</label>
+        <input type="date" [(ngModel)]="fechaFin" (change)="buscarSesiones()">
+      </div>
+      <button class="btn-search" (click)="buscarSesiones()">
+        🔄 Actualizar
+      </button>
+    </div>
+  </div>
+
+  <div class="grid-mesas" *ngIf="!cargando && facturas.length > 0">
+    <div class="mesa-card" 
+         *ngFor="let f of facturas" 
+         [ngClass]="[f.estado, f.notificacionPendiente ? 'alerta-animada' : '']">
+      
+      <div class="dot-notificacion" *ngIf="f.notificacionPendiente"></div>
+
+      <div class="mesa-header">
+        <span class="numero-mesa">Mesa #{{ f.numeroMesa }}</span>
+        <span class="badge-estado" [ngClass]="obtenerClaseEstado(f.estado)">
+          {{ f.estado }}
+        </span>
+      </div>
+
+      <div class="mesa-body">
+        <div class="info-row">
+          <span class="label">Apertura:</span>
+          <span class="value">{{ (f.fechaApertura?.toDate ? f.fechaApertura.toDate() : f.fechaApertura) | date:'dd/MM HH:mm' }}</span>
+        </div>
+        <div class="info-row" *ngIf="f.id">
+          <span class="label">ID Factura:</span>
+          <span class="value code">#{{ f.id.substring(0,8) }}</span>
+        </div>
+        <div class="total-preview">
+          <span class="label">Consumo Aprobado:</span>
+          <span class="value total-price">{{ f.total | currency:'USD':'symbol':'1.0-0' }}</span>
+        </div>
+      </div>
+
+      <div class="mesa-footer">
+        <button class="btn-detalle" (click)="verDetalle(f)">
+          👁 Gestionar Comanda
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="detalleSeleccionado">
+    <div class="modal-card">
+      <header>
+        <div class="title">
+          <h3>Mesa #{{ detalleSeleccionado.numeroMesa }}</h3>
+          <small>ID de cuenta: {{ detalleSeleccionado.id }}</small>
+        </div>
+        <button class="close-x" (click)="cerrarDetalle()">✕</button>
+      </header>
+
+      <div class="modal-body">
+        <div class="tabla-gestion-wrapper">
+          <table class="pos-table">
             <thead>
-                <tr>
-                    <th>Mesa</th>
-                    <th>Apertura</th>
-                    <th>Estado</th>
-                    <th>Acción</th>
-                </tr>
+              <tr>
+                <th>PRODUCTO</th>
+                <th>PRECIO UNIT.</th>
+                <th>CANT.</th>
+                <th>ESTADO</th>
+                <th>SUBTOTAL</th>
+                <th>ACCIONES</th>
+              </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let f of facturas">
-                    <td>Mesa #{{ f.numeroMesa }}</td>
-                    <td>{{ (f.fechaApertura?.toDate ? f.fechaApertura.toDate() : f.fechaApertura) | date:'shortTime' }}</td>
-                    <td>
-                        <span class="badge" [ngClass]="obtenerClaseEstado(f.estado)">
-                            {{ f.estado | uppercase }}
-                        </span>
-                    </td>
-                    <td>
-                        <button (click)="verDetalle(f)">👁 Ver Detalle</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+              <ng-container *ngFor="let pedido of detalleSeleccionado.pedidos; let i = index">
+<tr class="row-separator">
+  <td colspan="6">
+    <div class="time-divider">
+      <span class="icon">📅</span> 
+      <strong>{{ pedido.fechaSolicitud }}</strong> 
+      <span class="divider-pipe">|</span>
+      <span class="icon">🕒</span> 
+      <strong>{{ pedido.horaSolicitud }}</strong>
     </div>
+  </td>
+</tr>
 
-    <div *ngIf="!cargando && facturas.length === 0" class="no-data">
-        <p>No se encontraron cuentas para el bar "{{ nombreBar }}" en estas fechas.</p>
+                <tr *ngFor="let item of pedido.items; let j = index" 
+                    [ngClass]="{'fila-pendiente': pedido.estado === 'pendiente', 'fila-aprobada': pedido.estado !== 'pendiente'}">
+                  
+                  <td class="txt-nombre">{{ item.nombre | titlecase }}</td>
+                  
+                  <td class="txt-precio-unit">
+                    {{ item.precioUnit | currency:'USD':'symbol':'1.0-0' }}
+                  </td>
+
+                  <td>
+                    <div class="qty-control">
+                      <button (click)="cambiarCantidad(i, j, -1)">-</button>
+                      <span class="cant-numero">{{ item.cantidad }}</span>
+                      <button (click)="cambiarCantidad(i, j, 1)">+</button>
+                    </div>
+                  </td>
+
+                  <td>
+                    <span class="badge-status" [ngClass]="pedido.estado">
+                      {{ pedido.estado | uppercase }}
+                    </span>
+                  </td>
+
+                  <td class="txt-subtotal">
+                    {{ (item.precioUnit * item.cantidad) | currency:'USD':'symbol':'1.0-0' }}
+                  </td>
+
+                  <td class="acciones-celda">
+                    <button *ngIf="pedido.estado === 'pendiente'" 
+                            class="btn-aprobar" 
+                            (click)="aprobarPedido(i)">
+                      Aprobar
+                    </button>
+                    <button class="btn-delete" (click)="eliminarItem(i, j)">
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <footer>
+        <div class="summary">
+          <span>SUBTOTAL APROBADO (En esta sesión)</span>
+          <p class="txt-resaltado">{{ calcularTotalAprobado() | currency:'USD':'symbol':'1.0-0' }}</p>
+        </div>
+        <div class="footer-btns">
+          <button class="btn-sec" (click)="cerrarDetalle()">Cancelar</button>
+          <button class="btn-pri" [disabled]="cargando" (click)="guardarCambiosFinales()">
+            {{ cargando ? 'Guardando...' : '💾 Guardar y Actualizar' }}
+          </button>
+        </div>
+      </footer>
     </div>
+  </div>
+
+  <div *ngIf="!cargando && facturas.length === 0" class="no-data">
+    <p>No se encontraron cuentas para <strong>{{ nombreBar }}</strong> en estas fechas.</p>
+  </div>
 </div>

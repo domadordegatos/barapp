@@ -6,7 +6,9 @@ import { AngularFirestore } from '@angular/fire/compat/firestore';
 })
 export class AdminService {
   constructor(private firestore: AngularFirestore) {}
-
+actualizarCuenta(idDoc: string, data: any) {
+  return this.firestore.collection('cuentas_activas').doc(idDoc).update(data);
+}
   // Mantenemos el nombre original: obtenerTokensPorRango
   obtenerTokensPorRango(nombreBar: string, inicio: Date, fin: Date) {
     // CORRECCIÓN: Normalizamos el nombre del bar para quitar espacios ("La Chula" -> "lachula")
