@@ -8,9 +8,9 @@ import { RockolaService } from 'src/app/services/rockola.service';
   styleUrls: ['./admin-pedidos.component.scss']
 })
 export class AdminPedidosComponent implements OnInit {
-  // Actualizamos el tipo para incluir 'mesas'
   seccionActiva: 'musica' | 'productos' | 'facturacion' | 'mesas' = 'musica'; 
   nombreBarReal: string = 'Cargando...';
+  nombreBarUrl: string = ''; // Nueva variable para el nombre normalizado
   barValido: boolean = false;
   errorMensaje: string = '';
 
@@ -22,16 +22,17 @@ export class AdminPedidosComponent implements OnInit {
 
   async ngOnInit() {
     const barUrl = this.route.snapshot.paramMap.get('nombreBar') || '';
+    this.nombreBarUrl = barUrl.toLowerCase().replace(/\s+/g, ''); // Normalizamos y guardamos
+    
     const sesion = sessionStorage.getItem('usuarioAdmin');
 
     if (sesion) {
       const datosUsuario = JSON.parse(sesion);
       const barSesionNorm = datosUsuario.nombreBar.toLowerCase().replace(/\s+/g, '');
-      const barUrlNorm = barUrl.toLowerCase().replace(/\s+/g, '');
 
-      if (barSesionNorm === barUrlNorm) {
+      if (barSesionNorm === this.nombreBarUrl) {
         this.barValido = true;
-        const datosBar: any = await this.rockolaService.verificarExistenciaBar(barUrlNorm);
+        const datosBar: any = await this.rockolaService.verificarExistenciaBar(this.nombreBarUrl);
         if (datosBar) {
           this.nombreBarReal = datosBar.nombreBar;
         }

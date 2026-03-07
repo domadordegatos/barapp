@@ -1,82 +1,119 @@
 $spotify-green: #1db954;
-$bg-gris: #f4f7f6;
 
 :host {
   display: flex;
   flex-direction: column;
   height: 100%;
   width: 100%;
-  overflow: hidden; // Evita scroll lateral en el componente
+  box-sizing: border-box; /* Asegura que el padding no sume al ancho */
+  overflow: hidden; /* Evita cualquier scroll lateral accidental */
 }
 
+/* Header con buscador */
 .header-bar {
-  position: relative; // Referencia para los resultados absolutos
-  background: $bg-gris;
   padding: 15px;
-  z-index: 1000; // Por encima del historial
+  width: 100%;
+  box-sizing: border-box;
   flex-shrink: 0;
 
   .search-box {
     position: relative;
+    width: 100%;
+    box-sizing: border-box;
+
     input {
       width: 100%;
-      padding: 12px 15px;
-      border-radius: 25px;
-      border: 1px solid #ddd;
+      box-sizing: border-box; /* CLAVE: El padding ahora se incluye en el 100% */
+      padding: 14px 20px;
+      padding-left: 45px;
+      border-radius: 12px;
+      border: 1px solid #eee;
+      background-color: #fff;
+      color: #333;
+      font-size: 16px;
       outline: none;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      box-sizing: border-box;
-      &:focus { border-color: $spotify-green; }
+      box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+      transition: all 0.3s ease;
+
+      &:focus {
+        border-color: $spotify-green;
+        box-shadow: 0 4px 15px rgba($spotify-green, 0.1);
+      }
+    }
+
+    &::before {
+      content: '🔍';
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      z-index: 2;
+      opacity: 0.5;
     }
   }
 }
 
-// RESULTADOS: Ahora garantizado debajo del input
+/* RESULTADOS: Corregidos para que floten bien dentro del ancho disponible */
 .resultados-busqueda {
-  position: absolute; 
-  top: 100%; // Justo debajo del padding del header-bar
-  left: 15px;
-  right: 15px;
+  margin: 0 15px;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  max-height: 300px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  max-height: 350px;
   overflow-y: auto;
-  z-index: 1100; // Superior al input y al historial
-  margin-top: 5px;
+  z-index: 1100;
+  border: 1px solid #eee;
+  box-sizing: border-box;
 
   .item-resultado {
     display: flex;
     align-items: center;
-    padding: 12px;
-    border-bottom: 1px solid #f0f0f0;
-    cursor: pointer;
-    &:active { background: #f9f9f9; }
+    padding: 12px 15px;
+    border-bottom: 1px solid #f9f9f9;
+    
+    &:last-child { border-bottom: none; }
 
-    .foto-resultado { width: 45px; height: 45px; border-radius: 6px; margin-right: 12px; }
-    .info-resultado { 
-      flex: 1; 
-      strong { font-size: 0.9rem; color: #333; display: block; } 
-      p { font-size: 0.8rem; color: #777; margin: 0; } 
+    .foto-resultado {
+      width: 45px;
+      height: 45px;
+      border-radius: 8px;
+      margin-right: 15px;
+      object-fit: cover;
+      flex-shrink: 0;
     }
-    .add-icon { color: $spotify-green; font-size: 1.4rem; font-weight: bold; }
+
+    .info-resultado {
+      flex: 1;
+      min-width: 0; /* Permite que el texto se trunque si es muy largo */
+      strong { display: block; font-size: 14px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      p { font-size: 12px; color: #888; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
+
+    .add-icon {
+      color: $spotify-green;
+      font-size: 22px;
+      font-weight: bold;
+      padding: 5px;
+      flex-shrink: 0;
+    }
   }
 }
 
-/* HISTORIAL CON SCROLL PROPIO */
+/* HISTORIAL / MIS PEDIDOS */
 .mis-pedidos {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden; // Bloqueo total de scroll lateral
   padding: 15px;
-  background: #fdfdfd;
+  overflow-y: auto;
   box-sizing: border-box;
 
   .titulo-seccion {
-    font-size: 0.9rem;
-    color: #999;
+    font-size: 14px;
+    color: #888;
     text-transform: uppercase;
-    margin-bottom: 15px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin: 10px 0 15px 5px;
   }
 }
 
@@ -85,49 +122,38 @@ $bg-gris: #f4f7f6;
   align-items: center;
   background: white;
   padding: 12px;
-  border-radius: 14px;
+  border-radius: 16px;
   margin-bottom: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  border-left: 5px solid #f1c40f; 
-  transition: all 0.4s ease;
-  width: 100%;
   box-sizing: border-box;
-  position: relative;
+  width: 100%;
 
-  .foto-mini { width: 50px; height: 50px; border-radius: 8px; margin-right: 12px; object-fit: cover; }
+  .foto-mini {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    margin-right: 15px;
+    flex-shrink: 0;
+  }
+
   .info-pedida {
     flex: 1;
-    strong { display: block; font-size: 0.95rem; color: #333; }
-    p { margin: 0; font-size: 0.8rem; color: #888; }
+    min-width: 0;
+    strong { display: block; font-size: 15px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    p { font-size: 12px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   }
 
-  /* --- ITEMS FINALIZADOS: GRISES Y DESPLAZADOS HACIA LA DERECHA --- */
-  &.pedido-finalizado {
-    filter: grayscale(100%);
-    opacity: 0.5;
-    transform: translateX(20px); // Se corre a la derecha
-    width: calc(100% - 22px);    // Compensación para evitar el overflow-x
-    background: #f8f8f8;
-    box-shadow: none;
+  .estado-badge {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    margin-left: 10px;
 
-    .estado-badge {
-      background: #e0e0e0 !important;
-      color: #777 !important;
-    }
+    &.pendiente { background: rgba(#f1c40f, 0.1); color: #f1c40f; }
+    &.aprobado { background: rgba($spotify-green, 0.1); color: $spotify-green; }
+    &.rechazado { background: rgba(#e74c3c, 0.1); color: #e74c3c; }
   }
-
-  &.pedido-aprobado { border-left-color: #2ecc71; }
-  &.pedido-rechazado { border-left-color: #e74c3c; }
-}
-
-.estado-badge {
-  font-size: 0.65rem;
-  padding: 3px 8px;
-  border-radius: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-
-  &.pendiente { background: #fff9e6; color: #f1c40f; }
-  &.reproduciendo, &.aprobado { background: #eafaf1; color: #2ecc71; }
-  &.rechazado { background: #fdedec; color: #e74c3c; }
 }

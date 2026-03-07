@@ -32,9 +32,11 @@
       <app-gestion-musica *ngIf="seccionActiva === 'musica'"></app-gestion-musica>
       <app-gestion-productos *ngIf="seccionActiva === 'productos'"></app-gestion-productos>
       <app-gestion-mesas *ngIf="seccionActiva === 'mesas'"></app-gestion-mesas>
+      
+      <!-- Pasamos el nombre normalizado (nombreBarUrl) -->
       <app-admin-facturacion 
         *ngIf="seccionActiva === 'facturacion'"
-        [nombreBar]="nombreBarReal"> 
+        [nombreBar]="nombreBarUrl"> 
       </app-admin-facturacion>
     </div>
   </ng-container>

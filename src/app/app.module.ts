@@ -21,7 +21,7 @@ import { DashboardMesaComponent } from './dashboard-mesa/dashboard-mesa.componen
 import { ListaProductosComponent } from './productos/lista-productos/lista-productos.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AdminFacturacionComponent } from './productos/admin-facturacion/admin-facturacion.component';
-import { GestionMesasComponent } from './mesas/gestion-mesas/gestion-mesas.component';
+import { GestionMesasComponent } from './productos/gestion-mesas/gestion-mesas.component';
 
 @NgModule({
   declarations: [

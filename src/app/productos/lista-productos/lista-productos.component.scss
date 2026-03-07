@@ -1,175 +1,100 @@
-/* Transiciones y Estilos para un Acordeón Fluido y Elegante */
-
-// Paleta de colores suaves para un look moderno
-$color-fondo: #f8f9fa;
-$color-tarjeta: #ffffff;
-$color-borde: #e9ecef;
-$color-sombra: rgba(0, 0, 0, 0.06);
-$color-texto-principal: #212529;
-$color-texto-secundario: #495057;
-$color-acento-hover: #f1f3f5;
-$color-primario: #007bff; // Un color primario para los botones
+/* Unificación Estética - Lista de Productos */
+$color-productos: #007bff;
+$bg-card: #ffffff;
+$border-color: #f1f3f5;
 
 .modulo-productos {
-  padding: 1.5rem;
-  background-color: $color-fondo;
-  border-radius: 12px;
-}
-
-.header-productos {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-
-  .titulo-vista {
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: $color-texto-principal;
-  }
+  padding: 15px;
 }
 
 .contenedor-menu {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 12px;
 }
 
+/* Acordeón de Categorías */
 .acordeon-categoria {
-  border: 1px solid $color-borde;
-  border-radius: 10px;
+  background-color: $bg-card;
+  border-radius: 16px;
   overflow: hidden;
-  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &:hover {
-    box-shadow: 0 8px 25px $color-sombra;
-  }
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
 }
 
 .card-categoria {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.25rem 1.5rem;
+  padding: 18px 20px;
   cursor: pointer;
-  background-color: $color-tarjeta;
-  transition: background-color 0.3s ease;
-
-  &:hover {
-    background-color: $color-acento-hover;
-  }
 
   h3 {
     margin: 0;
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: $color-texto-secundario;
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
   }
 
   .arrow {
-    font-size: 1.5rem;
-    color: #adb5bd;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .arrow.abierto {
-    transform: rotate(90deg);
+    font-size: 14px;
+    color: #ccc;
+    transition: transform 0.3s;
+    &.abierto { transform: rotate(90deg); color: $color-productos; }
   }
 }
 
+/* Panel de Productos */
 .panel-productos {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1); 
-  background-color: #fff; 
+  transition: max-height 0.4s ease;
+  background-color: #fafafa;
 
-  &.abierto {
-    max-height: 1200px; 
-  }
-
-  > div {
-    padding: 0.5rem 0;
-    opacity: 0;
-    transform: translateY(-15px);
-    transition: opacity 0.4s ease-out 0.2s, transform 0.4s ease-out 0.2s;
-  }
-
-  &.abierto > div {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  &.abierto { max-height: 1500px; }
 }
 
 .card-producto {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid $color-borde;
-
-  &:first-child {
-    border-top: none;
-  }
+  align-items: center;
+  padding: 15px 20px;
+  border-top: 1px solid $border-color;
 
   .info-prod {
-    strong {
-      font-size: 1.1rem;
-      font-weight: 500;
-      color: $color-texto-secundario;
-    }
-    p {
-      margin: 4px 0 0;
-      color: #868e96;
-      font-size: 0.95rem;
-    }
+    strong { font-size: 15px; color: #444; }
+    p { margin: 2px 0 0; font-size: 14px; color: $color-productos; font-weight: 700; }
   }
 }
 
-// --- ESTILOS PARA LOS CONTROLES DE CANTIDAD ---
-
+/* Controles de Cantidad */
 .controles-cantidad {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 12px;
+  background: #f1f3f5;
+  padding: 4px;
+  border-radius: 20px;
 
-  .btn-cantidad, .btn-agregar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%; // Botones circulares
-    border: 1px solid $color-borde;
-    background-color: $color-tarjeta;
-    color: $color-primario;
-    font-size: 1.5rem;
-    font-weight: 300; // Fuente más delgada para el "+" y "-"
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-
-    &:hover {
-      background-color: $color-acento-hover;
-      border-color: #ced4da;
-    }
-
-    &:active {
-      transform: scale(0.92); // Efecto de "presionado"
-    }
-  }
-  
-  .btn-agregar {
-      background-color: $color-primario;
-      color: white;
-      border-color: $color-primario;
-      &:hover {
-        background-color: darken($color-primario, 8%);
-      }
+  .btn-cantidad {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: #fff;
+    color: #333;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
 
-  .cantidad-producto {
-    font-size: 1.2rem;
-    font-weight: 500;
-    min-width: 20px; // Evita que el layout salte cuando el número cambia
-    text-align: center;
-  }
+  .cantidad-producto { font-weight: 700; font-size: 14px; min-width: 15px; text-align: center; }
+}
+
+.btn-agregar {
+  padding: 8px 15px;
+  background-color: $color-productos;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
 }

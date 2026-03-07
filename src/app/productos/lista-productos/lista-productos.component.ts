@@ -4,7 +4,6 @@ import { Producto } from '../../interfaces/producto.interface';
 import { Categoria } from '../../interfaces/categoria.interface';
 import { ProductosService } from '../../services/productos.service';
 
-// El producto que se maneja en el componente, con su ID y cantidad
 type ProductoConIdYCantidad = Producto & { id: string; cantidad: number };
 
 @Component({
@@ -14,38 +13,43 @@ type ProductoConIdYCantidad = Producto & { id: string; cantidad: number };
 })
 export class ListaProductosComponent implements OnInit, OnChanges {
 
-  // Inputs desde DashboardMesa
   @Input() nombreBarUrl: string = '';
   @Input() idMesaUrl: string = '';
   @Input() numeroMesaReal!: number;
   @Input() codigoAcceso: string = '';
+  
+  // NUEVO: Input para forzar el reinicio del carrito desde afuera
+  @Input() resetCarrito: boolean = false;
 
-  // Emite el carrito actualizado al componente padre
   @Output() carritoActualizado = new EventEmitter<ProductoConIdYCantidad[]>();
 
   public categorias$: Observable<Categoria[]> = of([]);
   public productos$: Observable<(Producto & { id: string })[]> = of([]);
   public categoriaAbiertaId: string | null = null;
 
-  // Lógica del carrito, local en el componente
   private carrito = new Map<string, ProductoConIdYCantidad>();
 
-  constructor(
-    private productosService: ProductosService
-  ) { }
+  constructor(private productosService: ProductosService) { }
 
   ngOnInit(): void {
-    if (this.nombreBarUrl) {
-      this.cargarCategorias();
-    }
+    if (this.nombreBarUrl) this.cargarCategorias();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['nombreBarUrl'] && !changes['nombreBarUrl'].firstChange) {
       this.cargarCategorias();
-      this.carrito.clear(); // Limpia el carrito si cambia el bar
-      this.emitirCarrito();
+      this.limpiarCarritoLocal();
     }
+    
+    // Si el padre cambia 'resetCarrito' a true, limpiamos
+    if (changes['resetCarrito'] && changes['resetCarrito'].currentValue === true) {
+      this.limpiarCarritoLocal();
+    }
+  }
+
+  limpiarCarritoLocal() {
+    this.carrito.clear();
+    this.emitirCarrito();
   }
 
   cargarCategorias() {
@@ -64,8 +68,6 @@ export class ListaProductosComponent implements OnInit, OnChanges {
     }
   }
 
-  // --- LÓGICA DEL CARRITO ---
-
   sumarProducto(producto: Producto & { id: string }) {
     if (this.carrito.has(producto.id)) {
       this.carrito.get(producto.id)!.cantidad++;
@@ -79,9 +81,7 @@ export class ListaProductosComponent implements OnInit, OnChanges {
     if (this.carrito.has(producto.id)) {
       const item = this.carrito.get(producto.id)!;
       item.cantidad--;
-      if (item.cantidad <= 0) {
-        this.carrito.delete(producto.id);
-      }
+      if (item.cantidad <= 0) this.carrito.delete(producto.id);
     }
     this.emitirCarrito();
   }
@@ -91,7 +91,6 @@ export class ListaProductosComponent implements OnInit, OnChanges {
   }
 
   private emitirCarrito() {
-    const carritoArray = Array.from(this.carrito.values());
-    this.carritoActualizado.emit(carritoArray);
+    this.carritoActualizado.emit(Array.from(this.carrito.values()));
   }
 }

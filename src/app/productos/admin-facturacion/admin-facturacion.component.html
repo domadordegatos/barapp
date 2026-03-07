@@ -1,159 +1,85 @@
-<div class="admin-container">
-  <div class="header-filtros">
-    <div class="titulo-seccion">
-      <h2>Gestión de Facturación</h2>
-      <span class="bar-name">📍 {{ nombreBar | uppercase }}</span>
-    </div>
-
-    <div class="inputs-rango">
-      <div class="date-group">
-        <label>Desde</label>
-        <input type="date" [(ngModel)]="fechaInicio" (change)="buscarSesiones()">
-      </div>
-      <div class="date-group">
-        <label>Hasta</label>
-        <input type="date" [(ngModel)]="fechaFin" (change)="buscarSesiones()">
-      </div>
-      <button class="btn-search" (click)="buscarSesiones()">
-        🔄 Actualizar
-      </button>
-    </div>
+<div class="modulo-facturacion">
+  <div class="header-facturacion">
+    <h2>Estado de las Mesas</h2>
+    <div *ngIf="cargando" class="loader-chico">Cargando mapa...</div>
   </div>
 
-  <div class="grid-mesas" *ngIf="!cargando && facturas.length > 0">
-    <div class="mesa-card" 
-         *ngFor="let f of facturas" 
-         [ngClass]="[f.estado, f.notificacionPendiente ? 'alerta-animada' : '']">
+  <!-- MAPA DE MESAS (GRID) -->
+  <div class="mapa-mesas">
+    <div *ngFor="let mesa of mesasConEstado" 
+         class="card-mesa-admin" 
+         [ngClass]="{ 'ocupada': mesa.ocupada, 'libre': !mesa.ocupada }"
+         (click)="verDetalle(mesa)">
       
-      <div class="dot-notificacion" *ngIf="f.notificacionPendiente"></div>
+      <!-- Indicador de notificación si hay pedidos pendientes -->
+      <div *ngIf="mesa.cuenta?.notificacionPendiente" class="alerta-pedidos">!</div>
 
-      <div class="mesa-header">
-        <span class="numero-mesa">Mesa #{{ f.numeroMesa }}</span>
-        <span class="badge-estado" [ngClass]="obtenerClaseEstado(f.estado)">
-          {{ f.estado }}
-        </span>
+      <div class="header-card">
+        <span class="num-mesa">#{{ mesa.numero }}</span>
+        <span class="estado-label">{{ mesa.ocupada ? 'Ocupada' : 'Libre' }}</span>
       </div>
 
-      <div class="mesa-body">
-        <div class="info-row">
-          <span class="label">Apertura:</span>
-          <span class="value">{{ (f.fechaApertura?.toDate ? f.fechaApertura.toDate() : f.fechaApertura) | date:'dd/MM HH:mm' }}</span>
-        </div>
-        <div class="info-row" *ngIf="f.id">
-          <span class="label">ID Factura:</span>
-          <span class="value code">#{{ f.id.substring(0,8) }}</span>
-        </div>
-        <div class="total-preview">
-          <span class="label">Consumo Aprobado:</span>
-          <span class="value total-price">{{ f.total | currency:'USD':'symbol':'1.0-0' }}</span>
+      <div class="body-card">
+        <span class="id-mesa">{{ mesa.id }}</span>
+        <div *ngIf="mesa.ocupada" class="info-cuenta">
+          <span class="hora-apertura">Desde: {{ mesa.cuenta.fechaApertura.toDate() | date:'shortTime' }}</span>
+          <span class="total-actual">Total: {{ mesa.cuenta.total | currency:'USD':'symbol':'1.0-0' }}</span>
         </div>
       </div>
-
-      <div class="mesa-footer">
-        <button class="btn-detalle" (click)="verDetalle(f)">
-          👁 Gestionar Comanda
-        </button>
+      
+      <div class="footer-card" *ngIf="mesa.ocupada">
+        <button class="btn-abrir-detalle">Ver Cuenta</button>
       </div>
     </div>
   </div>
 
+  <!-- MODAL DE DETALLE (SE MANTIENE IGUAL QUE ANTES) -->
   <div class="modal-overlay" *ngIf="detalleSeleccionado">
-    <div class="modal-card">
-      <header>
-        <div class="title">
-          <h3>Mesa #{{ detalleSeleccionado.numeroMesa }}</h3>
-          <small>ID de cuenta: {{ detalleSeleccionado.id }}</small>
+    <div class="modal-detalle">
+      <div class="modal-header">
+        <h3>Mesa #{{ detalleSeleccionado.numeroMesa }} - Detalle</h3>
+        <div class="botones-header">
+           <button class="btn-imprimir" (click)="imprimirFactura()">🖨️ Imprimir</button>
+           <button class="btn-cerrar-modal" (click)="cerrarDetalle()">×</button>
         </div>
-        <button class="close-x" (click)="cerrarDetalle()">✕</button>
-      </header>
+      </div>
 
       <div class="modal-body">
-        <div class="tabla-gestion-wrapper">
-          <table class="pos-table">
-            <thead>
-              <tr>
-                <th>PRODUCTO</th>
-                <th>PRECIO UNIT.</th>
-                <th>CANT.</th>
-                <th>ESTADO</th>
-                <th>SUBTOTAL</th>
-                <th>ACCIONES</th>
-              </tr>
-            </thead>
-            <tbody>
-              <ng-container *ngFor="let pedido of detalleSeleccionado.pedidos; let i = index">
-<tr class="row-separator">
-  <td colspan="6">
-    <div class="time-divider">
-      <span class="icon">📅</span> 
-      <strong>{{ pedido.fechaSolicitud }}</strong> 
-      <span class="divider-pipe">|</span>
-      <span class="icon">🕒</span> 
-      <strong>{{ pedido.horaSolicitud }}</strong>
-    </div>
-  </td>
-</tr>
-
-                <tr *ngFor="let item of pedido.items; let j = index" 
-                    [ngClass]="{'fila-pendiente': pedido.estado === 'pendiente', 'fila-aprobada': pedido.estado !== 'pendiente'}">
-                  
-                  <td class="txt-nombre">{{ item.nombre | titlecase }}</td>
-                  
-                  <td class="txt-precio-unit">
-                    {{ item.precioUnit | currency:'USD':'symbol':'1.0-0' }}
-                  </td>
-
-                  <td>
-                    <div class="qty-control">
-                      <button (click)="cambiarCantidad(i, j, -1)">-</button>
-                      <span class="cant-numero">{{ item.cantidad }}</span>
-                      <button (click)="cambiarCantidad(i, j, 1)">+</button>
-                    </div>
-                  </td>
-
-                  <td>
-                    <span class="badge-status" [ngClass]="pedido.estado">
-                      {{ pedido.estado | uppercase }}
-                    </span>
-                  </td>
-
-                  <td class="txt-subtotal">
-                    {{ (item.precioUnit * item.cantidad) | currency:'USD':'symbol':'1.0-0' }}
-                  </td>
-
-                  <td class="acciones-celda">
-                    <button *ngIf="pedido.estado === 'pendiente'" 
-                            class="btn-aprobar" 
-                            (click)="aprobarPedido(i)">
-                      Aprobar
-                    </button>
-                    <button class="btn-delete" (click)="eliminarItem(i, j)">
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-              </ng-container>
-            </tbody>
-          </table>
+        <div *ngFor="let ped of detalleSeleccionado.pedidos; let idxPed = index" class="card-pedido-admin" [class.pendiente]="ped.estado === 'pendiente'">
+          <div class="pedido-info">
+            <span class="hora">{{ ped.horaSolicitud }}</span>
+            <span class="quien">{{ ped.solicitadoPor }}</span>
+            <span class="estado-ped">{{ ped.estado }}</span>
+            <button *ngIf="ped.estado === 'pendiente'" (click)="aprobarPedido(idxPed)" class="btn-aprobar">Aprobar</button>
+          </div>
+          <div class="items-pedido">
+            <div *ngFor="let item of ped.items; let idxItem = index" class="item-linea">
+              <span class="nombre">{{ item.nombre }}</span>
+              <div class="controles">
+                <button (click)="cambiarCantidad(idxPed, idxItem, -1)">-</button>
+                <span class="cant">{{ item.cantidad }}</span>
+                <button (click)="cambiarCantidad(idxPed, idxItem, 1)">+</button>
+              </div>
+              <span class="precio">{{ (item.precioUnit * item.cantidad) | currency:'USD':'symbol':'1.0-0' }}</span>
+              <button (click)="eliminarItem(idxPed, idxItem)" class="btn-eliminar-item">🗑️</button>
+            </div>
+          </div>
+        </div>
+        <div class="seccion-observaciones">
+          <label>Observaciones:</label>
+          <textarea [(ngModel)]="observaciones" placeholder="Anotaciones de la mesa..."></textarea>
         </div>
       </div>
 
-      <footer>
-        <div class="summary">
-          <span>SUBTOTAL APROBADO (En esta sesión)</span>
-          <p class="txt-resaltado">{{ calcularTotalAprobado() | currency:'USD':'symbol':'1.0-0' }}</p>
+      <div class="modal-footer">
+        <div class="totales">
+          <span>Total Aprobado: <strong>{{ calcularTotalAprobado() | currency:'USD':'symbol':'1.0-0' }}</strong></span>
         </div>
-        <div class="footer-btns">
-          <button class="btn-sec" (click)="cerrarDetalle()">Cancelar</button>
-          <button class="btn-pri" [disabled]="cargando" (click)="guardarCambiosFinales()">
-            {{ cargando ? 'Guardando...' : '💾 Guardar y Actualizar' }}
-          </button>
+        <div class="acciones-finales">
+          <button (click)="guardarCambiosFinales()" class="btn-guardar-cambios">Guardar Cambios</button>
+          <button (click)="finalizarCuenta()" class="btn-finalizar-cuenta">Cerrar Mesa</button>
         </div>
-      </footer>
+      </div>
     </div>
-  </div>
-
-  <div *ngIf="!cargando && facturas.length === 0" class="no-data">
-    <p>No se encontraron cuentas para <strong>{{ nombreBar }}</strong> en estas fechas.</p>
   </div>
 </div>

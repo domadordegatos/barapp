@@ -1,225 +1,201 @@
-/* ==========================================================================
-   VARIABLES DE DISEÑO
-   ========================================================================== */
-$color-primary: #1db954;
-$color-pending-bg: #fff9e6;
-$color-pending-border: #ffc107;
-$color-approved-border: #28a745;
-$color-danger: #e91e63;
-$color-dark: #1a1a1a;
-$color-gray-light: #f8f9fa;
-$shadow-pos: 0 10px 30px rgba(0,0,0,0.3);
-
-/* ==========================================================================
-   ANIMACIONES
-   ========================================================================== */
-@keyframes pulso-alerta {
-  0% { box-shadow: 0 0 0 0 rgba(233, 30, 99, 0.7); border-color: #e91e63; }
-  70% { box-shadow: 0 0 0 15px rgba(233, 30, 99, 0); border-color: #e91e63; }
-  100% { box-shadow: 0 0 0 0 rgba(233, 30, 99, 0); border-color: #ccc; }
-}
-
-/* ==========================================================================
-   CONTENEDOR Y FILTROS
-   ========================================================================== */
-.admin-container {
+.modulo-facturacion {
   padding: 20px;
-  background: #fdfdfd;
-
-  .header-filtros {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    margin-bottom: 25px;
-
-    .titulo-seccion {
-      h2 { margin: 0; font-size: 1.5rem; }
-      .bar-name { font-weight: bold; color: $color-primary; font-size: 0.9rem; }
-    }
-    
-    .inputs-rango {
-      display: flex;
-      gap: 15px;
-      align-items: flex-end;
-
-      .date-group {
-        display: flex;
-        flex-direction: column;
-        label { font-size: 0.75rem; color: #888; margin-bottom: 4px; }
-        input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
-      }
-
-      .btn-search {
-        background: $color-dark; color: white;
-        border: none; padding: 9px 20px; border-radius: 6px; cursor: pointer;
-        transition: background 0.2s;
-        &:hover { background: #333; }
-      }
-    }
-  }
+  background-color: #1e1e1e;
+  color: #fff;
+  min-height: 100vh;
 }
 
-/* ==========================================================================
-   GRID Y TARJETAS (ESTADO ALERTA INCLUIDO)
-   ========================================================================== */
-.grid-mesas {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+.header-facturacion {
+  margin-bottom: 30px;
+  h2 { margin: 0; font-size: 1.8rem; font-weight: 700; }
+  .loader-chico { color: #888; font-size: 0.9rem; }
+}
+
+/* --- MAPA DE MESAS (GRID) --- */
+
+.mapa-mesas {
+  display: flex;
+  flex-wrap: wrap;
   gap: 20px;
+  justify-content: flex-start;
 }
 
-.mesa-card {
+.card-mesa-admin {
   position: relative;
-  background: white; border-radius: 14px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  border-left: 6px solid #ccc;
-  overflow: visible; transition: transform 0.2s;
+  width: 160px;
+  height: 180px;
+  background: #2a2a2e;
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 
-  &:hover { transform: translateY(-3px); }
-  &.abierta { border-left-color: #ffc107; background: #fffdf5; }
-  &.cerrada { border-left-color: $color-primary; }
-
-  /* Clase de alerta para nuevas solicitudes */
-  &.alerta-animada {
-    animation: pulso-alerta 2s infinite;
-    border: 2px solid #e91e63 !important;
-    background-color: #fff0f5 !important;
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
   }
 
-  .dot-notificacion {
-    position: absolute; top: -5px; right: -5px;
-    width: 15px; height: 15px; background-color: $color-danger;
-    border-radius: 50%; border: 2px solid white; z-index: 10;
+  /* Estado: Libre */
+  &.libre {
+    opacity: 0.7;
+    border: 1px solid #444;
+    .estado-label { color: #888; }
   }
 
-  .mesa-header {
-    padding: 15px; display: flex; justify-content: space-between;
-    border-bottom: 1px solid #f0f0f0;
-    .numero-mesa { font-weight: bold; font-size: 1.1rem; }
-    .badge-estado { 
-      font-size: 0.7rem; font-weight: bold; padding: 4px 8px; 
-      border-radius: 4px; text-transform: uppercase; 
-      &.estado-ocupada { background: #ffeeba; color: #856404; }
-      &.estado-pagada { background: #d4edda; color: #155724; }
-    }
-  }
-
-  .mesa-body {
-    padding: 15px;
-    .info-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem; color: #666; }
-    .total-price { font-weight: bold; color: $color-danger; font-size: 1.2rem; display: block; text-align: right; }
-  }
-
-  .btn-detalle { 
-    width: 100%; padding: 12px; border: none; background: #007bff; 
-    color: #fff; cursor: pointer; font-weight: bold;
-    &:hover { background: #0056b3; }
+  /* Estado: Ocupada */
+  &.ocupada {
+    background: #333;
+    border: 2px solid #28a745;
+    .estado-label { color: #28a745; font-weight: bold; }
+    .num-mesa { color: #fff; }
   }
 }
 
-/* ==========================================================================
-   MODAL POS (ESTRUCTURA DE TABLA COMPLETA)
-   ========================================================================== */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-  display: flex; align-items: center; justify-content: center; z-index: 2000;
-  backdrop-filter: blur(4px);
-}
-
-.modal-card {
-  background: #fff; width: 95%; max-width: 900px; border-radius: 16px;
-  box-shadow: $shadow-pos; display: flex; flex-direction: column; 
-  max-height: 90vh; overflow: hidden;
-
-  header {
-    background: $color-dark; color: #fff; padding: 1.2rem 1.5rem;
-    display: flex; justify-content: space-between; align-items: center;
-    h3 { margin: 0; font-size: 1.3rem; }
-    .close-x { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
-  }
-
-  .modal-body {
-    overflow-y: auto; padding: 0;
-    
-    .pos-table {
-      width: 100%; border-collapse: collapse;
-      th { background: $color-gray-light; padding: 1rem; text-align: left; font-size: 0.8rem; color: #888; text-transform: uppercase; }
-      td { padding: 1rem; border-bottom: 1px solid #eee; vertical-align: middle; }
-
-      .fila-pendiente { background-color: $color-pending-bg; border-left: 4px solid $color-pending-border; }
-      .fila-aprobada { background-color: #ffffff; border-left: 4px solid $color-approved-border; }
-
-      .row-separator {
-        background-color: $color-gray-light;
-        td { padding: 8px 15px !important; border-bottom: 1px solid #dee2e6; }
-        .time-divider {
-          display: flex; align-items: center; gap: 8px;
-          font-size: 0.8rem; color: #6c757d; text-transform: uppercase;
-          .icon { font-size: 1rem; }
-          strong { color: #343a40; }
-        }
-      }
-
-      .txt-nombre { font-weight: 600; color: #333; }
-      .txt-precio-unit { color: #666; font-size: 0.9rem; font-family: monospace; }
-      .txt-subtotal { font-weight: bold; color: $color-dark; }
-    }
-  }
-
-  .qty-control {
-    display: flex; align-items: center; gap: 8px;
-    button { width: 28px; height: 28px; border: 1px solid #ddd; background: #fff; border-radius: 4px; cursor: pointer; }
-    span { font-weight: bold; min-width: 20px; text-align: center; }
-  }
-
-  .badge-status {
-    padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;
-    &.pendiente { background: #ffeeba; color: #856404; }
-    &.aceptado { background: #d4edda; color: #155724; }
-  }
-
-  .btn-aprobar { 
-    background: $color-primary; color: #fff; border: none; 
-    padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 5px;
-  }
-  
-  .btn-delete { background: none; border: none; font-size: 1.1rem; cursor: pointer; }
-
-  footer {
-    padding: 1.5rem; background: $color-gray-light; border-top: 1px solid #eee;
-    display: flex; justify-content: space-between; align-items: center;
-    .summary { 
-      span { font-size: 0.8rem; color: #888; font-weight: bold; text-transform: uppercase; } 
-      p { margin: 4px 0 0; font-size: 1.6rem; font-weight: bold; color: $color-danger; } 
-    }
-    .btn-pri { background: $color-primary; color: #fff; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    .btn-sec { background: #ddd; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; margin-right: 10px; }
-  }
-}
-
-.no-data { padding: 40px; text-align: center; color: #888; background: #fff; border-radius: 12px; }
-
-/* admin-facturacion.component.scss */
-.time-divider {
+.alerta-pedidos {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 25px;
+  height: 25px;
+  background: #ff4d4d;
+  color: #fff;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: #f1f3f5;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.85rem;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  animation: pulse 1.5s infinite;
+}
 
-  .divider-pipe {
-    color: #ccc;
-    font-weight: normal;
-  }
+.header-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  .num-mesa { font-size: 1.8rem; font-weight: bold; color: #555; }
+  .estado-label { font-size: 0.75rem; text-transform: uppercase; }
+}
 
-  strong {
-    color: #2c3e50;
-    text-transform: capitalize; // Para que el mes salga "Marzo"
+.body-card {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  .id-mesa { font-size: 0.65rem; color: #666; font-family: monospace; }
+  .info-cuenta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+    .hora-apertura { color: #aaa; }
+    .total-actual { font-weight: bold; color: #28a745; }
   }
+}
+
+.footer-card {
+  margin-top: 10px;
+  .btn-abrir-detalle {
+    width: 100%;
+    padding: 8px;
+    background: #007bff;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+}
+
+/* --- MODAL DETALLE (ESTILOS ANTERIORES) --- */
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+}
+
+.modal-detalle {
+  background: #2a2a2e;
+  width: 95%;
+  max-width: 650px;
+  max-height: 90vh;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+
+.modal-header {
+  padding: 20px 25px;
+  border-bottom: 1px solid #444;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  .botones-header {
+    display: flex; gap: 15px; align-items: center;
+    .btn-imprimir { background: #444; border: none; color: #fff; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
+    .btn-cerrar-modal { background: none; border: none; color: #fff; font-size: 2.5rem; cursor: pointer; line-height: 1; }
+  }
+}
+
+.modal-body {
+  padding: 25px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.card-pedido-admin {
+  background: #333; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #444;
+  &.pendiente { border-left: 6px solid #ffc107; background: #383838; }
+  .pedido-info {
+    display: flex; gap: 12px; align-items: center; margin-bottom: 12px;
+    .hora { font-weight: bold; color: #aaa; }
+    .quien { color: #888; font-size: 0.85rem; }
+    .estado-ped { font-size: 0.7rem; background: #555; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+    .btn-aprobar { margin-left: auto; background: #28a745; border: none; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+  }
+}
+
+.item-linea {
+  display: flex; align-items: center; padding: 10px 0; border-top: 1px solid #444;
+  .nombre { flex-grow: 1; font-size: 0.95rem; }
+  .controles {
+    display: flex; align-items: center; gap: 10px; margin: 0 20px;
+    button { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #666; background: transparent; color: #fff; cursor: pointer; &:hover { background: #444; } }
+    .cant { font-weight: bold; min-width: 25px; text-align: center; }
+  }
+  .precio { font-weight: bold; width: 80px; text-align: right; margin-right: 15px; }
+  .btn-eliminar-item { background: none; border: none; cursor: pointer; font-size: 1.1rem; opacity: 0.5; &:hover { opacity: 1; } }
+}
+
+.seccion-observaciones {
+  margin-top: 25px; padding-top: 15px; border-top: 1px dashed #555;
+  label { display: block; margin-bottom: 8px; color: #aaa; font-size: 0.9rem; }
+  textarea { width: 100%; height: 70px; background: #1a1a1a; border: 1px solid #444; border-radius: 8px; color: #fff; padding: 12px; resize: none; font-family: inherit; &:focus { border-color: #007bff; outline: none; } }
+}
+
+.modal-footer {
+  padding: 25px; border-top: 1px solid #444;
+  .totales { display: flex; justify-content: flex-end; font-size: 1.4rem; margin-bottom: 20px; strong { color: #28a745; margin-left: 12px; } }
+  .acciones-finales {
+    display: flex; gap: 15px;
+    button { flex: 1; padding: 16px; border-radius: 10px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer; transition: all 0.2s; }
+    .btn-guardar-cambios { background: #444; color: #fff; &:hover { background: #555; } }
+    .btn-finalizar-cuenta { background: #ff8800; color: #fff; &:hover { background: #e67a00; } }
+  }
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(255, 77, 77, 0); }
+  100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
 }

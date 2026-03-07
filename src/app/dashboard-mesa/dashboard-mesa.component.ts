@@ -3,7 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { RockolaService } from '../services/rockola.service';
 import { trigger, transition, style, animate, group, query } from '@angular/animations';
 import { Producto } from '../interfaces/producto.interface';
-import { ProductosService } from '../services/productos.service'; // <--- Importar ProductosService
+import { ProductosService } from '../services/productos.service';
 
 @Component({
   selector: 'app-dashboard-mesa',
@@ -37,34 +37,33 @@ import { ProductosService } from '../services/productos.service'; // <--- Import
   ]
 })
 export class DashboardMesaComponent implements OnInit {
-  // Datos del Bar y Mesa
   nombreBarUrl: string = '';
   idMesaUrl: string = '';
   numeroMesaReal: number | null = null;
   nombreBarReal: string = ''; 
 
-  // Carrito de compras y estado del pedido
   carrito: (Producto & { id: string, cantidad: number })[] = [];
   mostrandoResumenPedido: boolean = false;
   enviandoPedido: boolean = false;
+  resetCarritoFlag: boolean = false;
 
-  // Estados de carga y validación
   barValido: boolean = false;
   errorMensaje: string = '';
   cargandoValidacion: boolean = true;
-
-  // Control de Acceso
   codigoIngresado: string = '';
   accesoAutorizado: boolean = false;
-  
-  // Navegación
   vistaActual: 'songs' | 'products' = 'songs';
 
   constructor(
     private route: ActivatedRoute,
     private rockolaService: RockolaService,
-    private productosService: ProductosService // <--- Inyectar ProductosService
+    private productosService: ProductosService
   ) {}
+
+  // Clave única: CODIGO_BAR_IDMESA
+  get storageKey(): string {
+    return `codigo_${this.nombreBarUrl.toLowerCase()}_${this.idMesaUrl}`;
+  }
 
   async ngOnInit() {
     const parametroUrl = this.route.snapshot.paramMap.get('nombreBar') || '';
@@ -82,7 +81,7 @@ export class DashboardMesaComponent implements OnInit {
   }
 
   get codigoAccesoVigente(): string {
-    return localStorage.getItem(`codigo_${this.nombreBarUrl.toLowerCase()}`) || '';
+    return localStorage.getItem(this.storageKey) || '';
   }
 
   async verificarExistenciaDelBar() {
@@ -93,31 +92,28 @@ export class DashboardMesaComponent implements OnInit {
         this.nombreBarReal = datosBar.nombreBar; 
       } else {
         this.barValido = false;
-        this.errorMensaje = `El establecimiento "${this.nombreBarUrl}" no existe.`;
+        this.errorMensaje = `El bar no existe.`;
       }
     } catch (error) {
       this.barValido = false;
-      this.errorMensaje = "Error de conexión con el servidor.";
+      this.errorMensaje = "Error de conexión.";
     }
   }
 
   async obtenerDatosDeLaMesa() {
     const datosMesa = await this.rockolaService.obtenerDatosMesa(this.idMesaUrl);
-    if (datosMesa) {
-      this.numeroMesaReal = datosMesa.numero;
-    }
+    if (datosMesa) this.numeroMesaReal = datosMesa.numero;
   }
 
   async verificarSesionExistente() {
-    const storageKey = `codigo_${this.nombreBarUrl.toLowerCase()}`;
-    const codigoGuardado = localStorage.getItem(storageKey);
-    
+    const codigoGuardado = localStorage.getItem(this.storageKey);
     if (codigoGuardado) {
       const esValido = await this.rockolaService.validarCodigoBar(this.nombreBarUrl, codigoGuardado);
       if (esValido) {
         this.accesoAutorizado = true;
       } else {
-        localStorage.removeItem(storageKey);
+        localStorage.removeItem(this.storageKey);
+        this.accesoAutorizado = false;
       }
     }
   }
@@ -127,41 +123,20 @@ export class DashboardMesaComponent implements OnInit {
     
     const esValido = await this.rockolaService.validarCodigoBar(this.nombreBarUrl, this.codigoIngresado);
     if (esValido) {
-      localStorage.setItem(`codigo_${this.nombreBarUrl.toLowerCase()}`, this.codigoIngresado);
+      localStorage.setItem(this.storageKey, this.codigoIngresado);
       this.accesoAutorizado = true;
     } else {
-      alert("Código incorrecto. Pídelo a tu mesero.");
+      alert("Código incorrecto.");
       this.codigoIngresado = '';
     }
   }
 
-  cambiarVista(nuevaVista: 'songs' | 'products') {
-    this.vistaActual = nuevaVista;
-  }
-
-  onCarritoActualizado(carrito: (Producto & { id: string, cantidad: number })[]) {
+  onCarritoActualizado(carrito: any[]) {
     this.carrito = carrito;
-    // Si el carrito se vacía mientras vemos el resumen, lo cerramos.
-    if (this.carrito.length === 0 && this.mostrandoResumenPedido) {
-      this.mostrandoResumenPedido = false;
-    }
-  }
-
-  // --- LÓGICA DEL RESUMEN DE PEDIDO ---
-
-  mostrarResumen() {
-    this.mostrandoResumenPedido = true;
-  }
-
-  ocultarResumen() {
-    this.mostrandoResumenPedido = false;
-  }
-
-  calcularTotalPedido(): number {
-    return this.carrito.reduce((total, item) => total + (item.precio * item.cantidad), 0);
   }
 
   async confirmarPedido() {
+    if (this.enviandoPedido) return;
     this.enviandoPedido = true;
     try {
       await this.productosService.guardarPedidoEnCuenta(
@@ -171,12 +146,14 @@ export class DashboardMesaComponent implements OnInit {
         this.carrito,
         this.codigoAccesoVigente
       );
-      alert('¡Pedido enviado con éxito! Tu mesero lo traerá pronto.');
-      this.carrito = []; // Limpiamos el carrito
-      this.ocultarResumen();
+      alert('¡Pedido enviado!');
+      this.resetCarritoFlag = true;
+      setTimeout(() => this.resetCarritoFlag = false, 100);
+      this.carrito = [];
+      this.mostrandoResumenPedido = false;
     } catch (error) {
-      console.error('Error al enviar el pedido:', error);
-      alert('Hubo un problema al enviar tu pedido. Por favor, inténtalo de nuevo.');
+      console.error(error);
+      alert('Error al enviar pedido.');
     } finally {
       this.enviandoPedido = false;
     }

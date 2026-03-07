@@ -1,99 +1,96 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { AdminService } from '../../services/admin.service';
+import { MesasService, Mesa } from '../../services/mesas.service';
+import { Subscription, combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-admin-facturacion',
   templateUrl: './admin-facturacion.component.html',
   styleUrls: ['./admin-facturacion.component.scss']
 })
-export class AdminFacturacionComponent implements OnInit {
+export class AdminFacturacionComponent implements OnInit, OnDestroy {
   @Input() nombreBar: string = '';
 
-  fechaInicio: string = '';
-  fechaFin: string = '';
-  facturas: any[] = [];
-  cargando: boolean = false;
+  mesasConEstado: any[] = [];
+  cargando: boolean = true;
   detalleSeleccionado: any = null;
+  observaciones: string = '';
+  
+  private subscripcion: Subscription | null = null;
 
-  constructor(private adminService: AdminService) {
-    this.establecerFechaHoy();
-  }
+  constructor(
+    private adminService: AdminService,
+    private mesasService: MesasService
+  ) {}
 
   ngOnInit(): void {
     if (this.nombreBar) {
-      this.buscarSesiones();
+      this.escucharCambiosEnTiempoReal();
     }
   }
 
-  establecerFechaHoy() {
-    const ahora = new Date();
-    const anio = ahora.getFullYear();
-    const mes = String(ahora.getMonth() + 1).padStart(2, '0');
-    const dia = String(ahora.getDate()).padStart(2, '0');
-    this.fechaInicio = `${anio}-${mes}-${dia}`;
-    this.fechaFin = `${anio}-${mes}-${dia}`;
+  ngOnDestroy(): void {
+    if (this.subscripcion) this.subscripcion.unsubscribe();
   }
 
-  async buscarSesiones() {
-    if (!this.nombreBar) return;
+  escucharCambiosEnTiempoReal() {
     this.cargando = true;
+    this.subscripcion = combineLatest([
+      this.mesasService.getMesas(this.nombreBar),
+      this.adminService.obtenerCuentasActivas(this.nombreBar)
+    ]).subscribe({
+      next: ([mesas, cuentas]: [any[], any[]]) => {
+        
+        // CORRECCIÓN: Filtramos para mostrar solo las mesas activas
+        const mesasActivas = mesas.filter(m => m.activa === true);
 
-    const inicio = new Date(this.fechaInicio + 'T00:00:00');
-    const fin = new Date(this.fechaFin + 'T23:59:59');
-
-    this.adminService.obtenerTokensPorRango(this.nombreBar, inicio, fin)
-      .subscribe({
-        next: (data: any[]) => {
-          this.facturas = data;
-          this.cargando = false;
-        },
-        error: (error) => {
-          console.error("Error en búsqueda:", error);
-          this.cargando = false;
-        }
-      });
+        this.mesasConEstado = mesasActivas.map(mesa => {
+          const cuentaActiva = cuentas.find(c => c.idMesa === mesa.id);
+          return {
+            ...mesa,
+            cuenta: cuentaActiva || null,
+            ocupada: !!cuentaActiva
+          };
+        });
+        this.cargando = false;
+      },
+      error: (err) => {
+        console.error(err);
+        this.cargando = false;
+      }
+    });
   }
 
-  async verDetalle(factura: any) {
-    this.detalleSeleccionado = factura;
+  async verDetalle(mesa: any) {
+    if (!mesa.ocupada) return;
+    this.detalleSeleccionado = mesa.cuenta;
+    this.observaciones = this.detalleSeleccionado.observaciones || '';
 
-    if (factura.notificacionPendiente) {
+    if (this.detalleSeleccionado.notificacionPendiente) {
       try {
-        await this.adminService.actualizarCuenta(factura.id, {
+        await this.adminService.actualizarCuenta(this.detalleSeleccionado.id, {
           notificacionPendiente: false
         });
-        factura.notificacionPendiente = false;
-      } catch (error) {
-        console.error("Error al limpiar notificación:", error);
-      }
+      } catch (error) { console.error(error); }
     }
   }
 
   cerrarDetalle() {
     this.detalleSeleccionado = null;
-  }
-
-  obtenerClaseEstado(estado: string): string {
-    switch (estado) {
-      case 'abierta': return 'estado-ocupada';
-      case 'cerrada': return 'estado-pagada';
-      default: return 'estado-otro';
-    }
+    this.observaciones = '';
   }
 
   aprobarPedido(indexPedido: number) {
-    if (this.detalleSeleccionado && this.detalleSeleccionado.pedidos[indexPedido]) {
+    if (this.detalleSeleccionado?.pedidos[indexPedido]) {
       this.detalleSeleccionado.pedidos[indexPedido].estado = 'aceptado';
     }
   }
 
   eliminarItem(indexPedido: number, indexItem: number) {
     const pedido = this.detalleSeleccionado.pedidos[indexPedido];
-    if (confirm(`¿Deseas eliminar ${pedido.items[indexItem].nombre}?`)) {
+    if (confirm(`¿Eliminar ${pedido.items[indexItem].nombre}?`)) {
       pedido.items.splice(indexItem, 1);
-      if (pedido.items.length === 0) {
-        this.detalleSeleccionado.pedidos.splice(indexPedido, 1);
-      }
+      if (pedido.items.length === 0) this.detalleSeleccionado.pedidos.splice(indexPedido, 1);
     }
   }
 
@@ -101,22 +98,15 @@ export class AdminFacturacionComponent implements OnInit {
     const item = this.detalleSeleccionado.pedidos[idxPedido].items[idxItem];
     if (item.cantidad + delta >= 0) {
       item.cantidad += delta;
-      if (item.cantidad === 0) {
-        this.eliminarItem(idxPedido, idxItem);
-      }
+      if (item.cantidad === 0) this.eliminarItem(idxPedido, idxItem);
     }
   }
 
   calcularTotalAprobado(): number {
-    if (!this.detalleSeleccionado || !this.detalleSeleccionado.pedidos) return 0;
-    
+    if (!this.detalleSeleccionado?.pedidos) return 0;
     return this.detalleSeleccionado.pedidos.reduce((totalGral: number, pedido: any) => {
       if (pedido.estado !== 'pendiente') {
-        const subtotalPedido = pedido.items.reduce((suma: number, item: any) => {
-          const precio = item.precioUnit || 0;
-          const cantidad = item.cantidad || 0;
-          return suma + (precio * cantidad);
-        }, 0);
+        const subtotalPedido = pedido.items.reduce((suma: number, item: any) => suma + (item.precioUnit * item.cantidad), 0);
         return totalGral + subtotalPedido;
       }
       return totalGral;
@@ -125,27 +115,53 @@ export class AdminFacturacionComponent implements OnInit {
 
   async guardarCambiosFinales() {
     if (!this.detalleSeleccionado) return;
-    this.cargando = true;
-
-    this.detalleSeleccionado.pedidos.forEach((pedido: any) => {
-      pedido.items.forEach((item: any) => {
-        item.subtotal = item.precioUnit * item.cantidad;
-      });
+    this.detalleSeleccionado.pedidos.forEach((p: any) => {
+      p.items.forEach((i: any) => i.subtotal = i.precioUnit * i.cantidad);
     });
-
-    const totalCalculado = this.calcularTotalAprobado();
-
     try {
       await this.adminService.actualizarCuenta(this.detalleSeleccionado.id, {
         pedidos: this.detalleSeleccionado.pedidos,
-        total: totalCalculado
+        total: this.calcularTotalAprobado(),
+        observaciones: this.observaciones
       });
-      alert('Base de datos sincronizada correctamente.');
+      alert('Guardado.');
+    } catch (error) { console.error(error); }
+  }
+
+  async finalizarCuenta() {
+    if (!confirm('¿Finalizar cuenta y liberar mesa?')) return;
+    
+    const cuentaFinalizada = {
+      ...this.detalleSeleccionado,
+      estado: 'cerrada',
+      total: this.calcularTotalAprobado(),
+      observaciones: this.observaciones,
+      fechaCierre: new Date()
+    };
+
+    try {
+      await this.adminService.archivarCuenta(cuentaFinalizada);
+      alert('Cuenta cerrada y mesa liberada.');
       this.cerrarDetalle();
     } catch (error) {
-      console.error("Error al sincronizar:", error);
-    } finally {
-      this.cargando = false;
+      console.error(error);
+      alert('Error al cerrar cuenta.');
     }
+  }
+
+  imprimirFactura() {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    const total = this.calcularTotalAprobado();
+    let tablaHtml = '';
+    this.detalleSeleccionado.pedidos.forEach((p: any) => {
+      if (p.estado !== 'pendiente') {
+        p.items.forEach((i: any) => {
+          tablaHtml += `<tr><td>${i.cantidad}</td><td>${i.nombre} <br><small>${p.horaSolicitud}</small></td><td>$${i.precioUnit}</td><td style="text-align: right;">$${i.precioUnit * i.cantidad}</td></tr>`;
+        });
+      }
+    });
+    printWindow.document.write(`<html><head><title>Ticket</title><style>body { font-family: monospace; font-size: 12px; padding: 20px; color: #000; } .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; } table { width: 100%; margin: 15px 0; } th { border-bottom: 1px solid #000; text-align: left; } .total { border-top: 1px dashed #000; padding-top: 10px; text-align: right; font-weight: bold; font-size: 14px; }</style></head><body onload="window.print()"><div class="header"><h1>${this.nombreBar}</h1><p>Mesa: ${this.detalleSeleccionado.numeroMesa}<br>${new Date().toLocaleDateString()}</p></div><table><thead><tr><th>Cant</th><th>Producto</th><th>Precio</th><th style="text-align: right;">Subt</th></tr></thead><tbody>${tablaHtml}</tbody></table><div class="total">TOTAL: $${total}</div></body></html>`);
+    printWindow.document.close();
   }
 }
