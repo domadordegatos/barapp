@@ -1,5 +1,6 @@
 <div class="contenedor-principal">
 
+  <!-- Pantallas de estado inicial -->
   <div class="pantalla-estado" *ngIf="cargandoValidacion">
     <div class="loader-simple"></div>
     <p>Sincronizando con el bar...</p>
@@ -14,60 +15,86 @@
     </div>
   </div>
 
+  <!-- Layout principal de la aplicación -->
   <div *ngIf="barValido && !cargandoValidacion" class="full-layout">
 
+    <!-- Pantalla de bloqueo por código -->
     <div class="pantalla-bloqueo" *ngIf="!accesoAutorizado">
       <div class="card-acceso">
         <h2>{{ nombreBarReal }}</h2>
         <p class="mesa-label">Mesa #{{ numeroMesaReal || '...' }}</p>
-        
         <div class="input-container">
           <label>Ingresa el código del día:</label>
-          <input 
-            type="text" 
-            [(ngModel)]="codigoIngresado" 
-            maxlength="4" 
-            placeholder="0000"
-            class="input-codigo">
-          
-          <button 
-            (click)="validarAcceso()" 
-            [disabled]="codigoIngresado.length !== 4"
-            class="btn-ingresar">
-            Entrar
-          </button>
+          <input type="text" [(ngModel)]="codigoIngresado" maxlength="4" placeholder="0000" class="input-codigo">
+          <button (click)="validarAcceso()" [disabled]="codigoIngresado.length !== 4" class="btn-ingresar">Entrar</button>
         </div>
       </div>
     </div>
 
+    <!-- Contenido autorizado -->
     <div class="vista-autorizada-container" *ngIf="accesoAutorizado">
       
+      <!-- Selector de Pestañas (Música / Productos) -->
       <div class="tab-selector">
-        <button [class.active]="vistaActual === 'songs'" (click)="cambiarVista('songs')">
-          <span>🎵 Música</span>
-        </button>
-        <button [class.active]="vistaActual === 'products'" (click)="cambiarVista('products')">
-          <span>🍻 Productos</span>
-        </button>
+        <button [class.active]="vistaActual === 'songs'" (click)="cambiarVista('songs')"><span>🎵 Música</span></button>
+        <button [class.active]="vistaActual === 'products'" (click)="cambiarVista('products')"><span>🍻 Productos</span></button>
       </div>
 
+      <!-- Contenido de las pestañas -->
       <div class="window-slider" [@slideContent]="vistaActual">
-        
         <div class="slide-section" *ngIf="vistaActual === 'songs'">
-          <app-buscar-canciones 
-            [nombreBarUrl]="nombreBarUrl"
-            [idMesaUrl]="idMesaUrl"
-            [numeroMesaReal]="numeroMesaReal"
-            [nombreBarReal]="nombreBarReal">
-          </app-buscar-canciones>
+          <app-buscar-canciones [nombreBarUrl]="nombreBarUrl" [idMesaUrl]="idMesaUrl" [numeroMesaReal]="numeroMesaReal" [nombreBarReal]="nombreBarReal"></app-buscar-canciones>
         </div>
-
-      <div class="slide-section" *ngIf="vistaActual === 'products'">
-        <app-lista-productos 
-  [nombreBarUrl]="nombreBarUrl"
-  [idMesaUrl]="idMesaUrl"
-  [numeroMesaReal]="numeroMesaReal"
-  [codigoAcceso]="codigoAccesoVigente"> </app-lista-productos>
+        <div class="slide-section" *ngIf="vistaActual === 'products'">
+          <app-lista-productos [nombreBarUrl]="nombreBarUrl" [idMesaUrl]="idMesaUrl" [numeroMesaReal]="numeroMesaReal" [codigoAcceso]="codigoAccesoVigente" (carritoActualizado)="onCarritoActualizado($event)"></app-lista-productos>
+        </div>
       </div>
 
-      </div> </div> </div> </div>
+      <!-- Botón flotante para ver el pedido -->
+      <div class="footer-pedido" *ngIf="carrito.length > 0">
+        <button class="btn-ver-pedido" (click)="mostrarResumen()">
+          Ver Pedido ({{ carrito.length }} items)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE RESUMEN DE PEDIDO -->
+  <div class="modal-overlay" *ngIf="mostrandoResumenPedido">
+    <div class="modal-resumen-pedido">
+      
+      <div class="modal-header">
+        <h3>Resumen del Pedido</h3>
+        <button class="btn-cerrar" (click)="ocultarResumen()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div *ngIf="carrito.length > 0; else carritoVacio">
+          <div *ngFor="let item of carrito" class="item-pedido">
+            <span class="cantidad">{{ item.cantidad }}x</span>
+            <span class="nombre">{{ item.nombre | titlecase }}</span>
+            <span class="subtotal">{{ (item.precio * item.cantidad) | currency:'USD':'symbol':'1.2-2' }}</span>
+          </div>
+        </div>
+        <ng-template #carritoVacio>
+          <p class="carrito-vacio-msg">Tu carrito está vacío.</p>
+        </ng-template>
+      </div>
+
+      <div class="modal-footer">
+        <div class="total-pedido">
+          <strong>Total:</strong>
+          <span>{{ calcularTotalPedido() | currency:'USD':'symbol':'1.2-2' }}</span>
+        </div>
+        <button 
+          class="btn-confirmar-pedido"
+          (click)="confirmarPedido()"
+          [disabled]="enviandoPedido || carrito.length === 0">
+          <span *ngIf="!enviandoPedido">Confirmar y Enviar</span>
+          <span *ngIf="enviandoPedido" class="loader-boton"></span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

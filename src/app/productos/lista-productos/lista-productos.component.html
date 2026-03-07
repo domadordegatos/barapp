@@ -1,49 +1,30 @@
 <div class="modulo-productos">
-  
-  <div class="header-productos">
-    <button *ngIf="categoriaSeleccionada" (click)="regresar()" class="btn-regresar">⬅</button>
-    <span class="titulo-vista">
-      {{ categoriaSeleccionada ? categoriaSeleccionada.nombre : 'Categorías' }}
-    </span>
-  </div>
+    <div class="contenedor-menu">
+        <div *ngFor="let cat of categorias$ | async" class="acordeon-categoria">
+            <div class="card-categoria" (click)="toggleCategoria(cat)">
+                <h3>{{ cat.nombre | titlecase }}</h3>
+                <div class="arrow" [class.abierto]="categoriaAbiertaId === cat.id">❯</div>
+            </div>
 
-  <div class="contenedor-menu" *ngIf="!categoriaSeleccionada">
-    <div *ngFor="let cat of (categorias$ | async)" class="card-categoria" (click)="seleccionarCategoria(cat)">
-      <div class="info-cat">
-        <h3>{{ cat.nombre }}</h3>
-      </div>
-      <span class="arrow">❯</span>
+            <div class="panel-productos" [class.abierto]="categoriaAbiertaId === cat.id">
+                <div *ngIf="(productos$ | async) as productos">
+                    <!-- 1. El clic en la tarjeta ahora suma el producto directamente -->
+                    <div *ngFor="let prod of productos" class="card-producto" (click)="sumarProducto(prod)">
+                        <div class="info-prod">
+                            <strong>{{ prod.nombre | titlecase }}</strong>
+                            <p>{{ prod.precio | currency:'USD':'symbol':'1.2-2' }}</p>
+                        </div>
+
+                        <!-- 2. Los controles aparecen si el producto está en el carrito -->
+                        <div class="controles-cantidad" *ngIf="obtenerCantidad(prod.id) > 0">
+                             <!-- 3. El botón de restar detiene la propagación para no sumar accidentalmente -->
+                            <button class="btn-cantidad" (click)="$event.stopPropagation(); restarProducto(prod)">-</button>
+                            <span class="cantidad-producto">{{ obtenerCantidad(prod.id) }}</span>
+                            <!-- El botón de sumar ha sido eliminado -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-
-<div class="contenedor-menu" *ngIf="categoriaSeleccionada">
-  <div *ngFor="let prod of (productos$ | async)" 
-       class="card-producto" 
-       (click)="sumarProducto(prod)">
-    
-    <div class="info-prod">
-      <strong>{{ prod.nombre }}</strong>
-      <p>{{ prod.precio | currency:'USD':'symbol':'1.0-0' }}</p>
-    </div>
-
-    <div class="controles-carrito">
-      <button *ngIf="obtenerCantidad(prod.id) > 0" 
-              (click)="restarProducto(prod); $event.stopPropagation()" 
-              class="btn-circular btn-menos">
-        -
-      </button>
-
-      <span class="cantidad-label" *ngIf="obtenerCantidad(prod.id) > 0">
-        {{ obtenerCantidad(prod.id) }}
-      </span>
-      
-      </div>
-  </div>
-</div>
-
-  <div class="footer-accion" *ngIf="carrito.length > 0">
-    <button class="btn-solicitar" (click)="enviarPedido()">
-      Solicitar Pedido ({{ totalItems }}) • {{ totalPrecio | currency:'USD':'symbol':'1.0-0' }}
-    </button>
-  </div>
 </div>
