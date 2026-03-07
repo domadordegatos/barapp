@@ -17,15 +17,12 @@ html, body {
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-app);
   
-  /* Refuerzo para deshabilitar zoom manual en algunos navegadores */
+  /* Deshabilita gestos de zoom a nivel de sistema de toque */
   touch-action: manipulation; 
   overflow-x: hidden;
 }
 
-/* Evitar que los inputs hagan zoom automático en iPhone al enfocarlos */
-input[type="text"], 
-input[type="number"], 
-input[type="tel"], 
-textarea {
-  font-size: 16px !important; 
+/* Eliminamos la restricción de font-size que bloqueaba los números gigantes */
+input, textarea {
+  font-family: inherit;
 }

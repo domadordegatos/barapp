@@ -1,7 +1,10 @@
 <div class="contenedor-principal">
-  <!-- Pantallas de estado inicial -->
+  <!-- Pantalla de carga centrada y elegante -->
   <div class="pantalla-estado" *ngIf="cargandoValidacion">
-    <div class="loader-simple"></div>
+    <div class="loader-container">
+      <div class="loader-simple"></div>
+      <p class="loading-text">Sincronizando con el bar...</p>
+    </div>
   </div>
 
   <div *ngIf="barValido && !cargandoValidacion" class="full-layout">
