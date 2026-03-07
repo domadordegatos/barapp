@@ -2,57 +2,49 @@
   <!-- Pantallas de estado inicial -->
   <div class="pantalla-estado" *ngIf="cargandoValidacion">
     <div class="loader-simple"></div>
-    <p>Sincronizando con el bar...</p>
-  </div>
-
-  <div class="pantalla-estado" *ngIf="!barValido && !cargandoValidacion">
-    <div class="card-error">
-      <h2>¡Ups! Algo salió mal</h2>
-      <p>{{ errorMensaje }}</p>
-      <button routerLink="/" class="btn-volver">Ir al inicio</button>
-    </div>
   </div>
 
   <div *ngIf="barValido && !cargandoValidacion" class="full-layout">
     
-    <!-- Pantalla de Bloqueo -->
+    <!-- PANTALLA DE ACCESO PREMIUM -->
     <div class="pantalla-bloqueo" *ngIf="!accesoAutorizado">
-      <div class="card-acceso">
-        <h2>{{ nombreBarReal }}</h2>
-        <p class="mesa-label">Mesa #{{ numeroMesaReal || '...' }}</p>
-        <div class="input-container">
-          <label>Código del día:</label>
-          <input type="text" [(ngModel)]="codigoIngresado" maxlength="4" placeholder="0000" class="input-codigo">
-          <button (click)="validarAcceso()" [disabled]="codigoIngresado.length !== 4" class="btn-ingresar">Entrar</button>
+      <div class="acceso-premium-container">
+        
+        <div class="header-bienvenida">
+          <h1>¡Hola! <br>Bienvenido a <strong>{{ nombreBarReal }}</strong></h1>
+          <p>Ingresa el código que te dio tu mesero para empezar a pedir.</p>
         </div>
+
+        <div class="input-gigante-container">
+          <input 
+            type="tel" 
+            [(ngModel)]="codigoIngresado" 
+            maxlength="4" 
+            placeholder="0000"
+            class="input-codigo-gigante"
+            (keyup)="codigoIngresado.length === 4 && validarAcceso()">
+        </div>
+
+        <button 
+          (click)="validarAcceso()" 
+          [disabled]="codigoIngresado.length !== 4"
+          class="btn-acceder-premium">
+          Entrar ahora
+        </button>
+
       </div>
     </div>
 
     <!-- VISTA AUTORIZADA -->
     <div class="vista-autorizada-container" *ngIf="accesoAutorizado">
-      
-      <!-- Selector de Pestañas con Clases Dinámicas -->
       <div class="tab-selector">
-        <button 
-          [class.active-music]="vistaActual === 'songs'" 
-          (click)="vistaActual = 'songs'">
-          <span>🎵 Música</span>
-        </button>
-        <button 
-          [class.active-products]="vistaActual === 'products'" 
-          (click)="vistaActual = 'products'">
-          <span>🍻 Productos</span>
-        </button>
+        <button [class.active-music]="vistaActual === 'songs'" (click)="vistaActual = 'songs'">🎵 Música</button>
+        <button [class.active-products]="vistaActual === 'products'" (click)="vistaActual = 'products'">🍻 Productos</button>
       </div>
 
       <div class="window-slider" [@slideContent]="vistaActual">
         <div class="slide-section" *ngIf="vistaActual === 'songs'">
-          <app-buscar-canciones 
-            [nombreBarUrl]="nombreBarUrl" 
-            [idMesaUrl]="idMesaUrl" 
-            [numeroMesaReal]="numeroMesaReal" 
-            [nombreBarReal]="nombreBarReal">
-          </app-buscar-canciones>
+          <app-buscar-canciones [nombreBarUrl]="nombreBarUrl" [idMesaUrl]="idMesaUrl" [numeroMesaReal]="numeroMesaReal" [nombreBarReal]="nombreBarReal"></app-buscar-canciones>
         </div>
         <div class="slide-section" *ngIf="vistaActual === 'products'">
           <app-lista-productos 
@@ -66,35 +58,20 @@
         </div>
       </div>
 
-      <!-- Botón Flotante de Pedido (Azul Marketplace) -->
       <div class="footer-pedido" *ngIf="carrito.length > 0 && vistaActual === 'products'">
-        <button class="btn-ver-pedido" (click)="mostrandoResumenPedido = true">
-          🛒 Ver Pedido ({{ carrito.length }})
-        </button>
+        <button class="btn-ver-pedido" (click)="mostrandoResumenPedido = true">🛒 Ver Pedido ({{ carrito.length }})</button>
       </div>
-
     </div>
   </div>
 
-  <!-- Modal Resumen Pedido -->
   <div class="modal-overlay" *ngIf="mostrandoResumenPedido" (click)="mostrandoResumenPedido = false">
     <div class="modal-resumen-pedido" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3>Resumen de tu pedido</h3>
+      <h3>Tu Pedido</h3>
+      <div *ngFor="let item of carrito" class="item-pedido-resumen">
+        <span>{{ item.cantidad }}x {{ item.nombre }}</span>
+        <span>{{ (item.precio * item.cantidad) | currency:'USD':'symbol':'1.0-0' }}</span>
       </div>
-      <div class="modal-body">
-        <div *ngFor="let item of carrito" class="item-pedido-resumen">
-          <span class="cant">{{ item.cantidad }}x</span>
-          <span class="nom">{{ item.nombre }}</span>
-          <span class="sub">{{ (item.precio * item.cantidad) | currency:'USD':'symbol':'1.0-0' }}</span>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-confirmar-pedido" (click)="confirmarPedido()" [disabled]="enviandoPedido">
-          Confirmar y Enviar Pedido
-        </button>
-      </div>
+      <button class="btn-confirmar-pedido" (click)="confirmarPedido()">Confirmar Pedido</button>
     </div>
   </div>
-
 </div>

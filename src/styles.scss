@@ -1,1 +1,31 @@
-/* You can add global styles to this file, and also import other style files */
+/* Estilos Globales de la Aplicación */
+:root {
+  --color-primario: #1DB954; /* Verde Premium */
+  --bg-app: #f8f9fa;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-app);
+  
+  /* Refuerzo para deshabilitar zoom manual en algunos navegadores */
+  touch-action: manipulation; 
+  overflow-x: hidden;
+}
+
+/* Evitar que los inputs hagan zoom automático en iPhone al enfocarlos */
+input[type="text"], 
+input[type="number"], 
+input[type="tel"], 
+textarea {
+  font-size: 16px !important; 
+}

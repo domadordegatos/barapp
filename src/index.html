@@ -2,10 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>SpotifyFirebaseAngular</title>
+  <title>BarApp - Tu Menú Digital</title>
   <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Script para forzar el bloqueo de zoom en dispositivos móviles -->
+  <script>
+    document.addEventListener('touchstart', function (event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    var lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      var now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+  </script>
 </head>
 <body>
   <app-root></app-root>

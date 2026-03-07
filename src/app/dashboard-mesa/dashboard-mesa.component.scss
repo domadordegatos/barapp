@@ -1,69 +1,108 @@
-/* Paleta de Colores Global Dashboard */
-$color-musica: #1DB954;    /* Verde Spotify */
-$color-productos: #007bff; /* Azul Marketplace */
-$bg-app: #f8f9fa;         /* Gris casi blanco */
+$color-primario: #1DB954;
+$bg-app: #f8f9fa;
 
 .contenedor-principal {
   background-color: $bg-app;
-  color: #212529;
   min-height: 100vh;
-  font-family: 'Inter', -apple-system, sans-serif;
-  padding-bottom: 80px; /* Espacio para el botón flotante */
 }
 
-/* Selector de Pestañas Unificado */
-.tab-selector {
+/* --- PANTALLA DE ACCESO PREMIUM --- */
+.pantalla-bloqueo {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: white;
+  z-index: 2000;
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  background-color: #fff;
-  padding: 8px;
-  border-radius: 20px;
-  margin: 15px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  align-items: center;
+  padding: 20px;
+}
 
-  button {
-    flex: 1;
-    padding: 12px;
-    background-color: transparent;
+.acceso-premium-container {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+}
+
+.header-bienvenida {
+  h1 { font-size: 30px; font-weight: 800; color: #111; margin: 0; line-height: 1.2; }
+  h1 strong { color: $color-primario; }
+  p { font-size: 16px; color: #777; margin-top: 15px; line-height: 1.4; padding: 0 15px; }
+}
+
+.input-gigante-container {
+  position: relative;
+  width: 100%;
+
+  .input-codigo-gigante {
+    width: 100%;
     border: none;
-    color: #888;
-    font-size: 15px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border-radius: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    background: transparent;
+    text-align: center;
+    font-size: 85px; /* Restauramos el tamaño gigante */
+    font-weight: 800;
+    color: #111;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    /* Letter spacing exagerado para separar bien los dígitos */
+    letter-spacing: 25px; 
+    text-indent: 25px; /* Centra el bloque de texto compensando el spacing del último dígito */
+    font-family: 'Inter', sans-serif;
 
-    &.active-music {
-      background-color: rgba($color-musica, 0.1);
-      color: $color-musica;
+    &::placeholder {
+      color: #f4f4f4;
     }
+  }
 
-    &.active-products {
-      background-color: rgba($color-productos, 0.1);
-      color: $color-productos;
-    }
+  /* Línea decorativa más premium */
+  &::after {
+    content: '';
+    display: block;
+    width: 150px;
+    height: 6px;
+    background-color: $color-primario;
+    border-radius: 10px;
+    margin: 5px auto 0;
+    opacity: 0.2;
   }
 }
 
-/* Modales estilo iOS (Mobile First) */
-.modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.4); z-index: 1000; backdrop-filter: blur(4px);
-  display: flex; align-items: flex-end;
-}
-
-.modal-resumen-pedido {
-  background: #fff;
+.btn-acceder-premium {
   width: 100%;
-  border-radius: 24px 24px 0 0;
   padding: 24px;
-  box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
+  background-color: $color-primario;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba($color-primario, 0.25);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:disabled {
+    background-color: #f5f5f5;
+    color: #ccc;
+    box-shadow: none;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
 }
 
-.btn-confirmar-pedido {
-  width: 100%; padding: 16px; border-radius: 12px; border: none;
-  background: $color-productos; color: #fff; font-weight: 700;
+/* Tab Selector coherente */
+.tab-selector {
+  display: flex; background: #fff; padding: 6px; border-radius: 18px; margin: 15px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+  button {
+    flex: 1; padding: 12px; border: none; background: transparent; color: #999;
+    font-size: 15px; font-weight: 700; border-radius: 14px;
+    &.active-music, &.active-products { background: rgba($color-primario, 0.1); color: $color-primario; }
+  }
 }
