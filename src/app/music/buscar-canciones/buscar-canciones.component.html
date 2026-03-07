@@ -2,55 +2,67 @@
   
   <div class="header-bar">
     <div class="search-box">
-      <input 
-        type="text" 
-        [(ngModel)]="query" 
-        (input)="onSearchChange()" 
-        placeholder="Busca artista o canción...">
-
+      <input type="text" [(ngModel)]="query" (input)="onSearchChange()" placeholder="Busca tu canción favorita y pídela...">
       <div class="resultados-busqueda" *ngIf="tracks.length > 0">
-        <div *ngFor="let track of tracks" class="item-resultado" (click)="seleccionarCancion(track)">
+        <div *ngFor="let track of tracks" class="item-resultado" (click)="abrirConfirmacion(track)">
           <img [src]="track.album.images[2]?.url" class="foto-resultado">
           <div class="info-resultado">
             <strong>{{ track.name }}</strong>
             <p>{{ obtenerArtistas(track) }}</p>
           </div>
-          <div class="add-icon">+</div>
+          <div class="btn-pedir">Pedir</div>
         </div>
       </div>
     </div>
   </div>
 
   <div class="mis-pedidos">
-    <h4 class="titulo-seccion">Mis pedidos recientes</h4>
+    <h4 class="titulo-seccion">Tu Actividad Musical</h4>
     
     <div *ngIf="(misCanciones$ | async) as lista; else cargandoH">
+      <!-- Añadimos clase dinámica para deshabilitar el fondo rojo si no está pendiente -->
       <div *ngFor="let solicitud of lista" 
+           class="swipe-container" 
+           [class.animar-tutorial]="idNuevaCancion === solicitud.id"
+           [class.swipe-disabled]="solicitud.estado?.toLowerCase() !== 'pendiente'">
+        
+        <!-- El fondo rojo CON LA PAPELERA solo aparece si está pendiente -->
+        <div *ngIf="solicitud.estado?.toLowerCase() === 'pendiente'" 
+             class="swipe-background" 
+             (click)="eliminarCancion(solicitud)">
+           <span class="delete-icon">🗑️</span>
+        </div>
+
+        <div 
            class="card-historial" 
            [ngClass]="{
              'pedido-finalizado': solicitud.estado?.toLowerCase() !== 'pendiente',
              'pedido-aprobado': solicitud.estado?.toLowerCase() === 'reproduciendo' || solicitud.estado?.toLowerCase() === 'aprobado',
              'pedido-rechazado': solicitud.estado?.toLowerCase() === 'rechazado'
-           }">
-        
-        <img [src]="solicitud.foto" class="foto-mini">
-        
-        <div class="info-pedida">
-          <strong>{{ solicitud.cancion }}</strong>
-          <p>{{ solicitud.artista }}</p>
-        </div>
-
-        <div class="status-container">
-          <span class="hora-pedido">
-            {{ (solicitud.timestamp?.toDate ? solicitud.timestamp.toDate() : 
-                (solicitud.fechaHora?.toDate ? solicitud.fechaHora.toDate() : solicitud.timestamp)) 
-                | date:'h:mm a' }}
-          </span>
+           }"
+           (touchstart)="onTouchStart($event, solicitud)"
+           (touchmove)="onTouchMove($event)"
+           (touchend)="onTouchEnd()"
+           [style.transform]="getTransform(solicitud.id)">
           
-          <div class="estado-badge" [ngClass]="solicitud.estado?.toLowerCase()">
-            <span *ngIf="solicitud.estado?.toLowerCase() === 'pendiente'">Esperando</span>
-            <span *ngIf="solicitud.estado?.toLowerCase() === 'reproduciendo' || solicitud.estado?.toLowerCase() === 'aprobado'">Se reprodujo</span>
-            <span *ngIf="solicitud.estado?.toLowerCase() === 'rechazado'">No disponible</span>
+          <img [src]="solicitud.foto" class="foto-mini">
+          
+          <div class="info-pedida">
+            <strong>{{ solicitud.cancion }}</strong>
+            <p>{{ solicitud.artista }}</p>
+          </div>
+
+          <div class="status-container">
+            <span class="hora-pedido">
+              {{ (solicitud.timestamp?.toDate ? solicitud.timestamp.toDate() : 
+                  (solicitud.fechaHora?.toDate ? solicitud.fechaHora.toDate() : solicitud.timestamp)) 
+                  | date:'h:mm a' }}
+            </span>
+            <div class="estado-badge" [ngClass]="solicitud.estado?.toLowerCase()">
+              <span *ngIf="solicitud.estado?.toLowerCase() === 'pendiente'">Esperando</span>
+              <span *ngIf="solicitud.estado?.toLowerCase() === 'reproduciendo' || solicitud.estado?.toLowerCase() === 'aprobado'">Se reprodujo</span>
+              <span *ngIf="solicitud.estado?.toLowerCase() === 'rechazado'">No disponible</span>
+            </div>
           </div>
         </div>
       </div>
@@ -62,4 +74,21 @@
     <ng-template #cargandoH><p>Actualizando lista...</p></ng-template>
   </div>
 
+  <!-- MODAL DE CONFIRMACIÓN -->
+  <div class="modal-confirmacion-overlay" *ngIf="mostrandoModal" (click)="cancelarSolicitud()">
+    <div class="modal-confirmacion" (click)="$event.stopPropagation()">
+      <div class="header-modal"><h3>Confirmar Pedido</h3></div>
+      <div class="body-modal" *ngIf="trackSeleccionado">
+        <img [src]="trackSeleccionado.album.images[1]?.url" class="foto-modal">
+        <div class="info-modal"><strong>{{ trackSeleccionado.name }}</strong><p>{{ obtenerArtistas(trackSeleccionado) }}</p></div>
+      </div>
+      <div class="footer-modal">
+        <button class="btn-cancelar" (click)="cancelarSolicitud()">Cancelar</button>
+        <button class="btn-confirmar" (click)="confirmarSolicitud()" [disabled]="enviandoSolicitud">
+          <span *ngIf="!enviandoSolicitud">Pedir Canción</span>
+          <span *ngIf="enviandoSolicitud">Enviando...</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

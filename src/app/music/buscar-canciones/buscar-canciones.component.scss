@@ -1,233 +1,94 @@
 $spotify-green: #1db954;
+$delete-red: #ff3b30;
 
-:host {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-}
+:host { display: flex; flex-direction: column; height: 100%; width: 100%; box-sizing: border-box; overflow: hidden; }
 
-/* Header con buscador */
-.header-bar {
-  padding: 15px;
-  width: 100%;
-  box-sizing: border-box;
-  flex-shrink: 0;
+/* ... (Estilos de Header y Resultados se mantienen) ... */
+.header-bar { padding: 15px 15px 5px; width: 100%; box-sizing: border-box; flex-shrink: 0; .search-box { position: relative; width: 100%; input { width: 100%; box-sizing: border-box; padding: 12px 20px; padding-left: 45px; border-radius: 12px; border: 1px solid #eee; background-color: #fff; color: #333; font-size: 15px; outline: none; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: all 0.3s ease; &:focus { border-color: $spotify-green; box-shadow: 0 4px 15px rgba($spotify-green, 0.1); } } &::before { content: '🔍'; position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 16px; z-index: 2; opacity: 0.5; } } }
+.resultados-busqueda { margin: 0; position: absolute; top: 55px; left: 0; right: 0; background: white; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); max-height: 350px; overflow-y: auto; z-index: 1100; border: 1px solid #eee; box-sizing: border-box; .item-resultado { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f9f9f9; &:last-child { border-bottom: none; } .foto-resultado { width: 45px; height: 45px; border-radius: 8px; margin-right: 15px; object-fit: cover; flex-shrink: 0; } .info-resultado { flex: 1; min-width: 0; strong { display: block; font-size: 14px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } p { font-size: 12px; color: #888; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } } .btn-pedir { background-color: rgba($spotify-green, 0.1); color: $spotify-green; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; text-transform: uppercase; flex-shrink: 0; } } }
 
-  .search-box {
-    position: relative;
-    width: 100%;
-    box-sizing: border-box;
-
-    input {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 14px 20px;
-      padding-left: 45px;
-      border-radius: 12px;
-      border: 1px solid #eee;
-      background-color: #fff;
-      color: #333;
-      font-size: 16px;
-      outline: none;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-      transition: all 0.3s ease;
-
-      &:focus {
-        border-color: $spotify-green;
-        box-shadow: 0 4px 15px rgba($spotify-green, 0.1);
-      }
-    }
-
-    &::before {
-      content: '🔍';
-      position: absolute;
-      left: 18px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 16px;
-      z-index: 2;
-      opacity: 0.5;
-    }
-  }
-}
-
-/* RESULTADOS DE BÚSQUEDA */
-.resultados-busqueda {
-  margin: 0 15px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-  max-height: 350px;
-  overflow-y: auto;
-  z-index: 1100;
-  border: 1px solid #eee;
-  box-sizing: border-box;
-
-  .item-resultado {
-    display: flex;
-    align-items: center;
-    padding: 12px 15px;
-    border-bottom: 1px solid #f9f9f9;
-    
-    &:last-child { border-bottom: none; }
-
-    .foto-resultado {
-      width: 45px;
-      height: 45px;
-      border-radius: 8px;
-      margin-right: 15px;
-      object-fit: cover;
-      flex-shrink: 0;
-    }
-
-    .info-resultado {
-      flex: 1;
-      min-width: 0;
-      strong { display: block; font-size: 15px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      p { font-size: 13px; color: #888; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    }
-
-    .add-icon {
-      color: $spotify-green;
-      font-size: 22px;
-      font-weight: bold;
-      padding: 5px;
-      flex-shrink: 0;
-    }
-  }
-}
-
-/* HISTORIAL / MIS PEDIDOS */
 .mis-pedidos {
-  flex: 1;
-  padding: 15px;
-  overflow-y: auto;
-  box-sizing: border-box;
+  flex: 1; padding: 0 15px 15px; overflow-y: auto; box-sizing: border-box;
+  .titulo-seccion { font-size: 13px; color: #bbb; text-transform: uppercase; font-weight: 700; letter-spacing: 1.2px; margin: 20px 0 15px 0; text-align: center; }
+}
 
-  .titulo-seccion {
-    font-size: 14px;
-    color: #888;
-    text-transform: uppercase;
-    font-weight: 700;
-    letter-spacing: 1px;
-    margin: 20px 0 15px 5px;
+/* --- SWIPE CONTAINER --- */
+.swipe-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: 15px;
+  background-color: $delete-red; /* Color rojo por defecto para los que se pueden borrar */
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+
+  /* Si el swipe está deshabilitado, el fondo es blanco */
+  &.swipe-disabled {
+    background-color: #fff;
+    box-shadow: none;
   }
+}
+
+.swipe-background {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  .delete-icon { font-size: 24px; }
 }
 
 .card-historial {
-  display: flex;
-  align-items: center;
-  background: white;
-  padding: 14px;
-  border-radius: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-  box-sizing: border-box;
-  width: 100%;
+  position: relative;
+  z-index: 2;
+  display: flex; align-items: center; 
+  background: white; 
+  padding: 14px; 
+  border-radius: 16px; 
+  width: 100%; 
   gap: 15px;
-  transition: all 0.3s ease;
+  transition: transform 0.1s ease-out;
 
-  .foto-mini {
-    width: 56px;
-    height: 56px;
-    border-radius: 10px;
-    flex-shrink: 0;
-    object-fit: cover;
-    transition: all 0.3s ease;
-  }
-
-  .info-pedida {
-    flex: 1;
-    min-width: 0;
+  .foto-mini { width: 56px; height: 56px; border-radius: 10px; flex-shrink: 0; object-fit: cover; }
+  .info-pedida { flex: 1; min-width: 0; strong { display: block; font-size: 16px; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px; font-weight: 700; } p { margin: 0; font-size: 13px; color: #777; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+  .status-container { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; flex-shrink: 0; min-width: 90px; gap: 6px; .hora-pedido { font-size: 11px; color: #aaa; font-weight: 500; } }
+  .estado-badge { font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; text-align: center; white-space: nowrap; &.pendiente { background: rgba(#f1c40f, 0.1); color: #f1c40f; } &.aprobado, &.reproduciendo { background: rgba($spotify-green, 0.1); color: $spotify-green; } &.rechazado { background: rgba(#e74c3c, 0.1); color: #e74c3c; } }
+  
+  /* --- ESTADOS FINALIZADOS: GRIS CLARO Y SIN SOMBRA --- */
+  &.pedido-finalizado { 
+    background-color: #f8f9fa !important; /* Gris muy claro */
+    border: 1px solid #eee;
+    box-shadow: none !important;
     
-    strong { 
-      display: block; 
-      font-size: 16px; 
-      color: #111; 
-      overflow: hidden; 
-      text-overflow: ellipsis; 
-      white-space: nowrap;
-      margin-bottom: 4px;
-      font-weight: 700;
-      transition: all 0.3s ease;
+    .foto-mini { 
+        filter: grayscale(1) opacity(0.4); /* Imagen en blanco y negro y translúcida */
+    } 
+    .info-pedida { 
+      strong { color: #aaa !important; font-size: 15px; } 
+      p { color: #ccc !important; font-size: 12px; } 
     }
-    
-    p { 
-      margin: 0;
-      font-size: 13px; 
-      color: #777; 
-      overflow: hidden; 
-      text-overflow: ellipsis; 
-      white-space: nowrap; 
-      transition: all 0.3s ease;
-    }
-  }
-
-  .status-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: center;
-    flex-shrink: 0;
-    min-width: 90px;
-    gap: 6px;
-
-    .hora-pedido {
-      font-size: 11px;
-      color: #aaa;
-      font-weight: 500;
-    }
-  }
-
-  .estado-badge {
-    font-size: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    border-radius: 20px;
-    text-align: center;
-    white-space: nowrap;
-    transition: all 0.3s ease;
-
-    &.pendiente { background: rgba(#f1c40f, 0.1); color: #f1c40f; }
-    &.aprobado, &.reproduciendo { background: rgba($spotify-green, 0.1); color: $spotify-green; }
-    &.rechazado { background: rgba(#e74c3c, 0.1); color: #e74c3c; }
-  }
-
-  /* --- PEDIDOS FINALIZADOS: MÁS PEQUEÑOS Y TONOS GRISES --- */
-  &.pedido-finalizado {
-    padding: 10px 14px; /* Más compacto verticalmente */
-    background: #fbfbfb;
-    box-shadow: none;
-    border: 1px solid #f0f0f0;
-    opacity: 0.8;
-
-    .foto-mini {
-      width: 42px; /* Reducido de 56px */
-      height: 42px; /* Reducido de 56px */
-      filter: grayscale(100%);
-      opacity: 0.6;
-    }
-
-    .info-pedida {
-      strong { font-size: 14px; color: #888; } /* Texto más pequeño y gris */
-      p { font-size: 11px; color: #bbb; } /* Texto más pequeño y gris */
-    }
-
-    /* Mantenemos el color de los badges aunque el resto sea gris */
-    .estado-badge {
-      font-size: 9px;
-      padding: 3px 8px;
+    .status-container .hora-pedido {
+        color: #ddd;
     }
   }
 }
 
-.vacio-mensaje {
-  text-align: center;
-  padding: 40px 20px;
-  color: #bbb;
-  font-size: 14px;
+/* Animación del Tutorial */
+.animar-tutorial .card-historial {
+  animation: hint-swipe 2.5s ease-in-out 0.5s;
 }
+
+@keyframes hint-swipe {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-60px); }
+  75% { transform: translateX(-60px); }
+  100% { transform: translateX(0); }
+}
+
+/* Modales */
+.modal-confirmacion-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: flex-end; backdrop-filter: blur(4px); }
+.modal-confirmacion { width: 100%; background: white; border-radius: 24px 24px 0 0; padding: 30px 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 20px; animation: slide-up 0.3s ease-out; .header-modal { text-align: center; h3 { margin: 0; font-size: 18px; font-weight: 800; color: #111; } } .body-modal { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; .foto-modal { width: 120px; height: 120px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); } .info-modal { strong { display: block; font-size: 18px; color: #111; } p { margin: 5px 0 0; font-size: 14px; color: #888; } } } .footer-modal { display: flex; gap: 15px; margin-top: 10px; button { flex: 1; padding: 18px; border-radius: 14px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; } .btn-cancelar { background: #f5f5f5; color: #666; } .btn-confirmar { background: $spotify-green; color: white; box-shadow: 0 8px 20px rgba($spotify-green, 0.25); } button:active { transform: scale(0.96); } button:disabled { opacity: 0.5; } } }
+@keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.vacio-mensaje { text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; }
