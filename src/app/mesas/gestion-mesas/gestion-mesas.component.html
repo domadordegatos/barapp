@@ -1,0 +1,58 @@
+<div class="gestion-container">
+  <h3>Gestión de Mesas</h3>
+
+  <!-- Formulario para crear nueva mesa -->
+  <div class="card-gestion">
+    <h4>Crear Nueva Mesa</h4>
+    <form [formGroup]="formCrearMesa" (ngSubmit)="crearMesa()" class="form-crear-mesa">
+      <div class="input-group">
+        <label for="numero-mesa">Número de Mesa:</label>
+        <input id="numero-mesa" type="number" formControlName="numero" placeholder="Ej: 5">
+        <button type="submit" [disabled]="formCrearMesa.invalid || creandoMesa">
+          <span *ngIf="!creandoMesa">Crear Mesa</span>
+          <span *ngIf="creandoMesa">Creando...</span>
+        </button>
+      </div>
+      <div *ngIf="errorCreacion" class="mensaje-error">
+        {{ errorCreacion }}
+      </div>
+    </form>
+  </div>
+
+  <!-- Cuadrícula de mesas existentes -->
+  <div class="card-gestion">
+    <h4>Mesas Existentes</h4>
+    <div *ngIf="(mesas$ | async) as mesas; else cargando">
+      <div *ngIf="mesas.length > 0; else noHayMesas" class="grid-mesas">
+        
+        <div *ngFor="let mesa of mesas" 
+             class="mesa-card" 
+             [ngClass]="{ 'activa': mesa.activa, 'inactiva': !mesa.activa }"
+             (click)="toggleMesaEstado(mesa)">
+          
+          <div class="status-bar"></div>
+          
+          <div class="card-content">
+            <span class="mesa-numero">{{ mesa.numero }}</span>
+            <span class="mesa-id">ID: {{ mesa.id }}</span>
+          </div>
+
+          <!-- Nueva sección para el botón QR -->
+          <div class="card-actions">
+            <button class="qr-button" (click)="descargarQR(mesa, $event)" title="Descargar Código QR">
+              <img src="assets/qr-code-icon.svg" alt="QR Code" class="qr-icon"/>
+            </button>
+          </div>
+        </div>
+
+      </div>
+      <ng-template #noHayMesas>
+        <p class="mensaje-info">Aún no se han creado mesas. ¡Añade una para empezar!</p>
+      </ng-template>
+    </div>
+    <ng-template #cargando>
+      <p class="mensaje-info">Cargando mesas...</p>
+    </ng-template>
+  </div>
+
+</div>

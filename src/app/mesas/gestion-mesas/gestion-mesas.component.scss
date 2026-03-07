@@ -1,0 +1,77 @@
+/* Estilos base (sin cambios) */
+.gestion-container { padding: 20px; font-family: 'Segoe UI', sans-serif; }
+h3, h4 { color: #fff; text-align: center; margin-bottom: 25px; }
+.card-gestion { background-color: #333; border-radius: 8px; padding: 20px; margin-bottom: 20px; color: #eee; h4 { margin-top: 0; border-bottom: 1px solid #555; padding-bottom: 10px; } }
+.form-crear-mesa .input-group { display: flex; gap: 10px; align-items: center; input { flex-grow: 1; padding: 10px; border-radius: 5px; border: 1px solid #555; background-color: #222; color: #fff; } button { padding: 10px 15px; border-radius: 5px; border: none; background-color: #007bff; color: white; cursor: pointer; } button:disabled { background-color: #555; cursor: not-allowed; } }
+.mensaje-error, .mensaje-info { text-align: center; padding: 10px 0; }
+.mensaje-error { color: #ff4d4d; }
+.mensaje-info { color: #aaa; }
+
+/* --- ESTILOS "PREMIUM" PARA LAS TARJETAS DE MESA --- */
+
+.grid-mesas {
+    display: flex; flex-wrap: wrap; gap: 25px;
+    justify-content: center; padding: 10px 0;
+}
+
+.mesa-card {
+    position: relative; width: 130px; height: 130px; /* Un poco más alta para el botón */
+    background-color: #2a2a2e; border-radius: 12px;
+    cursor: pointer; overflow: hidden;
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+
+    &:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4); }
+    &:active { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
+}
+
+.status-bar {
+    width: 100%; height: 8px;
+    transition: background-color 0.3s ease-in-out;
+}
+.mesa-card.activa .status-bar { background-color: #28a745; }
+.mesa-card.inactiva .status-bar { background-color: #dc3545; }
+
+.card-content {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; height: calc(100% - 40px); /* Ajusta el espacio para el botón */
+    padding-top: 5px; /* Espacio para que el número no pegue con la barra */
+}
+
+.mesa-numero { font-size: 2.8em; font-weight: 700; color: #f0f0f0; line-height: 1.1; }
+.mesa-id { font-size: 0.7em; color: #888; font-family: 'monospace', sans-serif; margin-top: 2px; }
+
+/* --- NUEVOS ESTILOS PARA EL BOTÓN QR --- */
+
+.card-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 5px;
+    display: flex;
+    justify-content: flex-end; /* Alinea el botón a la derecha */
+}
+
+.qr-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%; /* Botón circular */
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer; /* Cambiamos a puntero para el botón */
+    transition: background-color 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1);
+    }
+}
+
+.qr-icon {
+    width: 20px;
+    height: 20px;
+}

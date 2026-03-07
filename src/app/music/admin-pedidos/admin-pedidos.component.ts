@@ -8,8 +8,8 @@ import { RockolaService } from 'src/app/services/rockola.service';
   styleUrls: ['./admin-pedidos.component.scss']
 })
 export class AdminPedidosComponent implements OnInit {
-  // Actualizamos el tipo para incluir facturacion
-  seccionActiva: 'musica' | 'productos' | 'facturacion' = 'musica'; 
+  // Actualizamos el tipo para incluir 'mesas'
+  seccionActiva: 'musica' | 'productos' | 'facturacion' | 'mesas' = 'musica'; 
   nombreBarReal: string = 'Cargando...';
   barValido: boolean = false;
   errorMensaje: string = '';

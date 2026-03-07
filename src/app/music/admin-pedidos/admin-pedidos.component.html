@@ -14,6 +14,9 @@
           <button (click)="seccionActiva = 'productos'" [class.active]="seccionActiva === 'productos'">
             🍻 Productos
           </button>
+          <button (click)="seccionActiva = 'mesas'" [class.active]="seccionActiva === 'mesas'">
+            🪑 Mesas
+          </button>
           <button (click)="seccionActiva = 'facturacion'" [class.active]="seccionActiva === 'facturacion'">
             🧾 Facturación
           </button>
@@ -25,14 +28,14 @@
       </div>
     </nav>
 
-<div class="admin-main-container">
-  <app-gestion-musica *ngIf="seccionActiva === 'musica'"></app-gestion-musica>
-  <app-gestion-productos *ngIf="seccionActiva === 'productos'"></app-gestion-productos>
-  
-  <app-admin-facturacion 
-    *ngIf="seccionActiva === 'facturacion'"
-    [nombreBar]="nombreBarReal"> 
-  </app-admin-facturacion>
-</div>
+    <div class="admin-main-container">
+      <app-gestion-musica *ngIf="seccionActiva === 'musica'"></app-gestion-musica>
+      <app-gestion-productos *ngIf="seccionActiva === 'productos'"></app-gestion-productos>
+      <app-gestion-mesas *ngIf="seccionActiva === 'mesas'"></app-gestion-mesas>
+      <app-admin-facturacion 
+        *ngIf="seccionActiva === 'facturacion'"
+        [nombreBar]="nombreBarReal"> 
+      </app-admin-facturacion>
+    </div>
   </ng-container>
 </div>
