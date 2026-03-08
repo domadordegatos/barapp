@@ -1,94 +1,246 @@
 $spotify-green: #1db954;
 $delete-red: #ff3b30;
 
-:host { display: flex; flex-direction: column; height: 100%; width: 100%; box-sizing: border-box; overflow: hidden; }
-
-/* ... (Estilos de Header y Resultados se mantienen) ... */
-.header-bar { padding: 15px 15px 5px; width: 100%; box-sizing: border-box; flex-shrink: 0; .search-box { position: relative; width: 100%; input { width: 100%; box-sizing: border-box; padding: 12px 20px; padding-left: 45px; border-radius: 12px; border: 1px solid #eee; background-color: #fff; color: #333; font-size: 15px; outline: none; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: all 0.3s ease; &:focus { border-color: $spotify-green; box-shadow: 0 4px 15px rgba($spotify-green, 0.1); } } &::before { content: '🔍'; position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 16px; z-index: 2; opacity: 0.5; } } }
-.resultados-busqueda { margin: 0; position: absolute; top: 55px; left: 0; right: 0; background: white; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); max-height: 350px; overflow-y: auto; z-index: 1100; border: 1px solid #eee; box-sizing: border-box; .item-resultado { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f9f9f9; &:last-child { border-bottom: none; } .foto-resultado { width: 45px; height: 45px; border-radius: 8px; margin-right: 15px; object-fit: cover; flex-shrink: 0; } .info-resultado { flex: 1; min-width: 0; strong { display: block; font-size: 14px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } p { font-size: 12px; color: #888; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } } .btn-pedir { background-color: rgba($spotify-green, 0.1); color: $spotify-green; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; text-transform: uppercase; flex-shrink: 0; } } }
-
-.mis-pedidos {
-  flex: 1; padding: 0 15px 15px; overflow-y: auto; box-sizing: border-box;
-  .titulo-seccion { font-size: 13px; color: #bbb; text-transform: uppercase; font-weight: 700; letter-spacing: 1.2px; margin: 20px 0 15px 0; text-align: center; }
+:host { 
+  display: block;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
-/* --- SWIPE CONTAINER --- */
-.swipe-container {
-  position: relative;
+/* El contenedor principal del componente debe ser flex para repartir el espacio */
+.vista-autorizada {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   width: 100%;
-  margin-bottom: 15px;
-  background-color: $delete-red; /* Color rojo por defecto para los que se pueden borrar */
-  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
 
-  /* Si el swipe está deshabilitado, el fondo es blanco */
-  &.swipe-disabled {
-    background-color: #fff;
-    box-shadow: none;
+/* 1. HEADER ESTÁTICO (Buscador) */
+.header-bar { 
+  flex-shrink: 0; /* No permite que el buscador se encoja o se mueva */
+  padding: 10px 15px 5px; 
+  background-color: #fff;
+  z-index: 100;
+  
+  .search-box { 
+    position: relative; 
+    width: 100%; 
+    input { 
+      width: 100%; 
+      padding: 12px 20px; 
+      padding-left: 45px; 
+      border-radius: 12px; 
+      border: 1px solid #eee; 
+      background-color: #fff; 
+      color: #333; 
+      font-size: 15px; 
+      outline: none; 
+    } 
+    &::before { content: '🔍'; position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.5; z-index: 2; } 
+  } 
+}
+
+/* 2. TÍTULO ESTÁTICO (Tu Actividad Musical) */
+.titulo-seccion { 
+  flex-shrink: 0; /* No se mueve */
+  background-color: #f8f9fa; /* Color de fondo de la app */
+  padding: 15px 0 10px 0;
+  font-size: 13px; 
+  color: #bbb; 
+  text-transform: uppercase; 
+  font-weight: 700; 
+  letter-spacing: 1.2px; 
+  margin: 0; 
+  text-align: center; 
+} 
+
+/* 3. ZONA ÚNICA DE SCROLL (Lista de canciones) */
+.mis-pedidos { 
+  flex: 1; /* Toma todo el espacio restante de la pantalla */
+  overflow-y: auto !important; /* HABILITA EL SCROLL SOLO AQUÍ */
+  -webkit-overflow-scrolling: touch;
+  padding: 0 15px 100px; /* Padding extra abajo para el botón de pedido */
+  box-sizing: border-box;
+
+  /* Barra de scroll sutil */
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.05); border-radius: 10px; }
+}
+
+/* ESTILOS DE CARDS Y SWIPE */
+.swipe-container { 
+  position: relative; 
+  width: calc(100% - 4px); 
+  margin: 0 2px 8px 2px; 
+  background-color: $delete-red; 
+  border-radius: 16px; 
+  overflow: hidden; 
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06); 
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+
+  &.swipe-disabled { 
+    background-color: transparent; 
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04); 
+  } 
+  
+  &.removing { 
+    pointer-events: none; 
+    background-color: transparent !important; 
+    opacity: 0; 
+    max-height: 0; 
+    margin: 0; 
+    transition: all 1s cubic-bezier(0.4, 0, 0.2, 1) !important; 
+    .card-historial { 
+      transition: all 1s cubic-bezier(0.4, 0, 0.2, 1) !important; 
+      transform: scale(0) !important; 
+      opacity: 0 !important; 
+    } 
+  } 
+  
+  /* ANIMACIÓN TUTORIAL */
+  &.animar-tutorial {
+    .card-historial {
+      animation: swipe-hint 2s ease-in-out forwards;
+    }
   }
 }
 
-.swipe-background {
-  position: absolute;
-  top: 0; right: 0; bottom: 0;
-  width: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-  .delete-icon { font-size: 24px; }
+@keyframes swipe-hint {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-60px); }
+  30% { transform: translateX(-50px); } /* Pequeño rebote */
+  60% { transform: translateX(-50px); }
+  80% { transform: translateX(0); }
 }
 
-.card-historial {
-  position: relative;
-  z-index: 2;
-  display: flex; align-items: center; 
+.swipe-background { 
+  position: absolute; 
+  top: 0; 
+  right: 0; 
+  bottom: 0; 
+  width: 80px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  z-index: 1; 
+  .delete-icon { font-size: 24px; color: white; } 
+}
+
+.trash-icon-container { 
+  width: 32px; 
+  height: 32px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  .trash-svg { 
+    width: 26px; 
+    height: 26px; 
+    .trash-lid { 
+      transition: transform 0.2s ease; 
+      transform-origin: center top; 
+    } 
+  } 
+}
+
+.card-historial { 
+  position: relative; 
+  z-index: 2; 
+  display: flex; 
+  align-items: center; 
   background: white; 
-  padding: 14px; 
+  padding: 10px 14px; 
   border-radius: 16px; 
   width: 100%; 
-  gap: 15px;
-  transition: transform 0.1s ease-out;
-
-  .foto-mini { width: 56px; height: 56px; border-radius: 10px; flex-shrink: 0; object-fit: cover; }
-  .info-pedida { flex: 1; min-width: 0; strong { display: block; font-size: 16px; color: #111; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px; font-weight: 700; } p { margin: 0; font-size: 13px; color: #777; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
-  .status-container { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; flex-shrink: 0; min-width: 90px; gap: 6px; .hora-pedido { font-size: 11px; color: #aaa; font-weight: 500; } }
-  .estado-badge { font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; text-align: center; white-space: nowrap; &.pendiente { background: rgba(#f1c40f, 0.1); color: #f1c40f; } &.aprobado, &.reproduciendo { background: rgba($spotify-green, 0.1); color: $spotify-green; } &.rechazado { background: rgba(#e74c3c, 0.1); color: #e74c3c; } }
+  gap: 15px; 
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
   
-  /* --- ESTADOS FINALIZADOS: GRIS CLARO Y SIN SOMBRA --- */
+  &.swiping { transition: none !important; } 
+  
+  .foto-mini { 
+    width: 56px; 
+    height: 56px; 
+    border-radius: 10px; 
+    flex-shrink: 0; 
+    object-fit: cover; 
+  } 
+  
+  .info-pedida { 
+    flex: 1; 
+    min-width: 0; 
+    strong { 
+      display: block; 
+      font-size: 16px; 
+      color: #111; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+      white-space: nowrap; 
+      margin-bottom: 2px; 
+      font-weight: 700; 
+    } 
+    p { 
+      margin: 0; 
+      font-size: 13px; 
+      color: #777; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+      white-space: nowrap; 
+    } 
+  } 
+  
+  .status-container { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: flex-end; 
+    justify-content: center; 
+    flex-shrink: 0; 
+    min-width: 90px; 
+    gap: 4px; 
+    
+    .hora-pedido { 
+      font-size: 11px; 
+      color: #aaa; 
+      font-weight: 500; 
+    } 
+  } 
+  
+  .estado-badge { 
+    font-size: 10px; 
+    font-weight: 800; 
+    text-transform: uppercase; 
+    padding: 4px 10px; 
+    border-radius: 20px; 
+    text-align: center; 
+    white-space: nowrap; 
+    
+    &.pendiente { background: rgba(#f1c40f, 0.1); color: #f1c40f; } 
+    &.aprobado, &.reproduciendo { background: rgba($spotify-green, 0.1); color: $spotify-green; } 
+    &.rechazado { background: rgba(#e74c3c, 0.1); color: #e74c3c; } 
+  } 
+  
   &.pedido-finalizado { 
-    background-color: #f8f9fa !important; /* Gris muy claro */
-    border: 1px solid #eee;
-    box-shadow: none !important;
+    padding: 6px 14px; 
+    background-color: #f8f9fa !important; 
+    border: 1px solid #eee; 
+    box-shadow: none !important; 
+    gap: 12px; 
     
     .foto-mini { 
-        filter: grayscale(1) opacity(0.4); /* Imagen en blanco y negro y translúcida */
+      width: 36px; 
+      height: 36px; 
+      filter: grayscale(1) opacity(0.4); 
     } 
+    
     .info-pedida { 
-      strong { color: #aaa !important; font-size: 15px; } 
-      p { color: #ccc !important; font-size: 12px; } 
-    }
-    .status-container .hora-pedido {
-        color: #ddd;
-    }
-  }
+      strong { color: #aaa !important; font-size: 14px; } 
+      p { color: #ccc !important; font-size: 11px; } 
+    } 
+  } 
 }
 
-/* Animación del Tutorial */
-.animar-tutorial .card-historial {
-  animation: hint-swipe 2.5s ease-in-out 0.5s;
-}
-
-@keyframes hint-swipe {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-60px); }
-  75% { transform: translateX(-60px); }
-  100% { transform: translateX(0); }
-}
-
-/* Modales */
-.modal-confirmacion-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: flex-end; backdrop-filter: blur(4px); }
-.modal-confirmacion { width: 100%; background: white; border-radius: 24px 24px 0 0; padding: 30px 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 20px; animation: slide-up 0.3s ease-out; .header-modal { text-align: center; h3 { margin: 0; font-size: 18px; font-weight: 800; color: #111; } } .body-modal { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; .foto-modal { width: 120px; height: 120px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); } .info-modal { strong { display: block; font-size: 18px; color: #111; } p { margin: 5px 0 0; font-size: 14px; color: #888; } } } .footer-modal { display: flex; gap: 15px; margin-top: 10px; button { flex: 1; padding: 18px; border-radius: 14px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; transition: all 0.2s; } .btn-cancelar { background: #f5f5f5; color: #666; } .btn-confirmar { background: $spotify-green; color: white; box-shadow: 0 8px 20px rgba($spotify-green, 0.25); } button:active { transform: scale(0.96); } button:disabled { opacity: 0.5; } } }
+.resultados-busqueda { margin: 0; position: absolute; top: 55px; left: 0; right: 0; background: white; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); max-height: 250px; overflow-y: auto; z-index: 1100; border: 1px solid #eee; box-sizing: border-box; .item-resultado { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f9f9f9; .foto-resultado { width: 45px; height: 45px; border-radius: 8px; margin-right: 15px; object-fit: cover; } .info-resultado { flex: 1; min-width: 0; strong { display: block; font-size: 14px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } p { font-size: 12px; color: #888; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } } .btn-pedir { background-color: rgba($spotify-green, 0.1); color: $spotify-green; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; text-transform: uppercase; flex-shrink: 0; } } }
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: flex-end; backdrop-filter: blur(4px); }
+.modal-content { width: 100%; background: white; border-radius: 24px 24px 0 0; padding: 30px 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 20px; animation: slide-up 0.3s ease-out; .header-modal { text-align: center; h3 { margin: 0; font-size: 18px; font-weight: 800; color: #111; } } .body-modal { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; .foto-modal { width: 110px; height: 110px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); } .foto-modal.grayscale { filter: grayscale(1); opacity: 0.6; } .info-modal { strong { display: block; font-size: 18px; color: #111; } p { margin: 5px 0 0; font-size: 14px; color: #888; } } } .footer-modal { display: flex; gap: 15px; margin-top: 10px; button { flex: 1; padding: 18px; border-radius: 14px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; } .btn-cancelar { background: #f5f5f5; color: #666; } .btn-confirmar { background: $spotify-green; color: white; } .btn-danger { background: $delete-red; color: white; } } }
 @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .vacio-mensaje { text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; }

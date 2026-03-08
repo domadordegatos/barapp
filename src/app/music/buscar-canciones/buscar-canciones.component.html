@@ -3,8 +3,11 @@
   <div class="header-bar">
     <div class="search-box">
       <input type="text" [(ngModel)]="query" (input)="onSearchChange()" placeholder="Busca tu canción favorita y pídela...">
-      <div class="resultados-busqueda" *ngIf="tracks.length > 0">
-        <div *ngFor="let track of tracks" class="item-resultado" (click)="abrirConfirmacion(track)">
+      <div class="resultados-busqueda" *ngIf="tracks.length > 0" @listaResultados>
+        <div *ngFor="let track of tracks; let idx = index" 
+             class="item-resultado" 
+             (click)="abrirConfirmacion(track)"
+             [@itemAnim]="{value: '', params: {delay: idx * 50}}">
           <img [src]="track.album.images[2]?.url" class="foto-resultado">
           <div class="info-resultado">
             <strong>{{ track.name }}</strong>
@@ -20,17 +23,21 @@
     <h4 class="titulo-seccion">Tu Actividad Musical</h4>
     
     <div *ngIf="(misCanciones$ | async) as lista; else cargandoH">
-      <!-- Añadimos clase dinámica para deshabilitar el fondo rojo si no está pendiente -->
       <div *ngFor="let solicitud of lista" 
            class="swipe-container" 
            [class.animar-tutorial]="idNuevaCancion === solicitud.id"
+           [class.removing]="idSiendoEliminado === solicitud.id"
            [class.swipe-disabled]="solicitud.estado?.toLowerCase() !== 'pendiente'">
         
-        <!-- El fondo rojo CON LA PAPELERA solo aparece si está pendiente -->
         <div *ngIf="solicitud.estado?.toLowerCase() === 'pendiente'" 
              class="swipe-background" 
              (click)="eliminarCancion(solicitud)">
-           <span class="delete-icon">🗑️</span>
+           <div class="trash-icon-container">
+             <svg class="trash-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+               <path class="trash-lid" d="M15 4V3H9V4H4V6H20V4H15Z" fill="white"/>
+               <path class="trash-bin" d="M5 8V21H19V8H5ZM9 18H7V11H9V18ZM13 18H11V11H13V18ZM17 18H15V11H17V18Z" fill="white"/>
+             </svg>
+           </div>
         </div>
 
         <div 
@@ -38,15 +45,19 @@
            [ngClass]="{
              'pedido-finalizado': solicitud.estado?.toLowerCase() !== 'pendiente',
              'pedido-aprobado': solicitud.estado?.toLowerCase() === 'reproduciendo' || solicitud.estado?.toLowerCase() === 'aprobado',
-             'pedido-rechazado': solicitud.estado?.toLowerCase() === 'rechazado'
+             'pedido-rechazado': solicitud.estado?.toLowerCase() === 'rechazado',
+             'swiping': solicitudEnAccion?.id === solicitud.id
            }"
            (touchstart)="onTouchStart($event, solicitud)"
            (touchmove)="onTouchMove($event)"
            (touchend)="onTouchEnd()"
+           (mousedown)="onMouseDown($event, solicitud)"
+           (mousemove)="onMouseMove($event)"
+           (mouseup)="onMouseUp()"
+           (mouseleave)="onMouseLeave()"
            [style.transform]="getTransform(solicitud.id)">
           
           <img [src]="solicitud.foto" class="foto-mini">
-          
           <div class="info-pedida">
             <strong>{{ solicitud.cancion }}</strong>
             <p>{{ solicitud.artista }}</p>
@@ -66,17 +77,14 @@
           </div>
         </div>
       </div>
-
-      <div *ngIf="lista.length === 0" class="vacio-mensaje">
-        <p>No has pedido canciones aún.</p>
-      </div>
+      <div *ngIf="lista.length === 0" class="vacio-mensaje"><p>No has pedido canciones aún.</p></div>
     </div>
-    <ng-template #cargandoH><p>Actualizando lista...</p></ng-template>
+    <ng-template #cargandoH><p>Obteniendo tus canciones...</p></ng-template>
   </div>
 
-  <!-- MODAL DE CONFIRMACIÓN -->
-  <div class="modal-confirmacion-overlay" *ngIf="mostrandoModal" (click)="cancelarSolicitud()">
-    <div class="modal-confirmacion" (click)="$event.stopPropagation()">
+  <!-- MODALES -->
+  <div class="modal-overlay" *ngIf="mostrandoModal" (click)="cancelarSolicitud()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="header-modal"><h3>Confirmar Pedido</h3></div>
       <div class="body-modal" *ngIf="trackSeleccionado">
         <img [src]="trackSeleccionado.album.images[1]?.url" class="foto-modal">
@@ -85,10 +93,29 @@
       <div class="footer-modal">
         <button class="btn-cancelar" (click)="cancelarSolicitud()">Cancelar</button>
         <button class="btn-confirmar" (click)="confirmarSolicitud()" [disabled]="enviandoSolicitud">
-          <span *ngIf="!enviandoSolicitud">Pedir Canción</span>
-          <span *ngIf="enviandoSolicitud">Enviando...</span>
+          {{ enviandoSolicitud ? 'Enviando...' : 'Pedir Canción' }}
         </button>
       </div>
     </div>
   </div>
+
+  <div class="modal-overlay danger" *ngIf="mostrandoModalCancelacion" (click)="cerrarModalCancelacion()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="header-modal"><h3>¿Cancelar Solicitud?</h3></div>
+      <div class="body-modal" *ngIf="solicitudParaEliminar">
+        <img [src]="solicitudParaEliminar.foto" class="foto-modal grayscale">
+        <div class="info-modal">
+          <strong>{{ solicitudParaEliminar.cancion }}</strong>
+          <p>Se eliminará de la cola de reproducción</p>
+        </div>
+      </div>
+      <div class="footer-modal">
+        <button class="btn-cancelar" (click)="cerrarModalCancelacion()">No, mantener</button>
+        <button class="btn-danger" (click)="confirmarEliminacion()" [disabled]="eliminandoSolicitud">
+          {{ eliminandoSolicitud ? 'Eliminando...' : 'Sí, cancelar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>

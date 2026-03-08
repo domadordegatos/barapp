@@ -1,17 +1,58 @@
 $color-primario: #1DB954;
-$bg-app: #ffffff;
+$bg-app: #f8f9fa;
 
+/* --- ESTRUCTURA DE CONTENEDORES (FIX SCROLL) --- */
 .contenedor-principal {
   background-color: $bg-app;
-  min-height: 100vh;
+  height: 100%; 
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
 }
 
-/* --- PANTALLA DE CARGA CENTRADA --- */
+.full-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.vista-autorizada-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0; 
+  overflow: hidden;
+}
+
+.window-slider {
+  flex: 1;
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.slide-section {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* --- PANTALLA DE CARGA PREMIUM (RESTAURADA) --- */
 .pantalla-estado {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
   background: white;
-  z-index: 3000;
+  z-index: 4000; /* Por encima de todo */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -22,22 +63,23 @@ $bg-app: #ffffff;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 25px;
 }
 
 .loader-simple {
-  width: 45px;
-  height: 45px;
+  width: 50px; /* Tamaño restaurado */
+  height: 50px;
   border: 4px solid #f3f3f3;
   border-top-color: $color-primario;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
 .loading-text {
-  font-size: 16px;
-  font-weight: 600;
-  color: #888;
+  font-size: 18px; /* Tamaño restaurado */
+  font-weight: 700;
+  color: #333; /* Color más sólido */
   letter-spacing: 0.5px;
   margin: 0;
   animation: pulse-text 2s ease-in-out infinite;
@@ -45,11 +87,11 @@ $bg-app: #ffffff;
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes pulse-text { 
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.4; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1); }
 }
 
-/* --- PANTALLA DE ACCESO PREMIUM --- */
+/* --- PANTALLA DE BIENVENIDA (ACCESO) --- */
 .pantalla-bloqueo {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -78,14 +120,12 @@ $bg-app: #ffffff;
 }
 
 .input-gigante-container {
-  position: relative;
-  width: 100%;
-  display: flex;
-  justify-content: center;
+  position: relative; width: 100%; display: flex; justify-content: center;
   .input-codigo-gigante {
     width: 100%; border: none; background: transparent; text-align: center;
     font-size: 85px; font-weight: 800; color: #111; outline: none; padding: 0; margin: 0;
     letter-spacing: 12px; text-indent: 12px; font-family: 'Inter', sans-serif;
+    &::placeholder { color: #f9f9f9; }
   }
 }
 
@@ -95,13 +135,29 @@ $bg-app: #ffffff;
   box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 }
 
-/* Tab Selector */
+/* --- TABS Y FOOTER --- */
 .tab-selector {
-  display: flex; background: #fff; padding: 6px; border-radius: 18px; margin: 15px;
+  flex-shrink: 0;
+  display: flex; background: #fff; padding: 6px; border-radius: 18px; margin: 15px 15px 5px 15px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.04);
   button {
     flex: 1; padding: 12px; border: none; background: transparent; color: #999;
     font-size: 15px; font-weight: 700; border-radius: 14px;
+    transition: all 0.3s;
     &.active-music, &.active-products { background: rgba($color-primario, 0.1); color: $color-primario; }
   }
 }
+
+.footer-pedido {
+  flex-shrink: 0;
+  padding: 15px;
+  display: flex;
+  justify-content: center;
+  background: white;
+  border-top: 1px solid #eee;
+  .btn-ver-pedido { padding: 15px 40px; font-size: 16px; font-weight: 700; color: #fff; background-color: #111; border: none; border-radius: 35px; }
+}
+
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 5000; display: flex; align-items: flex-end; }
+.modal-resumen-pedido { background: #fff; width: 100%; border-radius: 24px 24px 0 0; padding: 24px; }
+.btn-confirmar-pedido { width: 100%; padding: 16px; border-radius: 12px; border: none; background: $color-primario; color: #fff; font-weight: 700; }

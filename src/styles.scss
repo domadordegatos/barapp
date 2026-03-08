@@ -1,6 +1,6 @@
-/* Estilos Globales de la Aplicación */
+/* Estilos Globales */
 :root {
-  --color-primario: #1DB954; /* Verde Premium */
+  --color-primario: #1DB954;
   --bg-app: #f8f9fa;
 }
 
@@ -12,17 +12,14 @@
 html, body {
   margin: 0;
   padding: 0;
+  /* CLAVE: Altura fija y bloqueo de scroll en la raíz */
   height: 100%;
   width: 100%;
+  overflow: hidden; 
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-app);
-  
-  /* Deshabilita gestos de zoom a nivel de sistema de toque */
-  touch-action: manipulation; 
-  overflow-x: hidden;
 }
 
-/* Eliminamos la restricción de font-size que bloqueaba los números gigantes */
 input, textarea {
   font-family: inherit;
 }

@@ -3,7 +3,8 @@ import { ActivatedRoute } from '@angular/router';
 import { RockolaService } from '../../services/rockola.service';
 import { SpotifyService } from '../../services/spotify-auth.service';
 import { Observable, Subject, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, map } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, map, take } from 'rxjs/operators';
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 export interface Track {
   id: string;
@@ -16,7 +17,24 @@ export interface Track {
 @Component({
   selector: 'app-buscar-canciones',
   templateUrl: './buscar-canciones.component.html',
-  styleUrls: ['./buscar-canciones.component.scss']
+  styleUrls: ['./buscar-canciones.component.scss'],
+  animations: [
+    trigger('listaResultados', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(-20px)' }),
+        animate('300ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' }))
+      ])
+    ]),
+    trigger('itemAnim', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateX(-10px)' }),
+        animate('200ms {{delay}}ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
+      ], { params: { delay: 0 } })
+    ])
+  ]
 })
 export class BuscarCancionesComponent implements OnInit, OnChanges {
   @Input() nombreBarUrl: string = '';
@@ -31,15 +49,22 @@ export class BuscarCancionesComponent implements OnInit, OnChanges {
   tracks: Track[] = [];
   private buscador$ = new Subject<string>();
   misCanciones$: Observable<any[]> | null = null;
+  
   trackSeleccionado: Track | null = null;
   mostrandoModal: boolean = false;
   enviandoSolicitud: boolean = false;
   idNuevaCancion: string | null = null;
 
-  // --- GESTIÓN DE SWIPE ---
+  solicitudParaEliminar: any = null;
+  mostrandoModalCancelacion: boolean = false;
+  eliminandoSolicitud: boolean = false;
+  idSiendoEliminado: string | null = null;
+
+  // GESTIÓN DE SWIPE (TOUCH + MOUSE)
   startX: number = 0;
   currentX: number = 0;
-  swipingId: string | null = null;
+  solicitudEnAccion: any = null;
+  isDragging: boolean = false; // Bandera para diferenciar clic de arrastre
 
   constructor(
     private route: ActivatedRoute,
@@ -99,7 +124,9 @@ export class BuscarCancionesComponent implements OnInit, OnChanges {
         return canciones.sort((a: any, b: any) => {
           if (a.estado === 'pendiente' && b.estado !== 'pendiente') return -1;
           if (a.estado !== 'pendiente' && b.estado === 'pendiente') return 1;
-          return (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0);
+          const tA = a.fechaHora?.seconds || 0;
+          const tB = b.fechaHora?.seconds || 0;
+          return tB - tA;
         });
       })
     );
@@ -119,10 +146,10 @@ export class BuscarCancionesComponent implements OnInit, OnChanges {
     this.enviandoSolicitud = true;
     try {
       const idNueva: string = await this.rockolaService.enviarSolicitud(this.trackSeleccionado, this.nombreBarUrl, this.idMesaUrl, this.numeroMesaReal || 0);
-      const tutorialVisto = localStorage.getItem('tutorial_delete_visto');
+      const tutorialVisto = sessionStorage.getItem('tutorial_delete_visto');
       if (!tutorialVisto) {
         this.idNuevaCancion = idNueva; 
-        localStorage.setItem('tutorial_delete_visto', 'true');
+        sessionStorage.setItem('tutorial_delete_visto', 'true');
         setTimeout(() => this.idNuevaCancion = null, 3000);
       }
       this.query = ''; this.tracks = []; this.cancelarSolicitud();
@@ -132,47 +159,119 @@ export class BuscarCancionesComponent implements OnInit, OnChanges {
 
   obtenerArtistas(track: Track): string { return track.artists.map(a => a.name).join(', '); }
 
-  // --- LÓGICA DE GESTOS (TOUCH) ---
-
+  // --- GESTIÓN DE SWIPE (TOUCH) ---
   onTouchStart(event: TouchEvent, solicitud: any) {
-    if (solicitud.estado !== 'pendiente') return;
+    if (solicitud.estado !== 'pendiente' || this.idSiendoEliminado) return;
     this.startX = event.touches[0].clientX;
-    this.swipingId = solicitud.id;
+    this.solicitudEnAccion = solicitud;
+    this.isDragging = true;
   }
 
   onTouchMove(event: TouchEvent) {
-    if (!this.swipingId) return;
+    if (!this.solicitudEnAccion || this.idSiendoEliminado || !this.isDragging) return;
     const x = event.touches[0].clientX;
-    const walk = x - this.startX;
-    // Solo permitimos deslizar hacia la izquierda y hasta un máximo de 80px
+    this.handleMove(x);
+  }
+
+  onTouchEnd() {
+    this.handleEnd();
+  }
+
+  // --- GESTIÓN DE SWIPE (MOUSE) ---
+  onMouseDown(event: MouseEvent, solicitud: any) {
+    if (solicitud.estado !== 'pendiente' || this.idSiendoEliminado) return;
+    this.startX = event.clientX;
+    this.solicitudEnAccion = solicitud;
+    this.isDragging = true;
+  }
+
+  onMouseMove(event: MouseEvent) {
+    if (!this.solicitudEnAccion || this.idSiendoEliminado || !this.isDragging) return;
+    // Evitamos seleccionar texto al arrastrar
+    event.preventDefault(); 
+    const x = event.clientX;
+    this.handleMove(x);
+  }
+
+  onMouseUp() {
+    this.handleEnd();
+  }
+
+  onMouseLeave() {
+    if (this.isDragging) {
+        this.handleEnd();
+    }
+  }
+
+  // --- LÓGICA COMÚN ---
+  private handleMove(currentClientX: number) {
+    const walk = currentClientX - this.startX;
     if (walk < 0 && walk > -120) {
       this.currentX = walk;
     }
   }
 
-  onTouchEnd() {
-    // Si deslizó más de 70px hacia la izquierda, disparamos la eliminación
+  private handleEnd() {
+    if (!this.solicitudEnAccion) return;
+
     if (this.currentX < -70) {
-      const solicitud = { id: this.swipingId, estado: 'pendiente' };
-      this.eliminarCancion(solicitud);
+      this.abrirModalCancelacion(this.solicitudEnAccion);
+    } else {
+      this.currentX = 0;
+      this.solicitudEnAccion = null;
     }
-    // Reseteamos
-    this.swipingId = null;
-    this.currentX = 0;
+    this.isDragging = false;
   }
 
   getTransform(solicitudId: string) {
-    if (this.swipingId === solicitudId) {
+    if (this.idSiendoEliminado === solicitudId) return `translateX(-150%)`; // Animación de salida
+    // Solo si el usuario está interactuando activamente
+    if (this.solicitudEnAccion?.id === solicitudId) {
       return `translateX(${this.currentX}px)`;
     }
-    return 'translateX(0)';
+    return null; // Deja que el CSS controle el tutorial y el reposo
+  }
+
+  abrirModalCancelacion(solicitud: any) {
+    this.solicitudParaEliminar = solicitud;
+    this.mostrandoModalCancelacion = true;
+    this.currentX = -80; 
+  }
+
+  cerrarModalCancelacion() {
+    this.mostrandoModalCancelacion = false;
+    this.solicitudParaEliminar = null;
+    this.solicitudEnAccion = null;
+    this.currentX = 0;
+    this.idSiendoEliminado = null;
+  }
+
+  async confirmarEliminacion() {
+    if (!this.solicitudParaEliminar || this.eliminandoSolicitud) return;
+    
+    this.eliminandoSolicitud = true;
+    const idABorrar = this.solicitudParaEliminar.id;
+    this.mostrandoModalCancelacion = false;
+    
+    setTimeout(() => {
+      this.idSiendoEliminado = idABorrar;
+      setTimeout(async () => {
+        try {
+          await this.rockolaService.eliminarSolicitud(this.nombreBarUrl, idABorrar);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          this.idSiendoEliminado = null;
+          this.solicitudParaEliminar = null;
+          this.solicitudEnAccion = null;
+          this.eliminandoSolicitud = false;
+          this.currentX = 0;
+        }
+      }, 1000); 
+    }, 500); 
   }
 
   async eliminarCancion(solicitud: any) {
-    if (solicitud.estado !== 'pendiente') return;
-    if (confirm('¿Quieres cancelar esta solicitud?')) {
-       try { await this.rockolaService.eliminarSolicitud(this.nombreBarUrl, solicitud.id); }
-       catch (e) { console.error(e); }
-    }
+     this.abrirModalCancelacion(solicitud);
   }
 }
