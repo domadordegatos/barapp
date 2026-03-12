@@ -1,43 +1,81 @@
-<div class="admin-wrapper">
-  <ng-container *ngIf="barValido">
-    <nav class="navbar-admin">
-      <div class="navbar-content">
-        <div class="brand">
-          <span class="logo-icon">🎵</span>
-          <h2>{{ nombreBarReal }}</h2>
-        </div>
-
-        <div class="nav-links">
-          <button (click)="seccionActiva = 'musica'" [class.active]="seccionActiva === 'musica'">
-            🎹 Música
-          </button>
-          <button (click)="seccionActiva = 'productos'" [class.active]="seccionActiva === 'productos'">
-            🍻 Productos
-          </button>
-          <button (click)="seccionActiva = 'mesas'" [class.active]="seccionActiva === 'mesas'">
-            🪑 Mesas
-          </button>
-          <button (click)="seccionActiva = 'facturacion'" [class.active]="seccionActiva === 'facturacion'">
-            🧾 Facturación
-          </button>
-        </div>
-
-        <button class="btn-logout" (click)="logout()">
-          <span class="icon-exit">🚪</span> Salir
-        </button>
-      </div>
-    </nav>
-
-    <div class="admin-main-container">
-      <app-gestion-musica *ngIf="seccionActiva === 'musica'"></app-gestion-musica>
-      <app-gestion-productos *ngIf="seccionActiva === 'productos'"></app-gestion-productos>
-      <app-gestion-mesas *ngIf="seccionActiva === 'mesas'"></app-gestion-mesas>
-      
-      <!-- Pasamos el nombre normalizado (nombreBarUrl) -->
-      <app-admin-facturacion 
-        *ngIf="seccionActiva === 'facturacion'"
-        [nombreBar]="nombreBarUrl"> 
-      </app-admin-facturacion>
+<div class="admin-main-container">
+  <div class="admin-header">
+    <div class="header-info">
+      <h2>{{ nombreBarReal }}</h2>
+      <span class="admin-tag">Panel de Administrador</span>
     </div>
-  </ng-container>
+    <button class="btn-logout" (click)="logout()">Cerrar Sesión</button>
+  </div>
+
+  <nav class="nav-links">
+    <button 
+      [class.active]="seccionActiva === 'musica'"
+      (click)="seccionActiva = 'musica'">
+      Música
+    </button>
+    <button 
+      [class.active]="seccionActiva === 'productos'"
+      (click)="seccionActiva = 'productos'"
+      disabled> 
+      Productos (Próximamente)
+    </button>
+    <button 
+      [class.active]="seccionActiva === 'mesas'"
+      (click)="seccionActiva = 'mesas'"
+      class="mesas">
+      Mesas
+    </button>
+    <button 
+      [class.active]="seccionActiva === 'facturacion'"
+      (click)="seccionActiva = 'facturacion'"
+      class="facturacion">
+      Facturación
+    </button>
+  </nav>
+
+  <div class="vista-autorizada admin" [ngSwitch]="seccionActiva">
+
+    <div *ngSwitchCase="'musica'" class="lista-pedidos">
+      <h3 class="titulo-seccion">Canciones Pendientes</h3>
+      <div *ngIf="(pedidos$ | async) as pedidos; else cargando">
+        <div *ngIf="pedidos.length > 0; else vacio">
+          <div *ngFor="let pedido of pedidos" class="card-pedido">
+            <img [src]="pedido.foto" class="foto-pedido">
+            <div class="info-pedido">
+              <strong>{{ pedido.cancion }}</strong>
+              <p>{{ pedido.artista }}</p>
+              <span class="info-mesa">Mesa #{{ pedido.mesaNumero }} &middot; {{ pedido.fechaHora.toDate() | date:'shortTime' }}</span>
+            </div>
+            <div class="acciones-pedido">
+              <button class="btn-accion rechazar" (click)="rockolaService.actualizarEstadoPedido(pedido.id, 'rechazado')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              </button>
+              <button class="btn-accion aceptar" (click)="rockolaService.actualizarEstadoPedido(pedido.id, 'aprobado')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ng-template #cargando>
+        <div class="skeleton-loader" *ngFor="let i of [1,2,3,4,5]"><div></div></div>
+      </ng-template>
+      <ng-template #vacio>
+        <div class="vacio-mensaje">
+          <p>¡Todo listo! No hay canciones pendientes.</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <div *ngSwitchCase="'productos'">
+      <p>Gestión de productos próximamente.</p>
+    </div>
+    <div *ngSwitchCase="'mesas'">
+      <p>Gestión de mesas próximamente.</p>
+    </div>
+    <div *ngSwitchCase="'facturacion'">
+      <p>Módulo de facturación próximamente.</p>
+    </div>
+
+  </div>
 </div>

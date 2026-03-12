@@ -1,146 +1,112 @@
-.admin-container {
+$spotify-green: #1db954;
+$delete-red: #ff3b30;
+$light-gray: #f8f9fa;
+$card-bg: #fff;
+$border-color: #eee;
+
+.admin-main-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
   padding: 20px;
-  max-width: 800px;
-  margin: auto;
-
-  .card-admin {
-    display: flex;
-    align-items: center;
-    background: #fff;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    position: relative;
-    border-left: 6px solid #fbbf24; // Amarillo para pendiente
-  }
-
-  .mesa-badge {
-    position: absolute;
-    top: -10px;
-    left: 20px;
-    background: #1f2937;
-    color: white;
-    padding: 2px 10px;
-    border-radius: 5px;
-    font-size: 0.8rem;
-    font-weight: bold;
-  }
-
-  .foto-admin { width: 60px; height: 60px; border-radius: 8px; margin-right: 15px; }
-
-  .info-track {
-    flex: 1;
-    .hora { font-size: 0.75rem; color: #6b7280; font-family: monospace; }
-    h3 { margin: 2px 0; font-size: 1.1rem; }
-    p { margin: 0; color: #4b5563; }
-  }
-
-  .acciones {
-    display: flex;
-    gap: 10px;
-    button {
-      border: none;
-      padding: 10px 15px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: opacity 0.2s;
-      &:hover { opacity: 0.8; }
-    }
-    .btn-aceptar { background: #10b981; color: white; }
-    .btn-rechazar { background: #ef4444; color: white; }
-  }
 }
 
-.panel-codigo {
-  background: #f3f4f6;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 30px;
-  border: 1px dashed #d1d5db;
-
-  h3 { margin-top: 0; color: #1f2937; font-size: 1.1rem; }
-  p { font-size: 0.85rem; color: #6b7280; margin-bottom: 15px; }
-
-  .input-group {
-    display: flex;
-    gap: 10px;
-
-    input {
-      padding: 10px;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      font-size: 1.2rem;
-      letter-spacing: 5px; // Para que se vea como código
-      width: 120px;
-      text-align: center;
-      font-weight: bold;
-      
-      &:focus { border-color: #1db954; outline: none; }
-    }
-
-    button {
-      background: #1f2937;
-      color: white;
-      border: none;
-      padding: 0 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      
-      &:disabled { opacity: 0.5; cursor: not-allowed; }
-      &:hover:not(:disabled) { background: #000; }
-    }
-  }
-}
-.divisor-discreto {
-  border: 0;
-  border-top: 1px solid #eee;
-  margin: 20px 0 10px;
-}
-
-.form-mini {
+.admin-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: flex-end; // Lo manda a la derecha
-  gap: 10px;
-  font-size: 0.75rem;
-  color: #999;
-
-  .input-oculto {
-    width: 60px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 2px 5px;
-    text-align: center;
-    background: transparent;
+  margin-bottom: 25px;
+  .header-info {
+    h2 { margin: 0; font-size: 24px; font-weight: 800; color: #222; }
+    .admin-tag { background: #eef; color: #55f; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
   }
-
-  .btn-xs {
-    background: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    cursor: pointer;
-    padding: 2px 8px;
-    &:hover { background: #e0e0e0; }
-  }
+  .btn-logout { background: #f1f1f1; color: #555; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; &:hover { background: #e0e0e0; } }
 }
 
 .nav-links {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+  border-bottom: 1px solid $border-color;
   button {
-    // Tus estilos actuales...
-    
-    &[class*="facturacion"] {
-      // Opcional: un color sutilmente diferente o un borde
-      border-bottom-color: #f1c40f; 
+    padding: 15px 5px;
+    border: none;
+    background: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    &.active { color: $spotify-green; border-bottom-color: $spotify-green; }
+    &:disabled { color: #ccc; cursor: not-allowed; }
+  }
+}
+
+.vista-autorizada.admin {
+  background-color: $light-gray;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.titulo-seccion {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+}
+
+.lista-pedidos {
+  .card-pedido {
+    display: flex;
+    align-items: center;
+    background: $card-bg;
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+    border-left: 5px solid #f1c40f; // Amarillo para pendiente
+    transition: all 0.3s ease;
+  }
+
+  .foto-pedido { width: 64px; height: 64px; border-radius: 10px; margin-right: 15px; object-fit: cover; flex-shrink: 0; }
+
+  .info-pedido {
+    flex: 1;
+    min-width: 0;
+    strong { display: block; font-size: 16px; font-weight: 700; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    p { margin: 2px 0 5px; font-size: 13px; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .info-mesa { font-size: 11px; color: #aaa; font-weight: 500; }
+  }
+
+  .acciones-pedido {
+    display: flex;
+    gap: 10px;
+    .btn-accion {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      svg { width: 22px; height: 22px; fill: white; }
+      &.rechazar { background: #fde2e2; svg { fill: $delete-red; } &:hover { background: $delete-red; svg { fill: white; } } }
+      &.aceptar { background: #e2f5ec; svg { fill: $spotify-green; } &:hover { background: $spotify-green; svg { fill: white; } } }
     }
   }
 }
 
-// Asegúrate de que el contenedor principal permita el scroll si la tabla de facturas es larga
-.admin-main-container {
-  padding: 20px;
-  overflow-y: auto;
-  height: calc(100vh - 70px); // Ajusta según la altura de tu navbar
+.vacio-mensaje { text-align: center; padding: 50px 20px; color: #bbb; font-size: 14px; }
+
+.skeleton-loader {
+  background: #f9f9f9;
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 12px;
+  div { height: 64px; border-radius: 10px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
 }
+
+@keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }

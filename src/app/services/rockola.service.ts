@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import firebase from 'firebase/compat/app';
-import { firstValueFrom, map } from 'rxjs';
+import { firstValueFrom, map, Observable } from 'rxjs';
 import emailjs from '@emailjs/browser';
+import { SolicitudCancion } from '../interfaces/producto.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -11,6 +12,39 @@ export class RockolaService {
   readonly CORREO_MASTER = 'admin@admin.com'; 
 
   constructor(private firestore: AngularFirestore) {}
+
+  // ... (métodos existentes)
+
+  /**
+   * Obtiene todas las solicitudes de canciones para un bar específico, ordenadas por fecha.
+   * @param nombreBar El identificador del bar.
+   * @returns Un observable con la lista de solicitudes.
+   */
+  getSolicitudesPorBar(nombreBar: string): Observable<SolicitudCancion[]> {
+    const idLimpio = nombreBar.toLowerCase().replace(/\s+/g, '');
+    return this.firestore.collection<SolicitudCancion>(
+      `bares_activos/${idLimpio}/solicitudes`,
+      ref => ref.orderBy('fechaHora', 'desc')
+    ).snapshotChanges().pipe(
+      map(actions => actions.map(a => {
+        const data = a.payload.doc.data() as SolicitudCancion;
+        const id = a.payload.doc.id;
+        return { id, ...data };
+      }))
+    );
+  }
+
+  /**
+   * Actualiza el estado de una solicitud de canción específica.
+   * @param nombreBar El identificador del bar.
+   * @param idSolicitud El ID de la solicitud a actualizar.
+   * @param nuevoEstado El nuevo estado a asignar.
+   */
+  actualizarEstadoSolicitud(nombreBar: string, idSolicitud: string, nuevoEstado: string): Promise<void> {
+    const idLimpio = nombreBar.toLowerCase().replace(/\s+/g, '');
+    const solicitudRef = this.firestore.doc(`bares_activos/${idLimpio}/solicitudes/${idSolicitud}`);
+    return solicitudRef.update({ estado: nuevoEstado });
+  }
 
   async validarCodigoBar(nombreBar: string, codigoCliente: string): Promise<boolean> {
     const barRef = this.firestore.collection('bares_activos').doc(nombreBar.toLowerCase().trim());
