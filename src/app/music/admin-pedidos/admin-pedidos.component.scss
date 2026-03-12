@@ -279,31 +279,30 @@ $text-light: #aaa;
 
   .acciones {
     display: flex;
-    gap: 8px; /* Slightly reduced gap */
+    gap: 8px; 
     flex-shrink: 0;
 
-    .btn-aceptar, .btn-rechazar {
-      width: 36px; /* Smaller width */
-      height: 36px; /* Smaller height */
-      border-radius: 50%;
-      border: none;
+    .btn-accion {
+      width: 38px; 
+      height: 38px; 
+      border-radius: 8px; 
+      border: none; /* Quitamos el borde para usar solo el color de fondo */
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.2s ease;
-      font-size: 16px; /* Smaller icon size */
 
       &:hover { opacity: 0.8; }
 
-      /* SVG specific styling for icons */
       svg {
-        width: 20px; /* Adjust SVG size */
+        width: 20px; 
         height: 20px;
+        fill: white; /* Iconos blancos sobre el fondo de color */
       }
     }
-    .btn-aceptar { background: #e2f5ec; svg { fill: $spotify-green; } }
-    .btn-rechazar { background: #fde2e2; svg { fill: $delete-red; } }
+    .btn-aceptar { background: $spotify-green; } /* Fondo verde para aceptar */
+    .btn-rechazar { background: $delete-red; } /* Fondo rojo para rechazar */
   }
 }
 
