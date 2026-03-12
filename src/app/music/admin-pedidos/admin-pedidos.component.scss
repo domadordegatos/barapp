@@ -3,61 +3,219 @@ $delete-red: #ff3b30;
 $light-gray: #f8f9fa;
 $card-bg: #fff;
 $border-color: #eee;
+$text-dark: #222;
+$text-medium: #777;
+$text-light: #aaa;
 
-.admin-main-container {
+:host {
+  display: block;
+  height: 100%;
   width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
+  background-color: #f0f2f5;
 }
 
-.admin-header {
+.admin-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: 'Inter', sans-serif;
+  background-color: #f0f2f5;
+}
+
+.navbar-admin {
+  flex-shrink: 0;
+  background-color: $card-bg;
+  padding: 15px 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+
+  .navbar-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      .logo-icon { font-size: 28px; }
+      h2 { margin: 0; font-size: 22px; font-weight: 800; color: $text-dark; }
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 5px; // Reduced gap for more compact look
+      button {
+        padding: 10px 15px;
+        border: none;
+        background: none;
+        font-size: 15px;
+        font-weight: 600;
+        color: $text-medium;
+        cursor: pointer;
+        border-radius: 8px; // Rounded corners for nav buttons
+        transition: all 0.2s ease;
+
+        &:hover { background-color: #f0f0f0; color: $text-dark; }
+        &.active { background-color: $spotify-green; color: white; box-shadow: 0 4px 10px rgba($spotify-green, 0.2); }
+      }
+    }
+
+    .btn-logout {
+      background: #f1f1f1;
+      color: #555;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      &:hover { background: #e0e0e0; }
+    }
+  }
+}
+
+.admin-main-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 25px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Admin Container for Music Section (where token and song list are) */
+.admin-container {
+  background-color: $card-bg;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.admin-header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 25px;
-  .header-info {
-    h2 { margin: 0; font-size: 24px; font-weight: 800; color: #222; }
-    .admin-tag { background: #eef; color: #55f; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; }
-  }
-  .btn-logout { background: #f1f1f1; color: #555; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; &:hover { background: #e0e0e0; } }
-}
-
-.nav-links {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 25px;
+  padding-bottom: 15px;
   border-bottom: 1px solid $border-color;
-  button {
-    padding: 15px 5px;
-    border: none;
-    background: none;
-    font-size: 15px;
+
+  h1 { margin: 0; font-size: 22px; color: $text-dark; font-weight: 700; }
+  .status-badge {
+    background-color: #e6ffe6;
+    color: $spotify-green;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
     font-weight: 600;
-    color: #888;
-    cursor: pointer;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s ease;
-    &.active { color: $spotify-green; border-bottom-color: $spotify-green; }
-    &:disabled { color: #ccc; cursor: not-allowed; }
   }
 }
 
-.vista-autorizada.admin {
-  background-color: $light-gray;
-  border-radius: 16px;
+.panel-codigo {
+  background: $light-gray;
   padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  border: 1px dashed $border-color;
+
+  .codigo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    h3 {
+      margin: 0;
+      color: $text-dark;
+      font-size: 1.1rem;
+      .codigo-resaltado {
+        color: $spotify-green;
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+      }
+    }
+    .ultima-actualizacion { font-size: 0.85rem; color: $text-medium; margin-top: 5px; }
+    .status-tag { background: $spotify-green; color: white; padding: 4px 10px; border-radius: 5px; font-size: 0.8rem; font-weight: bold; }
+  }
+
+  .form-actualizar {
+    p { font-size: 0.9rem; color: $text-medium; margin-bottom: 15px; }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      input {
+        flex: 1;
+        padding: 12px 15px;
+        border: 2px solid $border-color;
+        border-radius: 10px;
+        font-size: 1.2rem;
+        letter-spacing: 3px;
+        text-align: center;
+        font-weight: bold;
+        max-width: 150px; // Control width
+        &:focus { border-color: $spotify-green; outline: none; }
+      }
+      .btn-actualizar {
+        background: $text-dark;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.2s ease;
+        &:disabled { opacity: 0.6; cursor: not-allowed; }
+        &:hover:not(:disabled) { background: #000; }
+      }
+    }
+  }
+
+  .panel-invitados-secreto {
+    margin-top: 20px;
+    .divisor-discreto { border: 0; border-top: 1px solid #ddd; margin: 20px 0; }
+    .form-mini {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: $text-medium;
+
+      .input-mini-group {
+        display: flex;
+        gap: 5px;
+        .input-oculto {
+          width: 80px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          padding: 5px 8px;
+          text-align: center;
+          background: transparent;
+          font-size: 1rem;
+        }
+        .btn-xs {
+          background: #f0f0f0;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          cursor: pointer;
+          padding: 5px 10px;
+          font-size: 0.9rem;
+          &:hover { background: #e0e0e0; }
+        }
+      }
+    }
+  }
 }
 
-.titulo-seccion {
-  margin: 0 0 20px 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: #333;
-}
+/* Lista de Pedidos (Estilos Integrados desde la petición original) */
+.lista-admin {
+  margin-top: 20px;
 
-.lista-pedidos {
-  .card-pedido {
+  .card-admin {
+    position: relative; /* Added for mesa-badge positioning */
     display: flex;
     align-items: center;
     background: $card-bg;
@@ -69,22 +227,64 @@ $border-color: #eee;
     transition: all 0.3s ease;
   }
 
-  .foto-pedido { width: 64px; height: 64px; border-radius: 10px; margin-right: 15px; object-fit: cover; flex-shrink: 0; }
-
-  .info-pedido {
-    flex: 1;
-    min-width: 0;
-    strong { display: block; font-size: 16px; font-weight: 700; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    p { margin: 2px 0 5px; font-size: 13px; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .info-mesa { font-size: 11px; color: #aaa; font-weight: 500; }
+  .mesa-badge {
+    position: absolute;
+    top: -10px; 
+    left: 15px; 
+    background: $spotify-green;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    z-index: 10;
   }
 
-  .acciones-pedido {
+  .foto-admin {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    margin-right: 15px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .info-track {
+    flex: 1;
+    min-width: 0;
+    .hora {
+      font-size: 11px;
+      color: $text-light;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: $text-dark;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    p {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: $text-medium;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .acciones {
     display: flex;
-    gap: 10px;
-    .btn-accion {
-      width: 44px;
-      height: 44px;
+    gap: 8px; /* Slightly reduced gap */
+    flex-shrink: 0;
+
+    .btn-aceptar, .btn-rechazar {
+      width: 36px; /* Smaller width */
+      height: 36px; /* Smaller height */
       border-radius: 50%;
       border: none;
       cursor: pointer;
@@ -92,21 +292,30 @@ $border-color: #eee;
       align-items: center;
       justify-content: center;
       transition: all 0.2s ease;
-      svg { width: 22px; height: 22px; fill: white; }
-      &.rechazar { background: #fde2e2; svg { fill: $delete-red; } &:hover { background: $delete-red; svg { fill: white; } } }
-      &.aceptar { background: #e2f5ec; svg { fill: $spotify-green; } &:hover { background: $spotify-green; svg { fill: white; } } }
+      font-size: 16px; /* Smaller icon size */
+
+      &:hover { opacity: 0.8; }
+
+      /* SVG specific styling for icons */
+      svg {
+        width: 20px; /* Adjust SVG size */
+        height: 20px;
+      }
     }
+    .btn-aceptar { background: #e2f5ec; svg { fill: $spotify-green; } }
+    .btn-rechazar { background: #fde2e2; svg { fill: $delete-red; } }
   }
 }
 
-.vacio-mensaje { text-align: center; padding: 50px 20px; color: #bbb; font-size: 14px; }
-
-.skeleton-loader {
-  background: #f9f9f9;
-  border-radius: 16px;
-  padding: 12px;
-  margin-bottom: 12px;
-  div { height: 64px; border-radius: 10px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
+.vacio {
+  text-align: center;
+  padding: 50px 20px;
+  .vacio-content {
+    background: $light-gray;
+    border-radius: 12px;
+    padding: 30px;
+    display: inline-block;
+    .vacio-icon { font-size: 48px; margin-bottom: 10px; display: block; }
+    p { color: #888; font-size: 16px; margin: 0; }
+  }
 }
-
-@keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
