@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
 import { RockolaService } from '../services/rockola.service';
+import { NotificationService } from '../services/notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -8,7 +9,8 @@ import { RockolaService } from '../services/rockola.service';
 export class SuperAdminGuard implements CanActivate {
   constructor(
     private rockolaService: RockolaService, 
-    private router: Router
+    private router: Router,
+    private notificationService: NotificationService
   ) {}
 
   canActivate(): boolean {
@@ -25,7 +27,7 @@ export class SuperAdminGuard implements CanActivate {
     }
 
     // 3. Si no coincide o no hay sesión, lo mandamos al login
-    alert("Acceso restringido: Solo el Super Administrador puede entrar aquí.");
+    this.notificationService.error('Acceso restringido: solo el Super Administrador puede entrar aquí.');
     this.router.navigate(['/']);
     return false;
   }

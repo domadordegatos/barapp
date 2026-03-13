@@ -1,1 +1,8 @@
 <router-outlet></router-outlet>
+
+<div class="toast-stack" *ngIf="notificationService.notifications$ | async as notifications">
+	<div class="toast-item" *ngFor="let notification of notifications" [class]="'toast-item ' + notification.type">
+		<span>{{ notification.message }}</span>
+		<button type="button" (click)="notificationService.dismiss(notification.id)">×</button>
+	</div>
+</div>

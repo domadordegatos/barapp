@@ -1,117 +1,155 @@
 <div class="admin-wrapper">
   <ng-container *ngIf="barValido">
-    <nav class="navbar-admin">
-      <div class="navbar-content">
-        <div class="brand">
-          <span class="logo-icon">🎵</span>
-          <h2>{{ nombreBarReal }}</h2>
+    <div class="admin-shell">
+      <aside class="sidebar" [class.open]="menuAbierto">
+        <div class="sidebar-header">
+          <div class="sidebar-brand">
+            <span class="brand-mark">♪</span>
+            <div>
+              <p>Panel admin</p>
+              <h2>{{ nombreBarReal }}</h2>
+            </div>
+          </div>
+
+          <button type="button" class="sidebar-close" (click)="cerrarMenu()">×</button>
         </div>
 
-        <div class="nav-links">
-          <button (click)="seccionActiva = 'musica'" [class.active]="seccionActiva === 'musica'">
-            🎹 Música
+        <div class="sidebar-nav">
+          <button type="button" [class.active]="seccionActiva === 'musica'" (click)="seleccionarSeccion('musica')">
+            <span>♪</span>
+            Música
           </button>
-          <button (click)="seccionActiva = 'productos'" [class.active]="seccionActiva === 'productos'">
-            🍻 Productos
+          <button type="button" [class.active]="seccionActiva === 'productos'" (click)="seleccionarSeccion('productos')">
+            <span>◫</span>
+            Productos
           </button>
-          <button (click)="seccionActiva = 'mesas'" [class.active]="seccionActiva === 'mesas'">
-            🪑 Mesas
-          </button>
-          <button (click)="seccionActiva = 'facturacion'" [class.active]="seccionActiva === 'facturacion'">
-            🧾 Facturación
+          <button type="button" [class.active]="seccionActiva === 'mesas'" (click)="seleccionarSeccion('mesas')">
+            <span>▣</span>
+            Mesas
           </button>
         </div>
 
-        <button class="btn-logout" (click)="logout()">
-          <span class="icon-exit">🚪</span> Salir
+        <button type="button" class="btn-logout" (click)="logout()">
+          <span>↩</span>
+          Salir
         </button>
-      </div>
-    </nav>
+      </aside>
 
-    <div class="admin-main-container">
-      <!-- Contenido para cada sección -->
-      <div *ngIf="seccionActiva === 'musica'">
-        <!-- Panel de Código y Lista de Pedidos -->
-        <div class="admin-container">
-          <header class="admin-header-content">
-            <h1>Gestión de Rockola - Pedidos Entrantes</h1>
-            <div class="status-badge">En Línea</div>
-          </header>
+      <div class="sidebar-backdrop" *ngIf="menuAbierto" (click)="cerrarMenu()"></div>
 
-          <div class="panel-codigo">
-            <div class="codigo-header">
-              <div class="codigo-info">
-                <h3>🔑 Código Vigente: <span class="codigo-resaltado">{{ codigoActual }}</span></h3>
-                <p class="ultima-actualizacion" *ngIf="ultimaActualizacion">
-                  📅 Actualizado: {{ ultimaActualizacion | date:'dd/MM' }} a las {{ ultimaActualizacion | date:'shortTime' }}
-                </p>
-              </div>
-              <span class="status-tag active">Recepción Activa</span>
+      <main class="admin-main-container">
+        <header class="topbar">
+          <div class="topbar-left">
+            <button type="button" class="menu-toggle" [class.active]="menuAbierto" (click)="alternarMenu()" aria-label="Abrir menú lateral">
+              <span></span>
+              <span></span>
+              <span></span>
+            </button>
+            <div>
+              <p class="topbar-kicker">Gestión operativa</p>
+              <h1>{{ nombreBarReal }}</h1>
             </div>
+          </div>
 
-            <div class="form-actualizar">
-              <p>Para iniciar una nueva jornada o cambiar el acceso, ingresa un nuevo código:</p>
-              <div class="input-group">
-                <input type="text" [(ngModel)]="codigoNuevo" placeholder="Ej: 1234" maxlength="4"
-                  onkeypress="return event.charCode >= 48 && event.charCode <= 57">
-                <button (click)="guardarCodigo()" [disabled]="codigoNuevo.length !== 4" class="btn-actualizar">
-                  Actualizar y Reiniciar Lista
-                </button>
+          <div class="mobile-switch" *ngIf="esMobile && seccionActiva === 'musica'">
+            <button type="button" [class.active]="vistaMovilActiva === 'musica'" (click)="vistaMovilActiva = 'musica'">Música</button>
+            <button type="button" [class.active]="vistaMovilActiva === 'facturacion'" (click)="vistaMovilActiva = 'facturacion'">Facturación</button>
+          </div>
+        </header>
+
+        <div *ngIf="seccionActiva === 'musica'" class="workspace-grid" [class.mobile-billing]="esMobile && vistaMovilActiva === 'facturacion'">
+          <section class="music-panel" *ngIf="!esMobile || vistaMovilActiva === 'musica'">
+            <div class="admin-container">
+              <header class="admin-header-content compact">
+                <h2>Pedidos de música</h2>
+                <div class="header-meta-inline">
+                  <span class="meta-inline-item">
+                    <small>Acceso</small>
+                    <strong>{{ codigoActual }}</strong>
+                  </span>
+                  <span class="meta-inline-item" *ngIf="ultimaActualizacion">
+                    <small>Actualizado</small>
+                    <strong>{{ ultimaActualizacion | date:'dd/MM hh:mm a' }}</strong>
+                  </span>
+                </div>
+              </header>
+
+              <div class="panel-codigo compact">
+                <div class="codigo-inline-row">
+                  <div class="codigo-inline-block">
+                    <span class="codigo-label-inline">Código del día</span>
+                    <div class="input-group principal sin-margen">
+                      <input type="text" inputmode="numeric" [(ngModel)]="codigoNuevo" placeholder="1234" maxlength="4" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+                      <button (click)="guardarCodigo()" [disabled]="codigoNuevo.length !== 4" class="btn-actualizar">
+                        Guardar
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="codigo-inline-block" *ngIf="esAdmin">
+                    <span class="codigo-label-inline">Código para empleados</span>
+                    <div class="input-mini-group">
+                      <input type="password" [(ngModel)]="codigoInvitacionNuevo" placeholder="••••" maxlength="4" class="input-oculto">
+                      <button (click)="guardarCodigoInvitacion()" class="btn-xs" title="Actualizar código secreto">Guardar</button>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div class="panel-invitados-secreto" *ngIf="esAdmin">
-              <hr class="divisor-discreto">
-              <div class="form-mini">
-                <label>Código de registro (Solo para nuevos empleados):</label>
-                <div class="input-mini-group">
-                  <input type="password" [(ngModel)]="codigoInvitacionNuevo" placeholder="****" maxlength="4"
-                    class="input-oculto">
-                  <button (click)="guardarCodigoInvitacion()" class="btn-xs" title="Actualizar código secreto">🔑</button>
+              <div class="lista-admin">
+                <div *ngFor="let pedido of (pedidos$ | async); let index = index" class="card-admin">
+                  <div class="cover-shell">
+                    <img [src]="pedido.foto" class="foto-admin" alt="Portada album">
+                    <span class="indice-badge">{{ index + 1 }}</span>
+                    <span class="mesa-badge">Mesa {{ pedido.mesaNumero }}</span>
+                  </div>
+
+                  <div class="info-track">
+                    <span class="hora">{{ pedido.fechaHora?.toDate() | date:'hh:mm a' }}</span>
+                    <h3>{{ pedido.cancion }}</h3>
+                    <p>{{ pedido.artista }}</p>
+                  </div>
+
+                  <div class="acciones">
+                    <button class="btn-accion rechazar" type="button" title="Rechazar" aria-label="Rechazar solicitud" (click)="cambiarEstado(pedido.id, 'rechazado')">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12 19 6.4 17.6 5 12 10.6 6.4 5Z" />
+                      </svg>
+                    </button>
+                    <button class="btn-accion aceptar" type="button" title="Aceptar" aria-label="Aceptar solicitud" (click)="cambiarEstado(pedido.id, 'reproduciendo')">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M9.55 18.2 4.6 13.25 6.02 11.83 9.55 15.36 17.98 6.93 19.4 8.35 9.55 18.2Z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div *ngIf="(pedidos$ | async)?.length === 0" class="vacio">
+                  <div class="vacio-content">
+                    <span class="vacio-icon">♪</span>
+                    <p>No hay canciones pendientes.</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div class="lista-admin">
-            <div *ngFor="let pedido of (pedidos$ | async)" class="card-admin">
-              <div class="mesa-badge">Mesa {{ pedido.mesaNumero }}</div>
-              <img [src]="pedido.foto" class="foto-admin" alt="Portada album">
-              <div class="info-track">
-                <span class="hora">🕒 {{ pedido.fechaHora?.toDate() | date:'HH:mm:ss' }}</span>
-                <h3>{{ pedido.cancion }}</h3>
-                <p>{{ pedido.artista }}</p>
-              </div>
-              <div class="acciones">
-                <button class="btn-accion rechazar" (click)="cambiarEstado(pedido.id, 'rechazado')">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" fill="black"/>
-                  </svg>
-                </button>
-                <button class="btn-accion aceptar" (click)="cambiarEstado(pedido.id, 'reproduciendo')">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" fill="black"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div *ngIf="(pedidos$ | async)?.length === 0" class="vacio">
-              <div class="vacio-content">
-                <span class="vacio-icon">🎉</span>
-                <p>No hay canciones pendientes. ¡Todo está al día!</p>
-              </div>
-            </div>
-          </div>
+          <section class="billing-panel" *ngIf="!esMobile || vistaMovilActiva === 'facturacion'">
+            <app-admin-facturacion [nombreBar]="nombreBarUrl" [nombreBarReal]="nombreBarReal"></app-admin-facturacion>
+          </section>
         </div>
-      </div>
-      
-      <app-gestion-productos *ngIf="seccionActiva === 'productos'"></app-gestion-productos>
-      <app-gestion-mesas *ngIf="seccionActiva === 'mesas'"></app-gestion-mesas>
-      <app-admin-facturacion 
-        *ngIf="seccionActiva === 'facturacion'"
-        [nombreBar]="nombreBarUrl"> 
-      </app-admin-facturacion>
+
+        <app-gestion-productos *ngIf="seccionActiva === 'productos'"></app-gestion-productos>
+        <app-gestion-mesas *ngIf="seccionActiva === 'mesas'"></app-gestion-mesas>
+      </main>
     </div>
   </ng-container>
+
+  <div class="admin-error" *ngIf="!barValido && errorMensaje">
+    <div class="admin-error-card">
+      <h2>Acceso no disponible</h2>
+      <p>{{ errorMensaje }}</p>
+      <button type="button" (click)="volverInicio()">Volver</button>
+    </div>
+  </div>
 </div>

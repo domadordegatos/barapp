@@ -3,13 +3,36 @@ import { Observable, of } from 'rxjs';
 import { Producto } from '../../interfaces/producto.interface';
 import { Categoria } from '../../interfaces/categoria.interface';
 import { ProductosService } from '../../services/productos.service';
+import { animate, query, stagger, style, transition, trigger } from '@angular/animations';
 
 type ProductoConIdYCantidad = Producto & { id: string; cantidad: number };
 
 @Component({
   selector: 'app-lista-productos',
   templateUrl: './lista-productos.component.html',
-  styleUrls: ['./lista-productos.component.scss']
+  styleUrls: ['./lista-productos.component.scss'],
+  animations: [
+    trigger('accordionBody', [
+      transition(':enter', [
+        style({ opacity: 0, height: 0, transform: 'translateY(-10px)' }),
+        animate('240ms ease-out', style({ opacity: 1, height: '*', transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        style({ opacity: 1, height: '*', transform: 'translateY(0)' }),
+        animate('180ms ease-in', style({ opacity: 0, height: 0, transform: 'translateY(-8px)' }))
+      ])
+    ]),
+    trigger('staggerProducts', [
+      transition(':enter', [
+        query('.card-producto', [
+          style({ opacity: 0, transform: 'translateY(10px)' }),
+          stagger(55, [
+            animate('220ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+          ])
+        ], { optional: true })
+      ])
+    ])
+  ]
 })
 export class ListaProductosComponent implements OnInit, OnChanges {
 
@@ -68,7 +91,33 @@ export class ListaProductosComponent implements OnInit, OnChanges {
     }
   }
 
+  productoDisponible(producto: Producto): boolean {
+    if (!producto.disponible) {
+      return false;
+    }
+
+    if (!producto.controlInventario) {
+      return true;
+    }
+
+    return producto.existencias > 0;
+  }
+
+  cantidadCategoria(nombreCategoria: string): number {
+    return Array.from(this.carrito.values())
+      .filter(item => item.categoria === nombreCategoria)
+      .reduce((total, item) => total + item.cantidad, 0);
+  }
+
+  productosComprables(productos: (Producto & { id: string })[]): (Producto & { id: string })[] {
+    return productos.filter(producto => this.productoDisponible(producto));
+  }
+
   sumarProducto(producto: Producto & { id: string }) {
+    if (!this.productoDisponible(producto)) {
+      return;
+    }
+
     if (this.carrito.has(producto.id)) {
       this.carrito.get(producto.id)!.cantidad++;
     } else {
@@ -88,6 +137,14 @@ export class ListaProductosComponent implements OnInit, OnChanges {
 
   obtenerCantidad(idProducto: string): number {
     return this.carrito.get(idProducto)?.cantidad || 0;
+  }
+
+  trackByCategoriaId(index: number, categoria: Categoria): string {
+    return categoria.id;
+  }
+
+  trackByProductoId(index: number, producto: Producto & { id: string }): string {
+    return producto.id;
   }
 
   private emitirCarrito() {

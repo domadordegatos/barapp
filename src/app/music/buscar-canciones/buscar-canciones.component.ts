@@ -2,6 +2,7 @@ import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/cor
 import { ActivatedRoute } from '@angular/router';
 import { RockolaService } from '../../services/rockola.service';
 import { SpotifyService } from '../../services/spotify-auth.service';
+import { NotificationService } from '../../services/notification.service';
 import { Observable, Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, map, take } from 'rxjs/operators';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
@@ -69,10 +70,36 @@ export class BuscarCancionesComponent implements OnInit, OnChanges {
   constructor(
     private route: ActivatedRoute,
     private rockolaService: RockolaService,
-    private spotifyService: SpotifyService
+    private spotifyService: SpotifyService,
+    private notificationService: NotificationService
   ) {}
 
   get storageKey(): string { return `codigo_${this.nombreBarUrl.toLowerCase()}_${this.idMesaUrl}`; }
+
+  private debeActualizarNombreVisible(nombreEntrante: string): boolean {
+    if (!nombreEntrante.trim()) {
+      return false;
+    }
+
+    if (!this.nombreBarReal.trim()) {
+      return true;
+    }
+
+    const actualNormalizado = this.nombreBarReal.toLowerCase().trim().replace(/\s+/g, '');
+    const entranteNormalizado = nombreEntrante.toLowerCase().trim().replace(/\s+/g, '');
+
+    if (entranteNormalizado !== this.nombreBarUrl) {
+      return true;
+    }
+
+    return actualNormalizado === this.nombreBarReal.toLowerCase().trim() && entranteNormalizado === this.nombreBarUrl;
+  }
+
+  private asignarNombreBarVisible(nombreEntrante: string) {
+    if (this.debeActualizarNombreVisible(nombreEntrante)) {
+      this.nombreBarReal = nombreEntrante.trim();
+    }
+  }
 
   async ngOnInit() {
     if (this.nombreBarUrl) {
@@ -105,7 +132,10 @@ export class BuscarCancionesComponent implements OnInit, OnChanges {
   async verificarExistenciaDelBar() {
     try {
       const datosBar: any = await this.rockolaService.verificarExistenciaBar(this.nombreBarUrl);
-      if (datosBar) { this.barValido = true; this.nombreBarReal = datosBar.nombreBar; }
+      if (datosBar) {
+        this.barValido = true;
+        this.asignarNombreBarVisible(datosBar.nombreBarVisible || datosBar.nombreBar || '');
+      }
     } catch { this.barValido = false; }
   }
 
@@ -153,7 +183,9 @@ export class BuscarCancionesComponent implements OnInit, OnChanges {
         setTimeout(() => this.idNuevaCancion = null, 3000);
       }
       this.query = ''; this.tracks = []; this.cancelarSolicitud();
-    } catch { alert("Error al enviar."); }
+    } catch {
+      this.notificationService.error('Error al enviar la canción.');
+    }
     finally { this.enviandoSolicitud = false; }
   }
 

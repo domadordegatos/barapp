@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { RockolaService } from '../../services/rockola.service';
 import { Router } from '@angular/router';
-// IMPORTANTE: Agregamos la importación que faltaba
-import { firstValueFrom } from 'rxjs'; 
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-registro-admin',
@@ -19,7 +18,11 @@ export class RegistroAdminComponent implements OnInit {
   barExiste: boolean = false;
   codigoRequerido: string = '';
 
-  constructor(private rockolaService: RockolaService, private router: Router) {}
+  constructor(
+    private rockolaService: RockolaService,
+    private router: Router,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit(): void {}
 
@@ -44,7 +47,7 @@ export class RegistroAdminComponent implements OnInit {
   async registrarUsuario() {
     // 1. Validación del Captcha Lógico
     if (this.captchaRespuesta !== (this.num1 + this.num2)) {
-      alert("Captcha incorrecto. Por favor resuelve la suma nuevamente.");
+      this.notificationService.warning('Captcha incorrecto. Por favor resuelve la suma nuevamente.');
       this.num1 = Math.floor(Math.random() * 10);
       this.num2 = Math.floor(Math.random() * 10);
       this.captchaRespuesta = null;
@@ -53,7 +56,7 @@ export class RegistroAdminComponent implements OnInit {
 
     // 2. Validación de seguridad para empleados
     if (this.barExiste && (!this.codigoRequerido || this.codigoRequerido.length !== 4)) {
-      alert("Este bar ya está registrado. Debes ingresar el código de 4 dígitos proporcionado por el administrador del bar.");
+      this.notificationService.warning('Este bar ya está registrado. Debes ingresar el código de 4 dígitos proporcionado por el administrador del bar.');
       return;
     }
 
@@ -61,11 +64,11 @@ export class RegistroAdminComponent implements OnInit {
       // 3. Llamada al servicio
       await this.rockolaService.registrarUsuarioConValidacion(this.datos, this.codigoRequerido);
       
-      alert("¡Registro exitoso! Tu solicitud ha sido enviada. Por seguridad, un administrador de soporte debe activar tu cuenta.");
+      this.notificationService.success('Registro exitoso. Tu solicitud fue enviada y debe ser activada por soporte.');
       this.router.navigate(['/']); 
       
     } catch (error: any) {
-      alert(error.message);
+      this.notificationService.error(error.message);
     }
   }
 }

@@ -1,7 +1,9 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { AdminService } from '../../services/admin.service';
 import { MesasService, Mesa } from '../../services/mesas.service';
+import { RockolaService } from '../../services/rockola.service';
 import { Subscription, combineLatest } from 'rxjs';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-admin-facturacion',
@@ -10,27 +12,46 @@ import { Subscription, combineLatest } from 'rxjs';
 })
 export class AdminFacturacionComponent implements OnInit, OnDestroy {
   @Input() nombreBar: string = '';
+  @Input() nombreBarReal: string = '';
 
   mesasConEstado: any[] = [];
   cargando: boolean = true;
   detalleSeleccionado: any = null;
   observaciones: string = '';
+  mesaActualizandoValor: string | null = null;
+  servicioHabilitadoBar: boolean = true;
+  actualizandoServicio: boolean = false;
   
   private subscripcion: Subscription | null = null;
+  private servicioSubscription: Subscription | null = null;
 
   constructor(
     private adminService: AdminService,
-    private mesasService: MesasService
+    private mesasService: MesasService,
+    private rockolaService: RockolaService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
     if (this.nombreBar) {
+      this.escucharEstadoServicio();
       this.escucharCambiosEnTiempoReal();
     }
   }
 
   ngOnDestroy(): void {
     if (this.subscripcion) this.subscripcion.unsubscribe();
+    if (this.servicioSubscription) this.servicioSubscription.unsubscribe();
+  }
+
+  private escucharEstadoServicio() {
+    if (this.servicioSubscription) {
+      this.servicioSubscription.unsubscribe();
+    }
+
+    this.servicioSubscription = this.rockolaService.observarBar(this.nombreBar).subscribe((bar: any) => {
+      this.servicioHabilitadoBar = bar?.servicioHabilitado !== false;
+    });
   }
 
   escucharCambiosEnTiempoReal() {
@@ -40,18 +61,19 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
       this.adminService.obtenerCuentasActivas(this.nombreBar)
     ]).subscribe({
       next: ([mesas, cuentas]: [any[], any[]]) => {
-        
-        // CORRECCIÓN: Filtramos para mostrar solo las mesas activas
         const mesasActivas = mesas.filter(m => m.activa === true);
 
-        this.mesasConEstado = mesasActivas.map(mesa => {
+        this.mesasConEstado = mesasActivas.map((mesa: Mesa) => {
+          this.asegurarConfiguracionMesa(mesa);
           const cuentaActiva = cuentas.find(c => c.idMesa === mesa.id);
           return {
             ...mesa,
             cuenta: cuentaActiva || null,
-            ocupada: !!cuentaActiva
+            ocupada: !!cuentaActiva,
+            prioridadBase: this.obtenerPrioridadBase(mesa),
+            tieneNotificacion: !!cuentaActiva?.notificacionPendiente
           };
-        });
+        }).sort((mesaA, mesaB) => this.compararMesas(mesaA, mesaB));
         this.cargando = false;
       },
       error: (err) => {
@@ -59,6 +81,46 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
         this.cargando = false;
       }
     });
+  }
+
+  private asegurarConfiguracionMesa(mesa: Mesa) {
+    if (!mesa.id || typeof mesa.mostrarValorCuenta === 'boolean') {
+      return;
+    }
+
+    this.mesasService.actualizarVisibilidadValorCuenta(mesa.id, false).catch((error) => {
+      console.error(error);
+    });
+  }
+
+  private obtenerPrioridadBase(mesa: Mesa): number {
+    if (typeof mesa.prioridadVisual === 'number' && !Number.isNaN(mesa.prioridadVisual)) {
+      return mesa.prioridadVisual;
+    }
+
+    return mesa.numero;
+  }
+
+  private compararMesas(mesaA: any, mesaB: any): number {
+    const notificacionA = mesaA.tieneNotificacion ? 0 : 1;
+    const notificacionB = mesaB.tieneNotificacion ? 0 : 1;
+
+    if (notificacionA !== notificacionB) {
+      return notificacionA - notificacionB;
+    }
+
+    const ocupadaA = mesaA.ocupada ? 0 : 1;
+    const ocupadaB = mesaB.ocupada ? 0 : 1;
+
+    if (ocupadaA !== ocupadaB) {
+      return ocupadaA - ocupadaB;
+    }
+
+    if (mesaA.prioridadBase !== mesaB.prioridadBase) {
+      return mesaA.prioridadBase - mesaB.prioridadBase;
+    }
+
+    return mesaA.numero - mesaB.numero;
   }
 
   async verDetalle(mesa: any) {
@@ -75,9 +137,115 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
     }
   }
 
+  async alternarVisibilidadValorCuenta(mesa: any, event: Event) {
+    event.stopPropagation();
+
+    if (!mesa?.id || this.mesaActualizandoValor === mesa.id) {
+      return;
+    }
+
+    this.mesaActualizandoValor = mesa.id;
+    const nuevoEstado = !mesa.mostrarValorCuenta;
+
+    try {
+      await this.mesasService.actualizarVisibilidadValorCuenta(mesa.id, nuevoEstado);
+      this.notificationService.success(
+        nuevoEstado
+          ? `Mesa #${mesa.numero}: visibilidad de valores activada.`
+          : `Mesa #${mesa.numero}: visibilidad de valores desactivada.`
+      );
+    } catch (error) {
+      console.error(error);
+      this.notificationService.error('No se pudo actualizar la visibilidad de valores.');
+    } finally {
+      this.mesaActualizandoValor = null;
+    }
+  }
+
+  async alternarEstadoServicio() {
+    if (!this.nombreBar || this.actualizandoServicio) {
+      return;
+    }
+
+    this.actualizandoServicio = true;
+    const nuevoEstado = !this.servicioHabilitadoBar;
+
+    try {
+      await this.rockolaService.actualizarEstadoServicio(this.nombreBar, nuevoEstado, this.nombreBarReal || this.nombreBar);
+      this.notificationService.success(
+        nuevoEstado
+          ? 'Servicio activado para este bar.'
+          : 'Servicio pausado para este bar.'
+      );
+    } catch (error) {
+      console.error(error);
+      this.notificationService.error('No se pudo actualizar el estado del servicio.');
+    } finally {
+      this.actualizandoServicio = false;
+    }
+  }
+
   cerrarDetalle() {
     this.detalleSeleccionado = null;
     this.observaciones = '';
+  }
+
+  formatearMetaPedido(pedido: any): string {
+    const partes: string[] = [];
+
+    if (pedido?.horaSolicitud) {
+      partes.push(pedido.horaSolicitud);
+    }
+
+    if (pedido?.fechaSolicitud) {
+      partes.push(pedido.fechaSolicitud);
+    }
+
+    if (pedido?.solicitadoPor) {
+      partes.push(this.formatearSolicitante(pedido.solicitadoPor));
+    }
+
+    return partes.join(' • ');
+  }
+
+  formatearSolicitante(valor: string): string {
+    const normalizado = (valor || '').trim().toLowerCase();
+
+    if (normalizado === 'usuario') {
+      return 'Cliente';
+    }
+
+    if (normalizado === 'admin' || normalizado === 'administrador') {
+      return 'Administrador';
+    }
+
+    if (!normalizado) {
+      return 'Sin origen';
+    }
+
+    return valor.charAt(0).toUpperCase() + valor.slice(1);
+  }
+
+  formatearEstadoPedido(valor: string): string {
+    const normalizado = (valor || '').trim().toLowerCase();
+
+    if (normalizado === 'aceptado') {
+      return 'Aceptado';
+    }
+
+    if (normalizado === 'pendiente') {
+      return 'Pendiente';
+    }
+
+    if (normalizado === 'rechazado') {
+      return 'Rechazado';
+    }
+
+    if (!normalizado) {
+      return 'Sin estado';
+    }
+
+    return valor.charAt(0).toUpperCase() + valor.slice(1);
   }
 
   aprobarPedido(indexPedido: number) {
@@ -124,7 +292,7 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
         total: this.calcularTotalAprobado(),
         observaciones: this.observaciones
       });
-      alert('Guardado.');
+      this.notificationService.success('Cambios guardados.');
     } catch (error) { console.error(error); }
   }
 
@@ -141,11 +309,11 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
 
     try {
       await this.adminService.archivarCuenta(cuentaFinalizada);
-      alert('Cuenta cerrada y mesa liberada.');
+      this.notificationService.success('Cuenta cerrada y mesa liberada.');
       this.cerrarDetalle();
     } catch (error) {
       console.error(error);
-      alert('Error al cerrar cuenta.');
+      this.notificationService.error('Error al cerrar cuenta.');
     }
   }
 

@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RockolaService } from 'src/app/services/rockola.service';
 import { Observable } from 'rxjs';
+import { NotificationService } from 'src/app/services/notification.service';
 
 @Component({
   selector: 'app-admin-pedidos',
@@ -9,14 +10,16 @@ import { Observable } from 'rxjs';
   styleUrls: ['./admin-pedidos.component.scss']
 })
 export class AdminPedidosComponent implements OnInit {
-  // --- Propiedades de estado y navegación ---
-  seccionActiva: 'musica' | 'productos' | 'mesas' | 'facturacion' = 'musica';
+  seccionActiva: 'musica' | 'productos' | 'mesas' = 'musica';
+  vistaMovilActiva: 'musica' | 'facturacion' = 'musica';
   nombreBarReal: string = 'Cargando...';
   nombreBarUrl: string = '';
   barValido: boolean = false;
   errorMensaje: string = '';
   esAdmin: boolean = false;
   userId: string = '';
+  menuAbierto: boolean = false;
+  esMobile: boolean = false;
 
   // --- Propiedades para la gestión de códigos ---
   codigoActual: string = '----';
@@ -30,10 +33,13 @@ export class AdminPedidosComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    public rockolaService: RockolaService
+    public rockolaService: RockolaService,
+    private notificationService: NotificationService
   ) { }
 
   async ngOnInit() {
+    this.actualizarVistaResponsive();
+
     const barUrl = this.route.snapshot.paramMap.get('nombreBar') || '';
     this.nombreBarUrl = barUrl.toLowerCase().replace(/\s+/g, '');
 
@@ -47,10 +53,11 @@ export class AdminPedidosComponent implements OnInit {
         this.barValido = true;
         this.userId = datosUsuario.id;
         this.esAdmin = datosUsuario.tipo === 'admin';
+        this.nombreBarReal = datosUsuario.nombreBar;
         
         const datosBar: any = await this.rockolaService.verificarExistenciaBar(this.nombreBarUrl);
         if (datosBar) {
-          this.nombreBarReal = datosBar.nombreBar;
+          this.nombreBarReal = datosBar.nombreBarVisible || datosBar.nombreBar || this.nombreBarReal;
           this.codigoActual = datosBar.codigoSeguridad || '----';
           if (datosBar.ultimaActualizacion) {
             this.ultimaActualizacion = datosBar.ultimaActualizacion.toDate();
@@ -68,29 +75,62 @@ export class AdminPedidosComponent implements OnInit {
     }
   }
 
+  @HostListener('window:resize')
+  actualizarVistaResponsive() {
+    this.esMobile = window.innerWidth <= 980;
+    if (!this.esMobile) {
+      this.menuAbierto = false;
+    }
+  }
+
+  alternarMenu() {
+    this.menuAbierto = !this.menuAbierto;
+  }
+
+  cerrarMenu() {
+    this.menuAbierto = false;
+  }
+
+  seleccionarSeccion(seccion: 'musica' | 'productos' | 'mesas') {
+    this.seccionActiva = seccion;
+    this.cerrarMenu();
+  }
+
   async guardarCodigo() {
-    if (this.codigoNuevo.length !== 4 || !this.userId) return;
+    if (this.codigoNuevo.length !== 4 || !this.userId) {
+      this.notificationService.warning('El código del día debe tener exactamente 4 dígitos.');
+      return;
+    }
+
     try {
-      await this.rockolaService.actualizarCodigoDia(this.nombreBarUrl, this.codigoNuevo, this.userId);
+      await this.rockolaService.actualizarCodigoDia(this.nombreBarUrl, this.codigoNuevo, this.userId, this.nombreBarReal);
       this.codigoActual = this.codigoNuevo;
       this.ultimaActualizacion = new Date();
       this.codigoNuevo = '';
-      alert('¡Código del día actualizado con éxito!');
+      this.notificationService.success('Código del día actualizado con éxito.');
     } catch (error) {
       console.error('Error al actualizar el código:', error);
-      alert('Hubo un error al actualizar el código.');
+      this.notificationService.error('Hubo un error al actualizar el código.');
     }
   }
 
   async guardarCodigoInvitacion() {
-    if (!this.esAdmin || !this.userId) return;
+    if (!this.esAdmin || !this.userId) {
+      return;
+    }
+
+    if (this.codigoInvitacionNuevo.length !== 4) {
+      this.notificationService.warning('El código de registro debe tener exactamente 4 dígitos.');
+      return;
+    }
+
     try {
       await this.rockolaService.actualizarCodigoInvitacion(this.userId, this.codigoInvitacionNuevo);
-      this.codigoInvitacionNuevo = ''; // Limpiar campo
-      alert('¡Código de invitación para empleados actualizado!');
+      this.codigoInvitacionNuevo = '';
+      this.notificationService.success('Código de invitación actualizado.');
     } catch (error) {
       console.error('Error al actualizar código de invitación:', error);
-      alert('Hubo un error al actualizar el código de invitación.');
+      this.notificationService.error('Hubo un error al actualizar el código de invitación.');
     }
   }
 
@@ -104,5 +144,9 @@ export class AdminPedidosComponent implements OnInit {
       sessionStorage.removeItem('usuarioAdmin');
       this.router.navigate(['/']);
     }
+  }
+
+  volverInicio() {
+    this.router.navigate(['/']);
   }
 }

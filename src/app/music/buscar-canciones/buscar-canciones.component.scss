@@ -1,5 +1,7 @@
 $spotify-green: #1db954;
-$delete-red: #ff3b30;
+$delete-green: #169c49;
+$ink-900: #18201c;
+$ink-700: #5d6b63;
 
 :host { 
   display: block;
@@ -20,8 +22,8 @@ $delete-red: #ff3b30;
 /* 1. HEADER ESTÁTICO (Buscador) */
 .header-bar { 
   flex-shrink: 0; /* No permite que el buscador se encoja o se mueva */
-  padding: 10px 15px 5px; 
-  background-color: #fff;
+  padding: 8px 14px 4px; 
+  background-color: transparent;
   z-index: 100;
   
   .search-box { 
@@ -29,29 +31,38 @@ $delete-red: #ff3b30;
     width: 100%; 
     input { 
       width: 100%; 
-      padding: 12px 20px; 
+      padding: 12px 18px; 
       padding-left: 45px; 
-      border-radius: 12px; 
-      border: 1px solid #eee; 
-      background-color: #fff; 
-      color: #333; 
-      font-size: 15px; 
+      border-radius: 14px; 
+      border: 1px solid rgba(231, 238, 232, 0.95); 
+      background-color: rgba(255, 255, 255, 0.9); 
+      color: $ink-900; 
+      font-size: 14px; 
+      font-weight: 600;
       outline: none; 
+      box-shadow: 0 8px 18px rgba(18, 24, 20, 0.04);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+
+      &:focus {
+        border-color: rgba($spotify-green, 0.28);
+        box-shadow: 0 10px 20px rgba(29, 185, 84, 0.1);
+        background-color: #fff;
+      }
     } 
-    &::before { content: '🔍'; position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.5; z-index: 2; } 
+    &::before { content: '⌕'; position: absolute; left: 18px; top: 50%; transform: translateY(-50%); font-size: 17px; color: #859188; z-index: 2; } 
   } 
 }
 
 /* 2. TÍTULO ESTÁTICO (Tu Actividad Musical) */
 .titulo-seccion { 
   flex-shrink: 0; /* No se mueve */
-  background-color: #f8f9fa; /* Color de fondo de la app */
-  padding: 15px 0 10px 0;
+  background-color: transparent;
+  padding: 12px 0 8px 0;
   font-size: 13px; 
-  color: #bbb; 
+  color: #93a097; 
   text-transform: uppercase; 
-  font-weight: 700; 
-  letter-spacing: 1.2px; 
+  font-weight: 800; 
+  letter-spacing: 0.16em; 
   margin: 0; 
   text-align: center; 
 } 
@@ -61,7 +72,7 @@ $delete-red: #ff3b30;
   flex: 1; /* Toma todo el espacio restante de la pantalla */
   overflow-y: auto !important; /* HABILITA EL SCROLL SOLO AQUÍ */
   -webkit-overflow-scrolling: touch;
-  padding: 0 15px 100px; /* Padding extra abajo para el botón de pedido */
+  padding: 0 14px 100px; /* Padding extra abajo para el botón de pedido */
   box-sizing: border-box;
 
   /* Barra de scroll sutil */
@@ -74,7 +85,7 @@ $delete-red: #ff3b30;
   position: relative; 
   width: calc(100% - 4px); 
   margin: 0 2px 8px 2px; 
-  background-color: $delete-red; 
+  background: linear-gradient(135deg, $delete-green 0%, #0f8f43 100%); 
   border-radius: 16px; 
   overflow: hidden; 
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06); 
@@ -129,14 +140,17 @@ $delete-red: #ff3b30;
 }
 
 .trash-icon-container { 
-  width: 32px; 
-  height: 32px; 
+  width: 38px; 
+  height: 38px; 
   display: flex; 
   align-items: center; 
   justify-content: center; 
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
   .trash-svg { 
-    width: 26px; 
-    height: 26px; 
+    width: 22px; 
+    height: 22px; 
     .trash-lid { 
       transition: transform 0.2s ease; 
       transform-origin: center top; 
@@ -149,12 +163,14 @@ $delete-red: #ff3b30;
   z-index: 2; 
   display: flex; 
   align-items: center; 
-  background: white; 
+  background: rgba(255, 255, 255, 0.96); 
   padding: 10px 14px; 
   border-radius: 16px; 
   width: 100%; 
   gap: 15px; 
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+  border: 1px solid rgba(231, 238, 232, 0.92);
+  box-shadow: 0 8px 20px rgba(18, 24, 20, 0.04);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, border-color 0.2s ease; 
   
   &.swiping { transition: none !important; } 
   
@@ -172,7 +188,7 @@ $delete-red: #ff3b30;
     strong { 
       display: block; 
       font-size: 16px; 
-      color: #111; 
+      color: $ink-900; 
       overflow: hidden; 
       text-overflow: ellipsis; 
       white-space: nowrap; 
@@ -182,7 +198,7 @@ $delete-red: #ff3b30;
     p { 
       margin: 0; 
       font-size: 13px; 
-      color: #777; 
+      color: $ink-700; 
       overflow: hidden; 
       text-overflow: ellipsis; 
       white-space: nowrap; 
@@ -200,10 +216,15 @@ $delete-red: #ff3b30;
     
     .hora-pedido { 
       font-size: 11px; 
-      color: #aaa; 
+      color: #96a299; 
       font-weight: 500; 
     } 
   } 
+
+  &:hover {
+    border-color: rgba($spotify-green, 0.16);
+    box-shadow: 0 12px 24px rgba(18, 24, 20, 0.06);
+  }
   
   .estado-badge { 
     font-size: 10px; 
@@ -239,8 +260,8 @@ $delete-red: #ff3b30;
   } 
 }
 
-.resultados-busqueda { margin: 0; position: absolute; top: 55px; left: 0; right: 0; background: white; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); max-height: 250px; overflow-y: auto; z-index: 1100; border: 1px solid #eee; box-sizing: border-box; .item-resultado { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f9f9f9; .foto-resultado { width: 45px; height: 45px; border-radius: 8px; margin-right: 15px; object-fit: cover; } .info-resultado { flex: 1; min-width: 0; strong { display: block; font-size: 14px; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } p { font-size: 12px; color: #888; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } } .btn-pedir { background-color: rgba($spotify-green, 0.1); color: $spotify-green; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; text-transform: uppercase; flex-shrink: 0; } } }
+.resultados-busqueda { margin: 0; position: absolute; top: 56px; left: 0; right: 0; background: rgba(255, 255, 255, 0.98); border-radius: 16px; box-shadow: 0 18px 36px rgba(0,0,0,0.12); max-height: 250px; overflow-y: auto; z-index: 1100; border: 1px solid rgba(231, 238, 232, 0.95); box-sizing: border-box; .item-resultado { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid #f3f6f3; .foto-resultado { width: 45px; height: 45px; border-radius: 10px; margin-right: 13px; object-fit: cover; } .info-resultado { flex: 1; min-width: 0; strong { display: block; font-size: 14px; color: $ink-900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } p { font-size: 12px; color: #7a877f; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } } .btn-pedir { background-color: rgba($spotify-green, 0.1); color: $spotify-green; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; flex-shrink: 0; letter-spacing: 0.06em; } } }
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; display: flex; align-items: flex-end; backdrop-filter: blur(4px); }
-.modal-content { width: 100%; background: white; border-radius: 24px 24px 0 0; padding: 30px 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 20px; animation: slide-up 0.3s ease-out; .header-modal { text-align: center; h3 { margin: 0; font-size: 18px; font-weight: 800; color: #111; } } .body-modal { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; .foto-modal { width: 110px; height: 110px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); } .foto-modal.grayscale { filter: grayscale(1); opacity: 0.6; } .info-modal { strong { display: block; font-size: 18px; color: #111; } p { margin: 5px 0 0; font-size: 14px; color: #888; } } } .footer-modal { display: flex; gap: 15px; margin-top: 10px; button { flex: 1; padding: 18px; border-radius: 14px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; } .btn-cancelar { background: #f5f5f5; color: #666; } .btn-confirmar { background: $spotify-green; color: white; } .btn-danger { background: $delete-red; color: white; } } }
+.modal-content { width: 100%; background: white; border-radius: 24px 24px 0 0; padding: 30px 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 20px; animation: slide-up 0.3s ease-out; .header-modal { text-align: center; h3 { margin: 0; font-size: 18px; font-weight: 800; color: #111; } } .body-modal { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 15px; .foto-modal { width: 110px; height: 110px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); } .foto-modal.grayscale { filter: grayscale(1); opacity: 0.6; } .info-modal { strong { display: block; font-size: 18px; color: #111; } p { margin: 5px 0 0; font-size: 14px; color: #888; } } } .footer-modal { display: flex; gap: 15px; margin-top: 10px; button { flex: 1; padding: 18px; border-radius: 14px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; } .btn-cancelar { background: #f5f5f5; color: #666; } .btn-confirmar { background: $spotify-green; color: white; } .btn-danger { background: linear-gradient(135deg, $delete-green 0%, #0f8f43 100%); color: white; } } }
 @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .vacio-mensaje { text-align: center; padding: 40px 20px; color: #bbb; font-size: 14px; }

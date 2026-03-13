@@ -1,12 +1,16 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
+import { NotificationService } from '../services/notification.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthGuard implements CanActivate {
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private notificationService: NotificationService
+  ) {}
 
 // auth.guard.ts
 
@@ -27,7 +31,7 @@ canActivate(route: ActivatedRouteSnapshot): boolean {
 
     if (barUsuarioNormalizado !== barUrlNormalizado) {
       console.error("Diferencia detectada:", barUsuarioNormalizado, "vs", barUrlNormalizado);
-      alert("No tienes permisos para gestionar este establecimiento.");
+      this.notificationService.error('No tienes permisos para gestionar este establecimiento.');
       this.router.navigate(['/']); 
       return false;
     }

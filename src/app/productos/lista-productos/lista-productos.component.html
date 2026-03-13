@@ -1,27 +1,51 @@
 <div class="modulo-productos">
+    <div class="modulo-header">
+        <p class="module-kicker">Carta digital</p>
+    </div>
+
     <div class="contenedor-menu">
-        <div *ngFor="let cat of categorias$ | async" class="acordeon-categoria">
-            <div class="card-categoria" (click)="toggleCategoria(cat)">
-                <h3>{{ cat.nombre | titlecase }}</h3>
-                <div class="arrow" [class.abierto]="categoriaAbiertaId === cat.id">❯</div>
-            </div>
+        <div *ngFor="let cat of categorias$ | async; trackBy: trackByCategoriaId" class="categoria-shell" [class.activa]="categoriaAbiertaId === cat.id">
+            <button type="button" class="card-categoria" (click)="toggleCategoria(cat)">
+                <div class="categoria-copy">
+                    <span class="categoria-marker"></span>
+                    <div class="categoria-texto">
+                        <h3>{{ cat.nombre | titlecase }}</h3>
+                        <p *ngIf="cantidadCategoria(cat.nombre) > 0; else hintCategoria">{{ cantidadCategoria(cat.nombre) }} agregados</p>
+                        <ng-template #hintCategoria>
+                            <p>Toca para explorar</p>
+                        </ng-template>
+                    </div>
+                </div>
 
-            <div class="panel-productos" [class.abierto]="categoriaAbiertaId === cat.id">
-                <div *ngIf="(productos$ | async) as productos">
-                    <!-- 1. El clic en la tarjeta ahora suma el producto directamente -->
-                    <div *ngFor="let prod of productos" class="card-producto" (click)="sumarProducto(prod)">
-                        <div class="info-prod">
-                            <strong>{{ prod.nombre | titlecase }}</strong>
-                            <p>{{ prod.precio | currency:'USD':'symbol':'1.2-2' }}</p>
+                <div class="categoria-side">
+                    <span class="categoria-count" *ngIf="cantidadCategoria(cat.nombre) > 0">{{ cantidadCategoria(cat.nombre) }}</span>
+                    <span class="arrow" [class.abierto]="categoriaAbiertaId === cat.id">+</span>
+                </div>
+            </button>
+
+            <div class="panel-productos" *ngIf="categoriaAbiertaId === cat.id" @accordionBody>
+                <div class="productos-stack" *ngIf="(productos$ | async) as productos" @staggerProducts>
+                    <div
+                        *ngFor="let prod of productosComprables(productos); trackBy: trackByProductoId"
+                        class="card-producto"
+                        [class.activo]="obtenerCantidad(prod.id) > 0"
+                        (click)="sumarProducto(prod)">
+                        <div class="producto-main">
+                            <div class="producto-copy">
+                                <strong class="producto-nombre">{{ prod.nombre | titlecase }}</strong>
+                                <span class="producto-hint">Toca para agregar</span>
+                            </div>
+                            <span class="producto-precio">{{ prod.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                         </div>
 
-                        <!-- 2. Los controles aparecen si el producto está en el carrito -->
-                        <div class="controles-cantidad" *ngIf="obtenerCantidad(prod.id) > 0">
-                             <!-- 3. El botón de restar detiene la propagación para no sumar accidentalmente -->
-                            <button class="btn-cantidad" (click)="$event.stopPropagation(); restarProducto(prod)">-</button>
-                            <span class="cantidad-producto">{{ obtenerCantidad(prod.id) }}</span>
-                            <!-- El botón de sumar ha sido eliminado -->
+                        <div class="producto-side" *ngIf="obtenerCantidad(prod.id) > 0">
+                            <span class="cantidad-chip">{{ obtenerCantidad(prod.id) }}</span>
+                            <button class="btn-cantidad" type="button" (click)="$event.stopPropagation(); restarProducto(prod)">−</button>
                         </div>
+                    </div>
+
+                    <div class="sin-productos" *ngIf="productosComprables(productos).length === 0">
+                        No hay productos disponibles en esta categoria.
                     </div>
                 </div>
             </div>

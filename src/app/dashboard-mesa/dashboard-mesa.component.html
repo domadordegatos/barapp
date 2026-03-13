@@ -7,10 +7,20 @@
     </div>
   </div>
 
-  <div *ngIf="barValido && !cargandoValidacion" class="full-layout">
-    
+  <div *ngIf="barValido && mesaValida && !cargandoValidacion && !errorMensaje" class="full-layout">
+
+    <div class="pantalla-bloqueo servicio-pausado" *ngIf="!servicioHabilitadoBar">
+      <div class="acceso-premium-container">
+        <div class="header-bienvenida">
+          <span class="service-badge off">Servicio pausado</span>
+          <h1>{{ nombreBarReal || nombreBarUrl }} <br>no está recibiendo accesos</h1>
+          <p>En este momento no tenemos servicio disponible para esta mesa. Intenta nuevamente más tarde o consulta con el personal del bar.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- PANTALLA DE ACCESO PREMIUM -->
-    <div class="pantalla-bloqueo" *ngIf="!accesoAutorizado">
+    <div class="pantalla-bloqueo" *ngIf="servicioHabilitadoBar && !accesoAutorizado">
       <div class="acceso-premium-container">
         
         <div class="header-bienvenida">
@@ -39,10 +49,26 @@
     </div>
 
     <!-- VISTA AUTORIZADA -->
-    <div class="vista-autorizada-container" *ngIf="accesoAutorizado">
-      <div class="tab-selector">
-        <button [class.active-music]="vistaActual === 'songs'" (click)="vistaActual = 'songs'">🎵 Música</button>
-        <button [class.active-products]="vistaActual === 'products'" (click)="vistaActual = 'products'">🍻 Productos</button>
+    <div class="vista-autorizada-container" *ngIf="servicioHabilitadoBar && accesoAutorizado">
+      <div class="dashboard-top-stack">
+        <div class="bar-pill" *ngIf="nombreBarReal">
+          <strong>{{ nombreBarReal }}</strong>
+        </div>
+
+        <div class="tab-selector">
+          <button [class.active-music]="vistaActual === 'songs'" (click)="vistaActual = 'songs'">
+            <span class="tab-icon">♪</span>
+            <span>Música</span>
+          </button>
+          <div class="mesa-pill" *ngIf="numeroMesaReal !== null">
+            <span class="mesa-pill-label">Mesa</span>
+            <strong>#{{ numeroMesaReal }}</strong>
+          </div>
+          <button [class.active-products]="vistaActual === 'products'" (click)="vistaActual = 'products'">
+            <span class="tab-icon">◫</span>
+            <span>Productos</span>
+          </button>
+        </div>
       </div>
 
       <div class="window-slider" [@slideContent]="vistaActual">
@@ -61,20 +87,107 @@
         </div>
       </div>
 
+      <button
+        type="button"
+        class="btn-historial-cuenta"
+        *ngIf="vistaActual === 'products'"
+        [class.with-footer]="carrito.length > 0"
+        (click)="abrirHistorialCuenta()"
+        title="Ver historial de consumo">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 3.5C7 2.67 7.67 2 8.5 2h7A1.5 1.5 0 0 1 17 3.5V5h1.5A1.5 1.5 0 0 1 20 6.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5v-13A1.5 1.5 0 0 1 5.5 5H7V3.5Zm2 0V5h6V3.5H9Zm-1 5a1 1 0 0 0 0 2h8a1 1 0 1 0 0-2H8Zm0 4a1 1 0 0 0 0 2h5a1 1 0 1 0 0-2H8Zm0 4a1 1 0 0 0 0 2h8a1 1 0 1 0 0-2H8Z" />
+        </svg>
+      </button>
+
       <div class="footer-pedido" *ngIf="carrito.length > 0 && vistaActual === 'products'">
-        <button class="btn-ver-pedido" (click)="mostrandoResumenPedido = true">🛒 Ver Pedido ({{ carrito.length }})</button>
+        <button class="btn-ver-pedido" (click)="mostrandoResumenPedido = true">Ver pedido</button>
       </div>
+    </div>
+  </div>
+
+  <div class="pantalla-estado" *ngIf="!cargandoValidacion && errorMensaje">
+    <div class="loader-container estado-error">
+      <h2>No se pudo abrir esta mesa</h2>
+      <p class="loading-text">{{ errorMensaje }}</p>
     </div>
   </div>
 
   <div class="modal-overlay" *ngIf="mostrandoResumenPedido" (click)="mostrandoResumenPedido = false">
     <div class="modal-resumen-pedido" (click)="$event.stopPropagation()">
-      <h3>Tu Pedido</h3>
-      <div *ngFor="let item of carrito" class="item-pedido-resumen">
-        <span>{{ item.cantidad }}x {{ item.nombre }}</span>
-        <span>{{ (item.precio * item.cantidad) | currency:'USD':'symbol':'1.0-0' }}</span>
+      <div class="resumen-header">
+        <div>
+          <p class="resumen-kicker">Resumen actual</p>
+          <h3>Tu pedido</h3>
+        </div>
+        <button class="btn-cerrar-resumen" type="button" (click)="mostrandoResumenPedido = false">✕</button>
       </div>
-      <button class="btn-confirmar-pedido" (click)="confirmarPedido()">Confirmar Pedido</button>
+
+      <div class="resumen-items">
+        <div *ngFor="let item of carrito; trackBy: trackByCarritoId" class="item-pedido-resumen">
+          <div class="item-principal">
+            <span class="item-cantidad">{{ item.cantidad }}x</span>
+            <div>
+              <strong>{{ item.nombre | titlecase }}</strong>
+              <p>{{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }} c/u</p>
+            </div>
+          </div>
+          <strong class="item-total">{{ obtenerSubtotalItem(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+        </div>
+      </div>
+
+      <button class="btn-confirmar-pedido" (click)="confirmarPedido()">Confirmar pedido</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="mostrandoHistorialCuenta" (click)="cerrarHistorialCuenta()">
+    <div class="modal-historial-cuenta" (click)="$event.stopPropagation()">
+      <div class="resumen-header historial-header">
+        <div>
+          <p class="resumen-kicker">Consumo aprobado</p>
+          <h3>Historial de cuenta</h3>
+        </div>
+        <button class="btn-cerrar-resumen" type="button" (click)="cerrarHistorialCuenta()">✕</button>
+      </div>
+
+      <div class="historial-estado" *ngIf="mostrarAvisoHistorialSinPrecios">
+        Los precios están ocultos por ahora. Puedes revisar el detalle de lo que ya fue aprobado.
+      </div>
+
+      <div class="historial-lista" *ngIf="historialPedidosAprobados.length > 0; else sinHistorialAprobado">
+        <div class="grupo-historial" *ngFor="let pedido of historialPedidosAprobados; let i = index; trackBy: trackByHistorialPedidoId">
+          <div class="grupo-historial-header">
+            <h4>{{ resumenPedidoHistorial(pedido, i) }}</h4>
+          </div>
+
+          <div class="linea-historial" *ngFor="let item of pedido.items; trackBy: trackByHistorialItemId">
+            <div class="linea-historial-main">
+              <span class="linea-cantidad">{{ item.cantidad }}x</span>
+              <strong>{{ item.nombre | titlecase }}</strong>
+            </div>
+
+            <div class="linea-historial-pricing" *ngIf="mostrarValorCuentaCliente">
+              <span>{{ item.precioUnit | currency:'COP':'symbol-narrow':'1.0-0' }} c/u</span>
+              <strong>{{ item.subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+            </div>
+          </div>
+
+          <div class="grupo-total" *ngIf="mostrarValorCuentaCliente">
+            <span>Total del pedido</span>
+            <strong>{{ pedido.totalPedido | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #sinHistorialAprobado>
+        <div class="historial-vacio">
+          Aún no hay productos aprobados en tu cuenta.
+        </div>
+      </ng-template>
+
+      <div class="historial-total-general" *ngIf="mostrarValorCuentaCliente && historialPedidosAprobados.length > 0">
+        <span>Total acumulado</span>
+        <strong>{{ totalHistorialAprobado | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+      </div>
     </div>
   </div>
 </div>

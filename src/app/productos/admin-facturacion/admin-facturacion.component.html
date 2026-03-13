@@ -1,7 +1,25 @@
 <div class="modulo-facturacion">
   <div class="header-facturacion">
-    <h2>Estado de las Mesas</h2>
-    <div *ngIf="cargando" class="loader-chico">Cargando mapa...</div>
+    <div class="header-copy">
+      <h2>Estado de las Mesas</h2>
+      <p class="header-status-copy">
+        {{ servicioHabilitadoBar ? 'Servicio activo para recibir accesos y pedidos.' : 'Servicio pausado: las mesas no podrán ingresar ni enviar información.' }}
+      </p>
+    </div>
+    <div class="header-actions">
+      <div *ngIf="cargando" class="loader-chico">Cargando mapa...</div>
+      <button
+        type="button"
+        class="btn-toggle-servicio"
+        [class.activo]="servicioHabilitadoBar"
+        [class.inactivo]="!servicioHabilitadoBar"
+        [class.cargando]="actualizandoServicio"
+        [disabled]="actualizandoServicio"
+        (click)="alternarEstadoServicio()">
+        <span class="estado-dot"></span>
+        {{ servicioHabilitadoBar ? 'Servicio activo' : 'Servicio pausado' }}
+      </button>
+    </div>
   </div>
 
   <!-- MAPA DE MESAS (GRID) -->
@@ -15,20 +33,41 @@
       <div *ngIf="mesa.cuenta?.notificacionPendiente" class="alerta-pedidos">!</div>
 
       <div class="header-card">
-        <span class="num-mesa">#{{ mesa.numero }}</span>
-        <span class="estado-label">{{ mesa.ocupada ? 'Ocupada' : 'Libre' }}</span>
+        <div class="header-principal">
+          <span class="num-mesa">#{{ mesa.numero }}</span>
+        </div>
+        <div class="header-status">
+          <div class="estado-linea">
+            <button
+              *ngIf="mesa.ocupada"
+              type="button"
+              class="btn-valor-cuenta"
+              [class.activo]="mesa.mostrarValorCuenta"
+              [class.cargando]="mesaActualizandoValor === mesa.id"
+              [attr.aria-pressed]="mesa.mostrarValorCuenta"
+              [title]="mesa.mostrarValorCuenta ? 'Ocultar precios al cliente' : 'Permitir ver precios al cliente'"
+              (click)="alternarVisibilidadValorCuenta(mesa, $event)">
+              <svg *ngIf="mesa.mostrarValorCuenta" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 9.2A2.8 2.8 0 1 0 12 14.8 2.8 2.8 0 0 0 12 9.2Zm0 7.6c-3.9 0-7.27-2.33-8.75-5.8C4.73 7.53 8.1 5.2 12 5.2s7.27 2.33 8.75 5.8c-1.48 3.47-4.85 5.8-8.75 5.8Zm0-13.6c-5.2 0-9.54 3.18-11 7.8 1.46 4.62 5.8 7.8 11 7.8s9.54-3.18 11-7.8c-1.46-4.62-5.8-7.8-11-7.8Z"/>
+              </svg>
+              <svg *ngIf="!mesa.mostrarValorCuenta" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m4.27 3 16.73 16.73-1.27 1.27-2.43-2.43A11.74 11.74 0 0 1 12 19.2c-5.2 0-9.54-3.18-11-7.8a12.2 12.2 0 0 1 4.27-5.76L3 4.27 4.27 3Zm3.13 3.13A9.92 9.92 0 0 0 3.25 11c1.48 3.47 4.85 5.8 8.75 5.8 1.56 0 3.03-.38 4.32-1.05l-2.12-2.12a4.8 4.8 0 0 1-5.83-5.83L7.4 6.13Zm4.26 4.26 2.95 2.95c.13-.42.19-.87.19-1.34A2.8 2.8 0 0 0 12 9.2c-.47 0-.92.07-1.34.19ZM12 5.2c5.2 0 9.54 3.18 11 7.8a12.16 12.16 0 0 1-4.36 5.85l-1.43-1.43A9.92 9.92 0 0 0 20.75 11c-1.48-3.47-4.85-5.8-8.75-5.8-1.38 0-2.68.29-3.85.82L6.54 4.41A11.95 11.95 0 0 1 12 3.2Z"/>
+              </svg>
+            </button>
+            <span class="estado-label">{{ mesa.ocupada ? 'Ocupada' : 'Libre' }}</span>
+          </div>
+          <span class="id-mesa">{{ mesa.id }}</span>
+        </div>
       </div>
 
       <div class="body-card">
-        <span class="id-mesa">{{ mesa.id }}</span>
         <div *ngIf="mesa.ocupada" class="info-cuenta">
-          <span class="hora-apertura">Desde: {{ mesa.cuenta.fechaApertura.toDate() | date:'shortTime' }}</span>
-          <span class="total-actual">Total: {{ mesa.cuenta.total | currency:'USD':'symbol':'1.0-0' }}</span>
+          <span class="hora-apertura">Desde {{ mesa.cuenta.fechaApertura.toDate() | date:'shortTime' }}</span>
+          <div class="resumen-cuenta">
+            <span class="total-actual">{{ mesa.cuenta.total | currency:'USD':'symbol':'1.0-0' }}</span>
+            <button class="btn-abrir-detalle">Ver cuenta</button>
+          </div>
         </div>
-      </div>
-      
-      <div class="footer-card" *ngIf="mesa.ocupada">
-        <button class="btn-abrir-detalle">Ver Cuenta</button>
       </div>
     </div>
   </div>
@@ -37,7 +76,10 @@
   <div class="modal-overlay" *ngIf="detalleSeleccionado">
     <div class="modal-detalle">
       <div class="modal-header">
-        <h3>Mesa #{{ detalleSeleccionado.numeroMesa }} - Detalle</h3>
+        <div class="modal-header-copy">
+          <span class="modal-kicker">Cuenta activa</span>
+          <h3>Mesa #{{ detalleSeleccionado.numeroMesa }}</h3>
+        </div>
         <div class="botones-header">
            <button class="btn-imprimir" (click)="imprimirFactura()">🖨️ Imprimir</button>
            <button class="btn-cerrar-modal" (click)="cerrarDetalle()">×</button>
@@ -47,21 +89,27 @@
       <div class="modal-body">
         <div *ngFor="let ped of detalleSeleccionado.pedidos; let idxPed = index" class="card-pedido-admin" [class.pendiente]="ped.estado === 'pendiente'">
           <div class="pedido-info">
-            <span class="hora">{{ ped.horaSolicitud }}</span>
-            <span class="quien">{{ ped.solicitadoPor }}</span>
-            <span class="estado-ped">{{ ped.estado }}</span>
+            <span class="pedido-meta-linea">{{ formatearMetaPedido(ped) }}</span>
+            <span class="estado-ped">{{ formatearEstadoPedido(ped.estado) }}</span>
             <button *ngIf="ped.estado === 'pendiente'" (click)="aprobarPedido(idxPed)" class="btn-aprobar">Aprobar</button>
           </div>
           <div class="items-pedido">
             <div *ngFor="let item of ped.items; let idxItem = index" class="item-linea">
-              <span class="nombre">{{ item.nombre }}</span>
+              <div class="item-copy">
+                <span class="nombre">{{ item.nombre }}</span>
+                <span class="precio-unitario">{{ item.precioUnit | currency:'USD':'symbol':'1.0-0' }} c/u</span>
+              </div>
               <div class="controles">
                 <button (click)="cambiarCantidad(idxPed, idxItem, -1)">-</button>
                 <span class="cant">{{ item.cantidad }}</span>
                 <button (click)="cambiarCantidad(idxPed, idxItem, 1)">+</button>
               </div>
               <span class="precio">{{ (item.precioUnit * item.cantidad) | currency:'USD':'symbol':'1.0-0' }}</span>
-              <button (click)="eliminarItem(idxPed, idxItem)" class="btn-eliminar-item">🗑️</button>
+              <button (click)="eliminarItem(idxPed, idxItem)" class="btn-eliminar-item" aria-label="Eliminar item">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 3.75h6a1.75 1.75 0 0 1 1.75 1.75V6h3a.75.75 0 0 1 0 1.5h-1.02l-.83 10.54A2.75 2.75 0 0 1 15.16 20.5H8.84a2.75 2.75 0 0 1-2.74-2.46L5.27 7.5H4.25a.75.75 0 0 1 0-1.5h3v-.5A1.75 1.75 0 0 1 9 3.75Zm6.25 2.25v-.5a.25.25 0 0 0-.25-.25H9a.25.25 0 0 0-.25.25V6h6.5Zm-5.5 3.25a.75.75 0 0 1 .75.75v6a.75.75 0 0 1-1.5 0v-6a.75.75 0 0 1 .75-.75Zm4.5 0a.75.75 0 0 1 .75.75v6a.75.75 0 0 1-1.5 0v-6a.75.75 0 0 1 .75-.75Z"/>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -73,7 +121,8 @@
 
       <div class="modal-footer">
         <div class="totales">
-          <span>Total Aprobado: <strong>{{ calcularTotalAprobado() | currency:'USD':'symbol':'1.0-0' }}</strong></span>
+          <span class="totales-label">Total aprobado</span>
+          <strong>{{ calcularTotalAprobado() | currency:'USD':'symbol':'1.0-0' }}</strong>
         </div>
         <div class="acciones-finales">
           <button (click)="guardarCambiosFinales()" class="btn-guardar-cambios">Guardar Cambios</button>

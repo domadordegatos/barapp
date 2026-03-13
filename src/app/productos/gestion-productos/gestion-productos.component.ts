@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AngularFirestore } from '@angular/fire/compat/firestore'; // Importación necesaria
 import { VentasService } from 'src/app/services/ventas-service.service';
 import { Producto } from 'src/app/interfaces/producto.interface';
+import { NotificationService } from 'src/app/services/notification.service';
 
 @Component({
   selector: 'app-gestion-productos',
@@ -13,13 +15,13 @@ export class GestionProductosComponent implements OnInit {
   nombreBarLimpio: string = '';
   nuevaCategoriaNombre: string = '';
   mostrandoForm = false;
-  filtroBusqueda: string = '';
   editando: boolean = false;
   idProductoEdicion: string | null = null;
 
   // Observables para la suscripción automática en el HTML
   categorias$: Observable<any[]> | null = null;
   productos$: Observable<any[]> | null = null;
+  productosOrdenados$: Observable<any[]> | null = null;
 
   // Objeto inicial para el formulario de productos
   producto: Producto = {
@@ -34,7 +36,8 @@ export class GestionProductosComponent implements OnInit {
 
   constructor(
     private firestore: AngularFirestore, // <--- Firestore inyectado
-    private ventasService: VentasService
+    private ventasService: VentasService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit() {
@@ -46,6 +49,23 @@ export class GestionProductosComponent implements OnInit {
       // Cargamos los flujos de datos desde el servicio
       this.categorias$ = this.ventasService.obtenerCategorias(this.nombreBarLimpio);
       this.productos$ = this.ventasService.obtenerProductos(this.nombreBarLimpio);
+      this.productosOrdenados$ = this.productos$.pipe(
+        map((productos: any[]) => {
+          return [...productos].sort((a: any, b: any) => {
+            const categoriaA = (a?.categoria || '').toString();
+            const categoriaB = (b?.categoria || '').toString();
+            const categoriaCmp = categoriaA.localeCompare(categoriaB, 'es', { sensitivity: 'base' });
+
+            if (categoriaCmp !== 0) {
+              return categoriaCmp;
+            }
+
+            const nombreA = (a?.nombre || '').toString();
+            const nombreB = (b?.nombre || '').toString();
+            return nombreA.localeCompare(nombreB, 'es', { sensitivity: 'base' });
+          });
+        })
+      );
     }
   }
 
@@ -79,7 +99,7 @@ prepararEdicion(p: any) {
       this.nuevaCategoriaNombre = ''; // Limpiar input
     } catch (error) {
       console.error("Error al crear categoría:", error);
-      alert("No se pudo crear la categoría");
+      this.notificationService.error('No se pudo crear la categoría.');
     }
   }
 
@@ -131,7 +151,7 @@ async toggleVigencia(id: string, estadoActual: boolean) {
 // 3. Función unificada para Guardar o Actualizar
 async guardarProducto() {
   if (!this.producto.nombre || !this.producto.precio || !this.producto.categoria) {
-    alert("Faltan campos obligatorios");
+    this.notificationService.warning('Faltan campos obligatorios.');
     return;
   }
 
@@ -139,12 +159,12 @@ async guardarProducto() {
     if (this.editando && this.idProductoEdicion) {
       // MODO EDICIÓN
       await this.ventasService.actualizarProducto(this.idProductoEdicion, this.producto);
-      alert("Producto actualizado con éxito");
+      this.notificationService.success('Producto actualizado con éxito.');
     } else {
       // MODO CREACIÓN (Aseguramos estados iniciales)
       const nuevoProd = { ...this.producto, visible: true, disponible: true };
       await this.ventasService.agregarProducto(this.nombreBarLimpio, nuevoProd);
-      alert("Producto creado con éxito");
+      this.notificationService.success('Producto creado con éxito.');
     }
     this.cancelarEdicion();
   } catch (error) {

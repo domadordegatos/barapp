@@ -7,6 +7,8 @@ export interface Mesa {
   activa: boolean;
   numero: number;
   nombreBar: string;
+  prioridadVisual?: number;
+  mostrarValorCuenta?: boolean;
 }
 
 @Injectable({
@@ -65,7 +67,9 @@ export class MesasService {
       id: idUnico,
       activa: true,
       numero: numero,
-      nombreBar: nombreBar
+      nombreBar: nombreBar,
+      prioridadVisual: numero,
+      mostrarValorCuenta: false
     };
 
     // Usamos el ID único que generamos como el nombre del documento.
@@ -77,5 +81,13 @@ export class MesasService {
    */
   actualizarEstadoMesa(idMesa: string, nuevoEstado: boolean) {
     return this.firestore.collection('mesas').doc(idMesa).update({ activa: nuevoEstado });
+  }
+
+  actualizarPrioridadMesa(idMesa: string, prioridadVisual: number) {
+    return this.firestore.collection('mesas').doc(idMesa).update({ prioridadVisual });
+  }
+
+  actualizarVisibilidadValorCuenta(idMesa: string, mostrarValorCuenta: boolean) {
+    return this.firestore.collection('mesas').doc(idMesa).update({ mostrarValorCuenta });
   }
 }

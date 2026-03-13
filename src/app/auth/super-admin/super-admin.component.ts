@@ -3,6 +3,7 @@ import { RockolaService } from '../../services/rockola.service';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { map } from 'rxjs';
 import { Router } from '@angular/router';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-super-admin',
@@ -16,7 +17,8 @@ export class SuperAdminComponent implements OnInit {
   constructor(
   private firestore: AngularFirestore, 
   public rockolaService: RockolaService, // Inyectamos el servicio
-  private router: Router
+  private router: Router,
+  private notificationService: NotificationService
 ) {}
 
   ngOnInit() {
@@ -51,10 +53,10 @@ export class SuperAdminComponent implements OnInit {
         tipo: u.tipo,
         codigoRegistroInvitados: u.codigoRegistroInvitados || ""
       });
-      alert("Usuario actualizado con éxito");
+      this.notificationService.success('Usuario actualizado con éxito.');
     } catch (e) {
       console.error(e);
-      alert("Error al actualizar");
+      this.notificationService.error('Error al actualizar.');
     }
   }
 }

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import firebase from 'firebase/compat/app'; 
 import 'firebase/compat/firestore';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -72,5 +73,11 @@ export class ProductosService {
          .where('categoria', '==', categoriaNombre)
          .where('visible', '==', true)
     ).valueChanges({ idField: 'id' });
+  }
+
+  observarCuentaActiva(idMesa: string) {
+    return this.firestore.collection('cuentas_activas').doc(idMesa).valueChanges().pipe(
+      map((cuenta: any) => cuenta ? { id: idMesa, ...cuenta } : null)
+    );
   }
 }

@@ -1,128 +1,129 @@
 .admin-container {
-  padding: 20px;
+  padding: 10px;
   max-width: 800px;
   margin: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
 
-  .card-admin {
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  h1 { font-size: 1rem; margin: 0; color: #1f2937; font-weight: 700; }
+  .status-badge { background: #1db954; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+}
+
+.panel-codigo {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+  .codigo-header-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .codigo-info {
+    h3 { margin: 0; font-size: 0.9rem; .codigo-resaltado { color: #1db954; font-size: 1.1rem; font-weight: 800; } }
+    .ultima-actualizacion { margin: 2px 0 0; font-size: 0.7rem; color: #6b7280; }
+  }
+
+  .status-tag { font-size: 0.65rem; font-weight: bold; color: #10b981; }
+
+  .form-actualizar {
+    p { font-size: 0.75rem; color: #4b5563; margin-bottom: 8px; }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      input { width: 80px; padding: 6px; border: 1px solid #d1d5db; border-radius: 8px; text-align: center; font-weight: bold; font-size: 1rem; }
+      .btn-actualizar { background: #1f2937; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; &:hover { background: #000; } }
+    }
+  }
+}
+
+.panel-invitados-secreto {
+  margin-top: 15px;
+  .divisor-discreto { border: 0; border-top: 1px solid #f3f4f6; margin-bottom: 10px; }
+  .form-mini {
     display: flex;
     align-items: center;
-    background: #fff;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    position: relative;
-    border-left: 6px solid #fbbf24; // Amarillo para pendiente
+    gap: 10px;
+    label { font-size: 0.7rem; color: #6b7280; flex: 1; }
+    .input-mini-group {
+      display: flex;
+      gap: 5px;
+      input { width: 60px; padding: 5px; border: 1px solid #e5e7eb; border-radius: 4px; font-size: 0.8rem; }
+      .btn-xs { background: #f3f4f6; border: 1px solid #d1d5db; cursor: pointer; border-radius: 4px; padding: 4px 10px; font-size: 0.7rem; }
+    }
   }
+}
+
+.card-admin {
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 15px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  border-left: 5px solid #fbbf24;
+  position: relative;
 
   .mesa-badge {
     position: absolute;
     top: -10px;
-    left: 20px;
+    left: 15px;
     background: #1f2937;
     color: white;
     padding: 2px 10px;
     border-radius: 5px;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-weight: bold;
+    z-index: 1;
   }
 
-  .foto-admin { width: 60px; height: 60px; border-radius: 8px; margin-right: 15px; }
+  .card-content-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .foto-admin { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; }
 
   .info-track {
     flex: 1;
-    .hora { font-size: 0.75rem; color: #6b7280; font-family: monospace; }
-    h3 { margin: 2px 0; font-size: 1.1rem; }
-    p { margin: 0; color: #4b5563; }
+    min-width: 0;
+    .hora { font-size: 0.65rem; color: #9ca3af; font-family: monospace; }
+    h3 { margin: 2px 0; font-size: 0.85rem; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    p { margin: 0; font-size: 0.75rem; color: #6b7280; }
   }
 
   .acciones {
     display: flex;
-    gap: 10px;
+    gap: 6px;
     button {
-      border: none;
-      padding: 10px 15px;
+      padding: 6px 10px;
       border-radius: 6px;
+      border: 1px solid #e5e7eb;
+      background: #fdfdfd;
+      font-size: 0.7rem;
       cursor: pointer;
-      font-weight: bold;
-      transition: opacity 0.2s;
-      &:hover { opacity: 0.8; }
+      &:hover { background: #fff; border-color: #d1d5db; }
+      &.btn-aceptar { color: #059669; }
+      &.btn-rechazar { color: #dc2626; }
     }
-    .btn-aceptar { background: #10b981; color: white; }
-    .btn-rechazar { background: #ef4444; color: white; }
   }
 }
 
-.panel-codigo {
-  background: #f3f4f6;
-  padding: 20px;
+.vacio {
+  text-align: center;
+  padding: 30px;
+  background: #f9fafb;
   border-radius: 12px;
-  margin-bottom: 30px;
-  border: 1px dashed #d1d5db;
-
-  h3 { margin-top: 0; color: #1f2937; font-size: 1.1rem; }
-  p { font-size: 0.85rem; color: #6b7280; margin-bottom: 15px; }
-
-  .input-group {
-    display: flex;
-    gap: 10px;
-
-    input {
-      padding: 10px;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-      font-size: 1.2rem;
-      letter-spacing: 5px; // Para que se vea como código
-      width: 120px;
-      text-align: center;
-      font-weight: bold;
-      
-      &:focus { border-color: #1db954; outline: none; }
-    }
-
-    button {
-      background: #1f2937;
-      color: white;
-      border: none;
-      padding: 0 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      
-      &:disabled { opacity: 0.5; cursor: not-allowed; }
-      &:hover:not(:disabled) { background: #000; }
-    }
-  }
-}
-.divisor-discreto {
-  border: 0;
-  border-top: 1px solid #eee;
-  margin: 20px 0 10px;
-}
-
-.form-mini {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end; // Lo manda a la derecha
-  gap: 10px;
-  font-size: 0.75rem;
-  color: #999;
-
-  .input-oculto {
-    width: 60px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 2px 5px;
-    text-align: center;
-    background: transparent;
-  }
-
-  .btn-xs {
-    background: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    cursor: pointer;
-    padding: 2px 8px;
-    &:hover { background: #e0e0e0; }
-  }
+  border: 2px dashed #e5e7eb;
+  .vacio-icon { font-size: 2rem; display: block; margin-bottom: 5px; }
+  p { color: #6b7280; font-size: 0.9rem; margin: 0; }
 }

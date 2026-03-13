@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { RockolaService } from 'src/app/services/rockola.service';
+import { NotificationService } from 'src/app/services/notification.service';
 
 @Component({
   selector: 'app-gestion-musica',
@@ -17,7 +18,10 @@ export class GestionMusicaComponent implements OnInit {
   codigoActual: string = '----';
   ultimaActualizacion: any = null;
 
-  constructor(private rockolaService: RockolaService) {}
+  constructor(
+    private rockolaService: RockolaService,
+    private notificationService: NotificationService
+  ) {}
 
   async ngOnInit() {
     const sesion = sessionStorage.getItem('usuarioAdmin');
@@ -46,13 +50,13 @@ export class GestionMusicaComponent implements OnInit {
 
   guardarCodigo() {
     if (this.codigoNuevo.length !== 4) {
-      alert("El código debe ser de exactamente 4 dígitos.");
+      this.notificationService.warning('El código debe ser de exactamente 4 dígitos.');
       return;
     }
 
     this.rockolaService.actualizarCodigoDia(this.nombreBar, this.codigoNuevo, this.userId)
       .then(() => {
-        alert("Código del día actualizado correctamente.");
+        this.notificationService.success('Código del día actualizado correctamente.');
         this.codigoActual = this.codigoNuevo;
         this.ultimaActualizacion = new Date();
         this.codigoNuevo = '';
@@ -68,13 +72,13 @@ export class GestionMusicaComponent implements OnInit {
 
   guardarCodigoInvitacion() {
     if (this.codigoInvitacionNuevo.length !== 4) {
-      alert("El código de invitación debe ser de 4 dígitos.");
+      this.notificationService.warning('El código de invitación debe ser de 4 dígitos.');
       return;
     }
 
     this.rockolaService.actualizarCodigoInvitacion(this.userId, this.codigoInvitacionNuevo)
       .then(() => {
-        alert("Código de registro para invitados actualizado.");
+        this.notificationService.success('Código de registro para invitados actualizado.');
         this.codigoInvitacionNuevo = '';
       })
       .catch(err => console.error(err));
