@@ -1,37 +1,60 @@
 <div class="login-container">
   <div class="login-box">
     <div *ngIf="!olvidoModo">
-      <h2>Ingreso Administrativo</h2>
-      <input type="email" [(ngModel)]="correo" placeholder="Correo electrónico">
-      <input type="password" [(ngModel)]="pass" placeholder="Contraseña">
+      <h2>Ingreso administrativo</h2>
+      <p class="panel-copy">Gestiona tu bar, inventario y facturación en una sola vista.</p>
+
+      <label class="field-shell">
+        <span>Correo</span>
+        <input type="email" [(ngModel)]="correo" placeholder="correo@tubarejemplo.com">
+      </label>
+
+      <label class="field-shell">
+        <span>Contraseña</span>
+        <input type="password" [(ngModel)]="pass" placeholder="Ingresa tu contraseña">
+      </label>
       
       <button (click)="entrar()" class="btn-principal">Entrar al Sistema</button>
       
       <div class="opciones-inferiores">
-        <p class="link" (click)="olvidoModo = true">¿Olvidaste tu contraseña?</p>
-        <hr>
+        <button type="button" class="link" (click)="olvidoModo = true">¿Olvidaste tu contraseña?</button>
         <p>¿No tienes una cuenta?</p>
         <button class="btn-secundario" routerLink="/registro">Registrar mi Bar</button>
       </div>
     </div>
 
 <div *ngIf="olvidoModo">
-  <h2>Recuperar Acceso</h2>
+  <p class="panel-kicker">Recuperación</p>
+  <h2>Recuperar acceso</h2>
 
   <div *ngIf="pasoReset === 1">
-    <p>Ingresa tu correo para recibir un código de seguridad.</p>
-    <input type="email" [(ngModel)]="correo" placeholder="Correo registrado">
+    <p class="panel-copy">Ingresa tu correo para recibir un código de seguridad.</p>
+
+    <label class="field-shell">
+      <span>Correo registrado</span>
+      <input type="email" [(ngModel)]="correo" placeholder="correo registrado">
+    </label>
+
     <button (click)="recuperar()" class="btn-principal">Enviar Código</button>
   </div>
 
   <div *ngIf="pasoReset === 2">
-    <p>Ingresa el código de 6 dígitos y tu nueva contraseña.</p>
-    <input type="text" [(ngModel)]="codigoReset" placeholder="Código de 6 dígitos">
-    <input type="password" [(ngModel)]="nuevaPass" placeholder="Nueva Contraseña">
+    <p class="panel-copy">Ingresa el código de 6 dígitos y tu nueva contraseña.</p>
+
+    <label class="field-shell">
+      <span>Código de seguridad</span>
+      <input type="text" [(ngModel)]="codigoReset" placeholder="Código de 6 dígitos" maxlength="6">
+    </label>
+
+    <label class="field-shell">
+      <span>Nueva contraseña</span>
+      <input type="password" [(ngModel)]="nuevaPass" placeholder="Nueva contraseña">
+    </label>
+
     <button (click)="confirmarCambio()" class="btn-principal">Cambiar Contraseña</button>
   </div>
 
-  <p class="link" (click)="olvidoModo = false; pasoReset = 1">Volver al Login</p>
+  <button type="button" class="link" (click)="olvidoModo = false; pasoReset = 1">Volver al login</button>
 </div>
   </div>
 </div>

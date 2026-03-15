@@ -10,6 +10,17 @@
       <div *ngIf="cargando" class="loader-chico">Cargando mapa...</div>
       <button
         type="button"
+        class="btn-agregar-pedido"
+        [disabled]="cargando"
+        (click)="abrirModalAgregarPedido()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 4.75A2.75 2.75 0 0 1 9.75 2h4.5A2.75 2.75 0 0 1 17 4.75V6h1.25A2.75 2.75 0 0 1 21 8.75v9.5A2.75 2.75 0 0 1 18.25 21h-12.5A2.75 2.75 0 0 1 3 18.25v-9.5A2.75 2.75 0 0 1 5.75 6H7V4.75Zm1.5 0V6h7V4.75a1.25 1.25 0 0 0-1.25-1.25h-4.5A1.25 1.25 0 0 0 8.5 4.75ZM12 9a.75.75 0 0 1 .75.75v1.5h1.5a.75.75 0 0 1 0 1.5h-1.5v1.5a.75.75 0 0 1-1.5 0v-1.5h-1.5a.75.75 0 0 1 0-1.5h1.5v-1.5A.75.75 0 0 1 12 9Z"/>
+        </svg>
+        Agregar pedido
+      </button>
+      <button
+        *ngIf="esAdmin"
+        type="button"
         class="btn-toggle-servicio"
         [class.activo]="servicioHabilitadoBar"
         [class.inactivo]="!servicioHabilitadoBar"
@@ -29,8 +40,37 @@
          [ngClass]="{ 'ocupada': mesa.ocupada, 'libre': !mesa.ocupada }"
          (click)="verDetalle(mesa)">
       
-      <!-- Indicador de notificación si hay pedidos pendientes -->
-      <div *ngIf="mesa.cuenta?.notificacionPendiente" class="alerta-pedidos">!</div>
+      <div *ngIf="mesa.ocupada" class="mesa-indicadores">
+        <button
+          type="button"
+          class="btn-valor-cuenta-chip"
+          [class.activo]="mesa.mostrarValorCuenta"
+          [class.inactivo]="!mesa.mostrarValorCuenta"
+          [class.cargando]="mesaActualizandoValor === mesa.id"
+          [attr.aria-pressed]="mesa.mostrarValorCuenta"
+          [title]="mesa.mostrarValorCuenta ? 'Ocultar precios al cliente' : 'Permitir ver precios al cliente'"
+          (click)="alternarVisibilidadValorCuenta(mesa, $event)">
+          <svg *ngIf="mesa.mostrarValorCuenta" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 9.2A2.8 2.8 0 1 0 12 14.8 2.8 2.8 0 0 0 12 9.2Zm0 7.6c-3.9 0-7.27-2.33-8.75-5.8C4.73 7.53 8.1 5.2 12 5.2s7.27 2.33 8.75 5.8c-1.48 3.47-4.85 5.8-8.75 5.8Zm0-13.6c-5.2 0-9.54 3.18-11 7.8 1.46 4.62 5.8 7.8 11 7.8s9.54-3.18 11-7.8c-1.46-4.62-5.8-7.8-11-7.8Z"/>
+          </svg>
+          <svg *ngIf="!mesa.mostrarValorCuenta" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m4.27 3 16.73 16.73-1.27 1.27-2.43-2.43A11.74 11.74 0 0 1 12 19.2c-5.2 0-9.54-3.18-11-7.8a12.2 12.2 0 0 1 4.27-5.76L3 4.27 4.27 3Zm3.13 3.13A9.92 9.92 0 0 0 3.25 11c1.48 3.47 4.85 5.8 8.75 5.8 1.56 0 3.03-.38 4.32-1.05l-2.12-2.12a4.8 4.8 0 0 1-5.83-5.83L7.4 6.13Zm4.26 4.26 2.95 2.95c.13-.42.19-.87.19-1.34A2.8 2.8 0 0 0 12 9.2c-.47 0-.92.07-1.34.19ZM12 5.2c5.2 0 9.54 3.18 11 7.8a12.16 12.16 0 0 1-4.36 5.85l-1.43-1.43A9.92 9.92 0 0 0 20.75 11c-1.48-3.47-4.85-5.8-8.75-5.8-1.38 0-2.68.29-3.85.82L6.54 4.41A11.95 11.95 0 0 1 12 3.2Z"/>
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          class="alerta-pedidos alerta-pedidos-accion"
+          title="Agregar pedido a esta mesa"
+          aria-label="Agregar pedido a esta mesa"
+          (click)="abrirModalAgregarPedidoParaMesa(mesa, $event)">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 4.75A2.75 2.75 0 0 1 9.75 2h4.5A2.75 2.75 0 0 1 17 4.75V6h1.25A2.75 2.75 0 0 1 21 8.75v9.5A2.75 2.75 0 0 1 18.25 21h-12.5A2.75 2.75 0 0 1 3 18.25v-9.5A2.75 2.75 0 0 1 5.75 6H7V4.75Zm1.5 0V6h7V4.75a1.25 1.25 0 0 0-1.25-1.25h-4.5A1.25 1.25 0 0 0 8.5 4.75ZM12 9a.75.75 0 0 1 .75.75v1.5h1.5a.75.75 0 0 1 0 1.5h-1.5v1.5a.75.75 0 0 1-1.5 0v-1.5h-1.5a.75.75 0 0 1 0-1.5h1.5v-1.5A.75.75 0 0 1 12 9Z"/>
+          </svg>
+        </button>
+
+        <div *ngIf="mesa.cuenta?.notificacionPendiente" class="alerta-pedidos alerta-pedidos-notificacion">!</div>
+      </div>
 
       <div class="header-card">
         <div class="header-principal">
@@ -38,22 +78,6 @@
         </div>
         <div class="header-status">
           <div class="estado-linea">
-            <button
-              *ngIf="mesa.ocupada"
-              type="button"
-              class="btn-valor-cuenta"
-              [class.activo]="mesa.mostrarValorCuenta"
-              [class.cargando]="mesaActualizandoValor === mesa.id"
-              [attr.aria-pressed]="mesa.mostrarValorCuenta"
-              [title]="mesa.mostrarValorCuenta ? 'Ocultar precios al cliente' : 'Permitir ver precios al cliente'"
-              (click)="alternarVisibilidadValorCuenta(mesa, $event)">
-              <svg *ngIf="mesa.mostrarValorCuenta" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 9.2A2.8 2.8 0 1 0 12 14.8 2.8 2.8 0 0 0 12 9.2Zm0 7.6c-3.9 0-7.27-2.33-8.75-5.8C4.73 7.53 8.1 5.2 12 5.2s7.27 2.33 8.75 5.8c-1.48 3.47-4.85 5.8-8.75 5.8Zm0-13.6c-5.2 0-9.54 3.18-11 7.8 1.46 4.62 5.8 7.8 11 7.8s9.54-3.18 11-7.8c-1.46-4.62-5.8-7.8-11-7.8Z"/>
-              </svg>
-              <svg *ngIf="!mesa.mostrarValorCuenta" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m4.27 3 16.73 16.73-1.27 1.27-2.43-2.43A11.74 11.74 0 0 1 12 19.2c-5.2 0-9.54-3.18-11-7.8a12.2 12.2 0 0 1 4.27-5.76L3 4.27 4.27 3Zm3.13 3.13A9.92 9.92 0 0 0 3.25 11c1.48 3.47 4.85 5.8 8.75 5.8 1.56 0 3.03-.38 4.32-1.05l-2.12-2.12a4.8 4.8 0 0 1-5.83-5.83L7.4 6.13Zm4.26 4.26 2.95 2.95c.13-.42.19-.87.19-1.34A2.8 2.8 0 0 0 12 9.2c-.47 0-.92.07-1.34.19ZM12 5.2c5.2 0 9.54 3.18 11 7.8a12.16 12.16 0 0 1-4.36 5.85l-1.43-1.43A9.92 9.92 0 0 0 20.75 11c-1.48-3.47-4.85-5.8-8.75-5.8-1.38 0-2.68.29-3.85.82L6.54 4.41A11.95 11.95 0 0 1 12 3.2Z"/>
-              </svg>
-            </button>
             <span class="estado-label">{{ mesa.ocupada ? 'Ocupada' : 'Libre' }}</span>
           </div>
           <span class="id-mesa">{{ mesa.id }}</span>
@@ -127,6 +151,127 @@
         <div class="acciones-finales">
           <button (click)="guardarCambiosFinales()" class="btn-guardar-cambios">Guardar Cambios</button>
           <button (click)="finalizarCuenta()" class="btn-finalizar-cuenta">Cerrar Mesa</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="mostrandoModalAgregarPedido" (click)="cerrarModalAgregarPedido()">
+    <div class="modal-agregar-pedido" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header-agregar">
+        <div class="modal-header-copy">
+          <span class="modal-kicker">Pedido administrativo</span>
+          <h3>Cargar pedido aprobado</h3>
+        </div>
+        <div class="botones-header">
+          <button class="btn-cerrar-modal" type="button" (click)="cerrarModalAgregarPedido()">×</button>
+        </div>
+      </div>
+
+      <div class="modal-body modal-body-agregar">
+        <div class="panel-agregar panel-configuracion-pedido">
+          <label for="mesaPedidoManual">Mesa</label>
+          <input
+            id="mesaPedidoManual"
+            type="number"
+            min="1"
+            inputmode="numeric"
+            placeholder="Numero de mesa"
+            [(ngModel)]="mesaPedidoManual"
+            (ngModelChange)="actualizarMesaPedidoCoincidente()">
+
+          <div class="estado-mesa-pedido" [class.valida]="mesaPedidoCoincidente" [class.invalida]="mesaPedidoManual && !mesaPedidoCoincidente">
+            <ng-container *ngIf="mesaPedidoCoincidente; else mesaNoValida">
+              Cuenta activa encontrada para mesa #{{ mesaPedidoCoincidente.numero }}.
+            </ng-container>
+            <ng-template #mesaNoValida>
+              <span *ngIf="mesaPedidoManual">La mesa debe coincidir con una cuenta activa existente.</span>
+              <span *ngIf="!mesaPedidoManual">Ingresa la mesa a la que se cargará el pedido.</span>
+            </ng-template>
+          </div>
+
+          <label for="buscarProductoAdmin">Buscar producto</label>
+          <input
+            id="buscarProductoAdmin"
+            type="text"
+            placeholder="Escribe el nombre y presiona Enter"
+            [(ngModel)]="busquedaProductoAdmin"
+            (ngModelChange)="actualizarResultadosBusqueda()"
+            (keydown.enter)="seleccionarPrimerResultado($event)">
+
+          <div class="resultados-busqueda-admin">
+            <button
+              type="button"
+              class="producto-resultado"
+              *ngFor="let producto of resultadosBusquedaProductos"
+              (click)="agregarProductoAPedido(producto)">
+              <span class="producto-copy">
+                <strong>{{ producto.nombre }}</strong>
+                <small>{{ producto.categoria }}</small>
+              </span>
+              <span class="producto-precio">{{ producto.precio | currency:'USD':'symbol':'1.0-0' }}</span>
+            </button>
+
+            <div class="estado-vacio-busqueda" *ngIf="resultadosBusquedaProductos.length === 0">
+              No hay productos que coincidan con la búsqueda.
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-agregar panel-resumen-pedido">
+          <div class="panel-resumen-header">
+            <h4>Pedido actual</h4>
+            <span>{{ itemsPedidoAdmin.length }} producto(s)</span>
+          </div>
+
+          <div class="lista-items-admin" *ngIf="itemsPedidoAdmin.length > 0; else pedidoVacio">
+            <div class="item-admin-manual" *ngFor="let item of itemsPedidoAdmin; let idxItem = index">
+              <div class="item-admin-copy">
+                <strong>{{ item.nombre }}</strong>
+                <span>{{ item.precioUnit | currency:'USD':'symbol':'1.0-0' }} c/u</span>
+              </div>
+
+              <div class="item-admin-actions">
+                <div class="controles-admin">
+                  <button type="button" (click)="cambiarCantidadPedidoAdmin(idxItem, -1)">-</button>
+                  <span>{{ item.cantidad }}</span>
+                  <button type="button" (click)="cambiarCantidadPedidoAdmin(idxItem, 1)">+</button>
+                </div>
+
+                <strong class="subtotal-admin">{{ item.subtotal | currency:'USD':'symbol':'1.0-0' }}</strong>
+
+                <button type="button" class="btn-quitar-admin" (click)="eliminarItemPedidoAdmin(idxItem)">
+                  Quitar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #pedidoVacio>
+            <div class="estado-pedido-vacio">
+              Todavía no has agregado productos al pedido.
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <div class="modal-footer modal-footer-agregar">
+        <div class="totales">
+          <span class="totales-label">Total del pedido</span>
+          <strong>{{ obtenerTotalPedidoAdmin() | currency:'USD':'symbol':'1.0-0' }}</strong>
+        </div>
+
+        <div class="acciones-finales acciones-finales-agregar">
+          <button type="button" class="btn-guardar-cambios" [disabled]="guardandoPedidoAdmin" (click)="cerrarModalAgregarPedido()">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn-guardar-pedido-admin"
+            [disabled]="guardandoPedidoAdmin || !mesaPedidoCoincidente || itemsPedidoAdmin.length === 0"
+            (click)="guardarPedidoAdmin()">
+            {{ guardandoPedidoAdmin ? 'Guardando...' : 'Guardar pedido' }}
+          </button>
         </div>
       </div>
     </div>

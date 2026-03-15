@@ -4,6 +4,7 @@ import { Timestamp } from 'firebase/firestore';
 export interface Producto {
   nombre: string;
   precio: number;
+  valorCompra: number;
   categoria: string;
   existencias: number;
   controlInventario: boolean; // Si es false, no descuenta stock

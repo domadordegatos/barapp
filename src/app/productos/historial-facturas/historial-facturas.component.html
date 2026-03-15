@@ -1,0 +1,180 @@
+<section class="historial-facturas-shell">
+  <header class="historial-header">
+    <div>
+      <p class="historial-kicker">Control de cierres</p>
+      <h2>Historial de facturas - {{ nombreBarReal || nombreBar }}</h2>
+      <p class="historial-subcopy">El rango se toma por dias completos para incluir facturas de la manana y la tarde.</p>
+    </div>
+  </header>
+
+  <div class="filtros-fecha">
+    <label>
+      Fecha inicio
+      <input type="date" [(ngModel)]="fechaInicio">
+    </label>
+
+    <label>
+      Fecha fin
+      <input type="date" [(ngModel)]="fechaFin">
+    </label>
+
+    <button type="button" class="btn-buscar" [disabled]="cargandoHistorial" (click)="buscarHistorialPorRango()">
+      {{ cargandoHistorial ? 'Buscando...' : 'Buscar por rango' }}
+    </button>
+  </div>
+
+  <div class="resumen-totales" *ngIf="historialFacturas.length > 0">
+    <div class="resumen-card">
+      <span>Facturas en lista</span>
+      <strong>{{ historialFacturas.length }}</strong>
+    </div>
+    <div class="resumen-card">
+      <span>Facturas seleccionadas</span>
+      <strong>{{ totalFacturasSeleccionadas }}</strong>
+    </div>
+    <div class="resumen-card resumen-ventas">
+      <span>Total ventas seleccionado</span>
+      <strong>{{ totalVentasSeleccionadas | currency:'USD':'symbol':'1.0-0' }}</strong>
+    </div>
+  </div>
+
+  <div class="tabla-facturas" *ngIf="historialFacturas.length > 0; else estadoVacio">
+    <div class="tabla-encabezado">
+      <label class="check-global">
+        <input
+          type="checkbox"
+          [checked]="seleccionTotalActiva"
+          (change)="alternarSeleccionTodas($event)">
+        Seleccionar todo
+      </label>
+      <span>Desmarca facturas para excluirlas del calculo.</span>
+    </div>
+
+    <div class="factura-item" *ngFor="let factura of historialFacturas; trackBy: trackByFacturaId">
+      <label class="factura-check">
+        <input type="checkbox" [(ngModel)]="factura.seleccionada">
+      </label>
+
+      <button type="button" class="factura-detail-btn" title="Ver detalle" (click)="abrirDetalleFactura(factura, $event)">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5L14 3.5ZM8 11h8v1.5H8V11Zm0 3.5h8V16H8v-1.5Zm0 3.5h6v1.5H8V18Z"/>
+        </svg>
+      </button>
+
+      <div class="factura-row-data" [class.cierre-nocturno]="esCierreNocturno(factura.fechaCierre)">
+        <span class="col-mesa">Mesa #{{ factura.numeroMesa || 'N/A' }}</span>
+        <span class="col-fecha">{{ factura.fechaCierre | date:'dd/MM/yyyy' }}</span>
+        <span class="col-hora col-hora-apertura">{{ turnoIcono(factura.fechaApertura) }} {{ factura.fechaApertura ? (factura.fechaApertura | date:'hh:mm a') : '--:--' }}</span>
+        <span class="col-hora col-hora-cierre" [class.col-hora-noche]="esCierreNocturno(factura.fechaCierre)">{{ turnoIcono(factura.fechaCierre) }} {{ factura.fechaCierre | date:'hh:mm a' }}</span>
+        <span class="col-obs" *ngIf="factura.observaciones">{{ factura.observaciones }}</span>
+        <span class="col-obs" *ngIf="!factura.observaciones">Sin observaciones</span>
+        <strong class="col-total">{{ factura.total | currency:'USD':'symbol':'1.0-0' }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #estadoVacio>
+    <div class="estado-vacio" *ngIf="!cargandoHistorial">
+      Aun no hay resultados. Selecciona un rango de fechas y pulsa buscar.
+    </div>
+  </ng-template>
+
+  <div class="modal-overlay" *ngIf="facturaDetalle" (click)="cerrarDetalleFactura()">
+    <div class="modal-detalle-factura" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <p class="modal-kicker">Detalle de factura</p>
+          <h3>Mesa #{{ facturaDetalle.numeroMesa || 'N/A' }}</h3>
+        </div>
+        <div class="modal-header-actions">
+          <button type="button" class="btn-imprimir" (click)="imprimirFacturaDetalle()">Imprimir</button>
+          <button *ngIf="esAdmin" type="button" class="btn-editar" (click)="abrirEdicionFactura()">Editar</button>
+          <button type="button" class="btn-cerrar" (click)="cerrarDetalleFactura()">×</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="ticket-preview">
+          <div class="ticket-header">
+            <h4>{{ nombreBarReal || nombreBar }}</h4>
+            <p>Mesa: {{ facturaDetalle.numeroMesa || 'N/A' }}</p>
+            <p>Fecha: {{ facturaDetalle.fechaCierre | date:'dd/MM/yyyy' }}</p>
+            <p>Apertura: {{ facturaDetalle.fechaApertura ? (facturaDetalle.fechaApertura | date:'hh:mm a') : '--:--' }}</p>
+            <p>Cierre: {{ facturaDetalle.fechaCierre | date:'hh:mm a' }}</p>
+          </div>
+
+          <div class="ticket-lista" *ngFor="let pedido of facturaDetalle.pedidos">
+            <div class="ticket-pedido-meta">
+              <span>{{ pedido.estado || 'sin estado' }}</span>
+              <span>{{ pedido.horaSolicitud }}</span>
+              <span>{{ pedido.fechaSolicitud }}</span>
+            </div>
+            <div class="ticket-item" *ngFor="let item of pedido.items">
+              <span class="cant">{{ item.cantidad }}</span>
+              <span class="nombre">{{ item.nombre }}</span>
+              <span class="valor">{{ (item.precioUnit * item.cantidad) | currency:'USD':'symbol':'1.0-0' }}</span>
+            </div>
+          </div>
+
+          <div class="ticket-footer">
+            <strong>TOTAL: {{ facturaDetalle.total | currency:'USD':'symbol':'1.0-0' }}</strong>
+            <p *ngIf="facturaDetalle.observaciones">{{ facturaDetalle.observaciones }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" *ngIf="mostrandoModalEdicion && facturaEditando" (click)="cerrarModalEdicionFactura()">
+    <div class="modal-editar-factura" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <p class="modal-kicker">Edicion de factura</p>
+          <h3>Editar mesa #{{ facturaEditando.numeroMesa || 'N/A' }}</h3>
+        </div>
+        <div class="modal-header-actions">
+          <button type="button" class="btn-cerrar" (click)="cerrarModalEdicionFactura()">×</button>
+        </div>
+      </div>
+
+      <div class="modal-body modal-body-edicion">
+        <div class="card-pedido" *ngFor="let pedido of facturaEditando.pedidos; let idxPed = index">
+          <div class="pedido-head">
+            <span>{{ pedido.estado || 'sin estado' }}</span>
+            <small>{{ pedido.horaSolicitud }} {{ pedido.fechaSolicitud }}</small>
+          </div>
+
+          <div class="linea-item" *ngFor="let item of pedido.items; let idxItem = index">
+            <div class="item-copy">
+              <strong>{{ item.nombre }}</strong>
+              <small>{{ item.precioUnit | currency:'USD':'symbol':'1.0-0' }} c/u</small>
+            </div>
+            <div class="item-actions">
+              <button type="button" (click)="cambiarCantidadItemFactura(idxPed, idxItem, -1)">-</button>
+              <span>{{ item.cantidad }}</span>
+              <button type="button" (click)="cambiarCantidadItemFactura(idxPed, idxItem, 1)">+</button>
+              <strong>{{ (item.precioUnit * item.cantidad) | currency:'USD':'symbol':'1.0-0' }}</strong>
+              <button type="button" class="btn-quitar" (click)="eliminarItemFactura(idxPed, idxItem)">Quitar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="seccion-observaciones">
+          <label>Observaciones</label>
+          <textarea [(ngModel)]="facturaEditando.observaciones" rows="3" placeholder="Observaciones de factura..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div class="totales">
+          <span>Total recalculado</span>
+          <strong>{{ facturaEditando.total | currency:'USD':'symbol':'1.0-0' }}</strong>
+        </div>
+        <div class="acciones-footer">
+          <button type="button" class="btn-cancelar" [disabled]="guardandoEdicion" (click)="cerrarModalEdicionFactura()">Cancelar</button>
+          <button type="button" class="btn-guardar" [disabled]="guardandoEdicion" (click)="guardarEdicionFactura()">{{ guardandoEdicion ? 'Guardando...' : 'Guardar cambios' }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

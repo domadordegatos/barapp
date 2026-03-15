@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
 import { NotificationService } from '../services/notification.service';
+import { RockolaService } from '../services/rockola.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,8 @@ export class AuthGuard implements CanActivate {
 
   constructor(
     private router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private rockolaService: RockolaService
   ) {}
 
 // auth.guard.ts
@@ -22,6 +24,15 @@ canActivate(route: ActivatedRouteSnapshot): boolean {
   }
 
   const usuario = JSON.parse(sesion);
+  const esMaster = usuario?.correo === this.rockolaService.CORREO_MASTER;
+
+  if (!esMaster && usuario?.estado === false) {
+    sessionStorage.removeItem('usuarioAdmin');
+    this.notificationService.error('Tu cuenta esta pendiente de activacion por Super Admin.');
+    this.router.navigate(['/']);
+    return false;
+  }
+
   const barEnUrl = route.paramMap.get('nombreBar');
 
   if (barEnUrl) {

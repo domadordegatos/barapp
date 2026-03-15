@@ -22,6 +22,8 @@ import { ListaProductosComponent } from './productos/lista-productos/lista-produ
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AdminFacturacionComponent } from './productos/admin-facturacion/admin-facturacion.component';
 import { GestionMesasComponent } from './productos/gestion-mesas/gestion-mesas.component';
+import { DatosImpresionComponent } from './configuracion/datos-impresion/datos-impresion.component';
+import { HistorialFacturasComponent } from './productos/historial-facturas/historial-facturas.component';
 
 @NgModule({
   declarations: [
@@ -38,7 +40,9 @@ import { GestionMesasComponent } from './productos/gestion-mesas/gestion-mesas.c
     DashboardMesaComponent, 
     ListaProductosComponent, 
     AdminFacturacionComponent,
-    GestionMesasComponent // <-- Componente añadido aquí
+    GestionMesasComponent,
+    DatosImpresionComponent,
+    HistorialFacturasComponent
   ],
   imports: [
     BrowserModule,

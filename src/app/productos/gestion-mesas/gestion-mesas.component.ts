@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { MesasService, Mesa } from '../../services/mesas.service';
 import * as QRCode from 'qrcode';
 import { environment } from '../../../environments/environment';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-gestion-mesas',
@@ -12,6 +13,7 @@ import { environment } from '../../../environments/environment';
   styleUrls: ['./gestion-mesas.component.scss']
 })
 export class GestionMesasComponent implements OnInit {
+  @Input() esAdmin: boolean = false;
 
   nombreBarUrl: string = '';
   mesas$: Observable<Mesa[]> = of([]);
@@ -23,7 +25,8 @@ export class GestionMesasComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private mesasService: MesasService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private notificationService: NotificationService
   ) {
     this.formCrearMesa = this.fb.group({
       numero: [null, [Validators.required, Validators.min(1)]]
@@ -42,6 +45,11 @@ export class GestionMesasComponent implements OnInit {
   }
 
   async crearMesa() {
+    if (!this.esAdmin) {
+      this.notificationService.warning('Solo un usuario admin puede crear mesas.');
+      return;
+    }
+
     if (this.formCrearMesa.invalid) return;
 
     this.creandoMesa = true;
@@ -68,6 +76,11 @@ export class GestionMesasComponent implements OnInit {
   }
 
   toggleMesaEstado(mesa: Mesa) {
+    if (!this.esAdmin) {
+      this.notificationService.warning('Solo un usuario admin puede activar o inactivar mesas.');
+      return;
+    }
+
     if (!mesa.id) {
       console.error('La mesa no tiene un ID para poder actualizarla.');
       return;
@@ -80,6 +93,10 @@ export class GestionMesasComponent implements OnInit {
       console.error('Error al actualizar el estado de la mesa:', error);
       mesa.activa = !nuevoEstado; 
     });
+  }
+
+  contarMesasActivas(mesas: Mesa[]): number {
+    return (mesas || []).filter(mesa => mesa.activa).length;
   }
 
   // --- NUEVA FUNCIÓN PARA DESCARGAR EL CÓDIGO QR ---

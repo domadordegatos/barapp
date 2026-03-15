@@ -1,58 +1,97 @@
-<div class="gestion-container">
-  <h3>Gestión de Mesas</h3>
+<section class="gestion-shell">
+  <header class="gestion-header">
+    <div class="header-copy">
+      <h2>Gestión de Mesas</h2>
+    </div>
+  </header>
 
-  <!-- Formulario para crear nueva mesa -->
-  <div class="card-gestion">
-    <h4>Crear Nueva Mesa</h4>
+  <section class="card-panel crear-panel" *ngIf="esAdmin; else soloLecturaMesas">
+    <div class="panel-head">
+      <h3>Crear nueva mesa</h3>
+    </div>
+
     <form [formGroup]="formCrearMesa" (ngSubmit)="crearMesa()" class="form-crear-mesa">
-      <div class="input-group">
-        <label for="numero-mesa">Número de Mesa:</label>
+      <label class="input-field" for="numero-mesa">
+        <span>Número de mesa</span>
         <input id="numero-mesa" type="number" formControlName="numero" placeholder="Ej: 5">
-        <button type="submit" [disabled]="formCrearMesa.invalid || creandoMesa">
-          <span *ngIf="!creandoMesa">Crear Mesa</span>
-          <span *ngIf="creandoMesa">Creando...</span>
-        </button>
-      </div>
-      <div *ngIf="errorCreacion" class="mensaje-error">
-        {{ errorCreacion }}
-      </div>
-    </form>
-  </div>
+      </label>
 
-  <!-- Cuadrícula de mesas existentes -->
-  <div class="card-gestion">
-    <h4>Mesas Existentes</h4>
+      <button class="btn-crear" type="submit" [disabled]="formCrearMesa.invalid || creandoMesa">
+        <span *ngIf="!creandoMesa">Crear mesa</span>
+        <span *ngIf="creandoMesa">Creando...</span>
+      </button>
+    </form>
+
+    <p class="mensaje-error" *ngIf="errorCreacion">{{ errorCreacion }}</p>
+  </section>
+
+  <ng-template #soloLecturaMesas>
+    <section class="card-panel crear-panel">
+      <div class="panel-head">
+        <h3>Permisos limitados</h3>
+        <p>Tu usuario puede visualizar mesas, pero no crear ni modificar su estado.</p>
+      </div>
+    </section>
+  </ng-template>
+
+  <section class="card-panel mesas-panel">
+    <div class="panel-head">
+      <h3>Mesas existentes</h3>
+      <p>Toca una tarjeta para activar o inactivar la mesa.</p>
+    </div>
+
     <div *ngIf="(mesas$ | async) as mesas; else cargando">
+      <div class="resumen-mesas" *ngIf="mesas.length > 0">
+        <div class="pill-resumen">
+          <small>Total</small>
+          <strong>{{ mesas.length }}</strong>
+        </div>
+        <div class="pill-resumen activa">
+          <small>Activas</small>
+          <strong>{{ contarMesasActivas(mesas) }}</strong>
+        </div>
+        <div class="pill-resumen inactiva">
+          <small>Inactivas</small>
+          <strong>{{ mesas.length - contarMesasActivas(mesas) }}</strong>
+        </div>
+      </div>
+
       <div *ngIf="mesas.length > 0; else noHayMesas" class="grid-mesas">
-        
-        <div *ngFor="let mesa of mesas" 
-             class="mesa-card" 
-             [ngClass]="{ 'activa': mesa.activa, 'inactiva': !mesa.activa }"
-             (click)="toggleMesaEstado(mesa)">
-          
+        <article
+          *ngFor="let mesa of mesas"
+          class="mesa-card"
+          [class.readonly]="!esAdmin"
+          [ngClass]="{ 'activa': mesa.activa, 'inactiva': !mesa.activa }"
+          (click)="toggleMesaEstado(mesa)">
+
           <div class="status-bar"></div>
-          
-          <div class="card-content">
-            <span class="mesa-numero">{{ mesa.numero }}</span>
-            <span class="mesa-id">ID: {{ mesa.id }}</span>
+
+          <div class="mesa-main">
+            <div class="mesa-principal">
+              <span class="mesa-label">Mesa</span>
+              <strong class="mesa-numero">{{ mesa.numero }}</strong>
+            </div>
+            <span class="estado-chip" [ngClass]="{ 'activa': mesa.activa, 'inactiva': !mesa.activa }">
+              {{ mesa.activa ? 'Activa' : 'Inactiva' }}
+            </span>
           </div>
 
-          <!-- Nueva sección para el botón QR -->
-          <div class="card-actions">
-            <button class="qr-button" (click)="descargarQR(mesa, $event)" title="Descargar Código QR">
-              <img src="assets/qr-code-icon.svg" alt="QR Code" class="qr-icon"/>
+          <div class="mesa-footer">
+            <span class="mesa-id">ID: {{ mesa.id }}</span>
+            <button class="qr-button" type="button" (click)="descargarQR(mesa, $event)" title="Descargar código QR">
+              <img src="assets/qr-code-icon.svg" alt="QR" class="qr-icon">
             </button>
           </div>
-        </div>
-
+        </article>
       </div>
+
       <ng-template #noHayMesas>
-        <p class="mensaje-info">Aún no se han creado mesas. ¡Añade una para empezar!</p>
+        <p class="mensaje-info">Aún no se han creado mesas. Crea una para empezar.</p>
       </ng-template>
     </div>
+
     <ng-template #cargando>
       <p class="mensaje-info">Cargando mesas...</p>
     </ng-template>
-  </div>
-
-</div>
+  </section>
+</section>

@@ -1,0 +1,119 @@
+<section class="datos-impresion-shell">
+  <header class="datos-impresion-header">
+    <div class="header-copy">
+      <p class="datos-kicker">Configuración</p>
+      <h2>Datos e impresión</h2>
+      <p class="datos-copy">
+        Ajusta rápidamente los datos que verá el cliente en la factura.
+      </p>
+    </div>
+    <div class="header-pill">
+      <strong>{{ datos.anchoFacturaCm || 8 }} cm</strong>
+      <span>Ancho térmico</span>
+    </div>
+  </header>
+
+  <div *ngIf="cargando" class="estado-carga">Cargando configuración...</div>
+
+  <div *ngIf="!cargando" class="datos-grid">
+    <article class="panel-formulario">
+      <section class="bloque-formulario bloque-logo">
+        <div class="bloque-head">
+          <div>
+            <h3>Identidad</h3>
+            <p>Nombre visible y logo para la factura.</p>
+          </div>
+        </div>
+
+        <div class="logo-uploader">
+          <div class="logo-card" [class.con-logo]="!!datos.logoFactura">
+            <ng-container *ngIf="datos.logoFactura; else logoPlaceholder">
+              <img [src]="datos.logoFactura" alt="Vista previa del logo de factura">
+            </ng-container>
+            <ng-template #logoPlaceholder>
+              <div class="logo-placeholder">
+                <span>PNG</span>
+                <small>Logo para ticket</small>
+              </div>
+            </ng-template>
+          </div>
+
+          <div class="logo-actions">
+            <label class="btn-upload" for="logoFacturaInput">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 16a.75.75 0 0 1-.75-.75V7.56l-2.72 2.72a.75.75 0 1 1-1.06-1.06l4-4a.75.75 0 0 1 1.06 0l4 4a.75.75 0 0 1-1.06 1.06l-2.72-2.72v7.69A.75.75 0 0 1 12 16Zm-7 2.25A2.25 2.25 0 0 0 7.25 20.5h9.5A2.25 2.25 0 0 0 19 18.25v-1.5a.75.75 0 0 1 1.5 0v1.5A3.75 3.75 0 0 1 16.75 22h-9.5A3.75 3.75 0 0 1 3.5 18.25v-1.5a.75.75 0 0 1 1.5 0v1.5Z"/>
+              </svg>
+              {{ datos.logoFactura ? 'Cambiar logo' : 'Subir logo PNG' }}
+            </label>
+            <input id="logoFacturaInput" class="input-file-hidden" type="file" accept="image/png" (change)="onLogoSeleccionado($event)">
+            <button *ngIf="datos.logoFactura" type="button" class="btn-secundario" (click)="quitarLogo()">Quitar</button>
+            <small>Usa un PNG ligero para impresora térmica.</small>
+            <p *ngIf="logoError" class="mensaje-error">{{ logoError }}</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="form-grid">
+        <label class="campo campo-full">
+          <span>Nombre visible del negocio</span>
+          <input type="text" [(ngModel)]="datos.nombreBarVisible" placeholder="Nombre que verá el cliente en la app y factura">
+        </label>
+
+        <label class="campo">
+          <span>NIT</span>
+          <input type="text" [(ngModel)]="datos.nitFactura" placeholder="900123456-7">
+        </label>
+
+        <label class="campo">
+          <span>Teléfono</span>
+          <input type="text" [(ngModel)]="datos.telefonoFactura" placeholder="300 000 0000">
+        </label>
+
+        <label class="campo campo-full">
+          <span>Dirección</span>
+          <input type="text" [(ngModel)]="datos.direccionFactura" placeholder="Calle 123 #45-67">
+        </label>
+
+        <label class="campo campo-full">
+          <span>Mensaje al pie de la factura</span>
+          <textarea [(ngModel)]="datos.mensajeFactura" rows="3" placeholder="Siempre tenemos el gusto de atenderte"></textarea>
+          <small>Mensaje opcional que aparecerá al final del ticket.</small>
+        </label>
+
+        <label class="campo campo-inline">
+          <span>Ancho del papel (cm)</span>
+          <input type="number" min="4" max="12" step="0.1" [(ngModel)]="datos.anchoFacturaCm">
+          <small>Predeterminado: 8 cm.</small>
+        </label>
+      </div>
+
+      <div class="acciones-formulario">
+        <button type="button" class="btn-guardar" [disabled]="guardando" (click)="guardarDatos()">
+          {{ guardando ? 'Guardando...' : 'Guardar configuración' }}
+        </button>
+      </div>
+    </article>
+
+    <aside class="panel-preview">
+      <div class="bloque-head preview-head">
+        <div>
+          <h3>Vista previa</h3>
+          <p>Así se compone el encabezado del ticket.</p>
+        </div>
+      </div>
+      <div class="ticket-preview" [style.width.cm]="datos.anchoFacturaCm || 8">
+        <div class="ticket-logo" *ngIf="datos.logoFactura">
+          <img [src]="datos.logoFactura" alt="Logo de factura">
+        </div>
+        <h3>{{ datos.nombreBarVisible || nombreBarReal || nombreBar }}</h3>
+        <p *ngIf="datos.nitFactura">NIT: {{ datos.nitFactura }}</p>
+        <p *ngIf="datos.telefonoFactura">Tel: {{ datos.telefonoFactura }}</p>
+        <p *ngIf="datos.direccionFactura">{{ datos.direccionFactura }}</p>
+        <div class="ticket-divider"></div>
+        <p>Este ancho se usará al imprimir la factura desde la cuenta.</p>
+        <div class="ticket-divider"></div>
+        <p class="ticket-message" *ngIf="datos.mensajeFactura">{{ datos.mensajeFactura }}</p>
+      </div>
+    </aside>
+  </div>
+</section>

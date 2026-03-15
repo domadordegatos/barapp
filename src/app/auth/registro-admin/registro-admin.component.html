@@ -1,6 +1,13 @@
 <div class="registro-container">
   <form (ngSubmit)="registrarUsuario()" #registroForm="ngForm">
     <h2>Registro de Establecimiento</h2>
+    <p class="panel-copy">Completa estos datos para enviar tu solicitud al sistema.</p>
+
+    <div class="alerta-info-correo" role="note">
+      <strong>Importante:</strong>
+      El correo que registres debe ser real y estar activo. Si pierdes tu contraseña,
+      el código de recuperación llegará a ese correo.
+    </div>
 
     <input 
   type="text" 
@@ -11,7 +18,7 @@
   required>
 
 <div class="alerta-empleado" *ngIf="barExiste">
-  <p>⚠️ Este bar ya está registrado. Ingresa el código de 4 dígitos proporcionado por tu administrador para unirte como empleado.</p>
+  <p>Este bar ya está registrado. Ingresa el código de 4 dígitos proporcionado por tu administrador para unirte como empleado.</p>
   <input 
     type="password" 
     name="codigoEmp" 
@@ -21,6 +28,29 @@
 </div>
     <input type="email" name="correo" [(ngModel)]="datos.correo" placeholder="Correo Electrónico" required>
     <input type="password" name="password" [(ngModel)]="datos.password" placeholder="Contraseña" required>
+
+    <ng-container *ngIf="!barExiste">
+      <input
+        type="text"
+        name="nitFactura"
+        [(ngModel)]="datos.nitFactura"
+        placeholder="NIT"
+        required>
+
+      <input
+        type="text"
+        name="telefonoFactura"
+        [(ngModel)]="datos.telefonoFactura"
+        placeholder="Teléfono"
+        required>
+
+      <input
+        type="text"
+        name="direccionFactura"
+        [(ngModel)]="datos.direccionFactura"
+        placeholder="Dirección"
+        required>
+    </ng-container>
     
 
     <div class="captcha-box">

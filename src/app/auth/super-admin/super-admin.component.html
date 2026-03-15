@@ -2,58 +2,117 @@
   <nav class="navbar-super-admin">
     <div class="navbar-content">
       <div class="brand">
-        <span class="logo-icon">👑</span>
-        <h2>Panel Maestro: {{ rockolaService.CORREO_MASTER }}</h2>
+        <span class="logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 18h18l-1.5-9-4.8 3.2L12 6 9.3 12.2 4.5 9 3 18Zm0 2v2h18v-2H3Z"/>
+          </svg>
+        </span>
+        <div class="brand-copy">
+          <p>Super Admin</p>
+          <h2>{{ rockolaService.CORREO_MASTER }}</h2>
+        </div>
       </div>
 
       <button class="btn-logout" (click)="logout()">
-        <span class="icon-exit">🚪</span> Cerrar Sesión Master
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M16 13v-2H7V8l-5 4 5 4v-3h9Zm3-10H9a2 2 0 0 0-2 2v4h2V5h10v14H9v-4H7v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"/>
+        </svg>
+        Cerrar Sesión
       </button>
     </div>
   </nav>
 
   <div class="super-admin-container">
     <header class="header-maestro">
-      <h1>Control Global de Establecimientos</h1>
-      <p>Gestión total de usuarios, permisos y estados del sistema.</p>
+      <p class="header-kicker">Panel de control</p>
+      <h1>Control global de establecimientos</h1>
+      <p>Activa cuentas nuevas, ajusta roles y revisa de forma centralizada el estado de acceso.</p>
     </header>
+
+    <section class="resumen-grid">
+      <article class="resumen-card">
+        <span>Total usuarios</span>
+        <strong>{{ usuarios.length }}</strong>
+      </article>
+      <article class="resumen-card activa">
+        <span>Activos</span>
+        <strong>{{ contarPorEstado(true) }}</strong>
+      </article>
+      <article class="resumen-card inactiva">
+        <span>Inactivos</span>
+        <strong>{{ contarPorEstado(false) }}</strong>
+      </article>
+      <article class="resumen-card alerta">
+        <span>Admins pendientes</span>
+        <strong>{{ contarPendientesAdmin() }}</strong>
+      </article>
+    </section>
     
-    <div class="busqueda">
+    <div class="filtros-toolbar">
       <input type="text" [(ngModel)]="filtroNombre" placeholder="Filtrar por nombre de bar o correo...">
+
+      <div class="estado-filtros">
+        <button type="button" [class.active]="filtroEstado === 'todos'" (click)="filtroEstado = 'todos'">Todos</button>
+        <button type="button" [class.active]="filtroEstado === 'activos'" (click)="filtroEstado = 'activos'">Activos</button>
+        <button type="button" [class.active]="filtroEstado === 'inactivos'" (click)="filtroEstado = 'inactivos'">Inactivos</button>
+        <button type="button" [class.active]="filtroEstado === 'pendientes-admin'" (click)="filtroEstado = 'pendientes-admin'">Pendientes admin</button>
+      </div>
     </div>
 
-    <table class="tabla-maestra">
-      <thead>
-        <tr>
-          <th>Establecimiento</th>
-          <th>Correo</th>
-          <th>Código Invitación</th>
-          <th>Tipo</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let u of usuarios | filtroUsuarios:filtroNombre">
-          <td><input [(ngModel)]="u.nombreBar" class="td-input"></td>
-          <td><input [(ngModel)]="u.correo" class="td-input"></td>
-          <td><input [(ngModel)]="u.codigoRegistroInvitados" class="td-input" placeholder="Sin código"></td>
-          <td>
-            <select [(ngModel)]="u.tipo">
-              <option value="admin">Admin (Dueño)</option>
-              <option value="user">User (Invitado)</option>
-            </select>
-          </td>
-          <td>
-            <button [class]="u.estado ? 'btn-activo' : 'btn-inactivo'" (click)="u.estado = !u.estado">
-              {{ u.estado ? 'Activo' : 'Inactivo' }}
-            </button>
-          </td>
-          <td>
-            <button class="btn-guardar" (click)="actualizarUsuario(u)">💾 Guardar</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="tabla-wrap">
+      <table class="tabla-maestra">
+        <thead>
+          <tr>
+            <th>Establecimiento</th>
+            <th>Correo</th>
+            <th>Código invitación</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of usuariosFiltrados">
+            <td><input [(ngModel)]="u.nombreBar" class="td-input" [disabled]="u.correo === rockolaService.CORREO_MASTER"></td>
+            <td><input [(ngModel)]="u.correo" class="td-input" [disabled]="u.correo === rockolaService.CORREO_MASTER"></td>
+            <td>
+              <input
+                [(ngModel)]="u.codigoRegistroInvitados"
+                class="td-input"
+                placeholder="0000"
+                [disabled]="u.tipo !== 'admin' || u.correo === rockolaService.CORREO_MASTER">
+            </td>
+            <td>
+              <select [(ngModel)]="u.tipo" [disabled]="u.correo === rockolaService.CORREO_MASTER">
+                <option value="admin">Admin</option>
+                <option value="user">Usuario</option>
+              </select>
+            </td>
+            <td>
+              <button
+                type="button"
+                [class]="u.estado ? 'btn-activo' : 'btn-inactivo'"
+                [disabled]="u.correo === rockolaService.CORREO_MASTER"
+                (click)="toggleEstadoLocal(u)">
+                {{ u.estado ? 'Activo' : 'Inactivo' }}
+              </button>
+            </td>
+            <td>
+              <button
+                type="button"
+                class="btn-guardar"
+                [disabled]="guardandoId === u.id || u.correo === rockolaService.CORREO_MASTER"
+                (click)="actualizarUsuario(u)">
+                {{ guardandoId === u.id ? 'Guardando...' : 'Guardar' }}
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="usuariosFiltrados.length === 0">
+            <td colspan="6" class="sin-resultados">No hay usuarios para los filtros seleccionados.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>

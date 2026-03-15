@@ -101,6 +101,46 @@ export class RockolaService {
     );
   }
 
+  async actualizarDatosImpresion(
+    nombreBar: string,
+    datos: {
+      nombreBarVisible: string;
+      logoFactura?: string;
+      nitFactura?: string;
+      telefonoFactura?: string;
+      direccionFactura?: string;
+      mensajeFactura?: string;
+      anchoFacturaCm?: number;
+    }
+  ): Promise<void> {
+    const idLimpio = this.normalizarNombreBar(nombreBar);
+    const barDoc = await firstValueFrom(this.firestore.collection('bares_activos').doc(idLimpio).get());
+    const dataActual = (barDoc.data() || {}) as Record<string, any>;
+    const nombreVisibleResuelto = await this.resolverNombreVisibleBar(nombreBar, datos.nombreBarVisible, dataActual);
+
+    return this.firestore.collection('bares_activos').doc(idLimpio).set({
+      nombreBar: nombreVisibleResuelto,
+      nombreBarVisible: nombreVisibleResuelto,
+      logoFactura: datos.logoFactura || '',
+      nitFactura: (datos.nitFactura || '').trim(),
+      telefonoFactura: (datos.telefonoFactura || '').trim(),
+      direccionFactura: (datos.direccionFactura || '').trim(),
+      mensajeFactura: (datos.mensajeFactura || '').trim(),
+      anchoFacturaCm: this.normalizarAnchoFactura(datos.anchoFacturaCm),
+      ultimaActualizacionDatosFactura: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }
+
+  private normalizarAnchoFactura(valor?: number): number {
+    const ancho = Number(valor);
+
+    if (!Number.isFinite(ancho) || ancho <= 0) {
+      return 8;
+    }
+
+    return Math.max(4, Math.min(12, Number(ancho.toFixed(2))));
+  }
+
   async actualizarEstadoServicio(nombreBar: string, servicioHabilitado: boolean, nombreBarVisible?: string): Promise<void> {
     const idLimpio = this.normalizarNombreBar(nombreBar);
     const barDoc = await firstValueFrom(this.firestore.collection('bares_activos').doc(idLimpio).get());
@@ -136,18 +176,19 @@ export class RockolaService {
 
   async registrarUsuarioConValidacion(datos: any, codigoIngresado?: string) {
     const nombreBusqueda = datos.nombreBar.toLowerCase().trim();
+    const nombreVisibleBar = String(datos.nombreBar || '').trim();
     const existeAdmin = await this.verificarSiAdminExiste(nombreBusqueda);
     let tipoAsignado = 'admin';
-    let estadoInicial = true;
+    // Todo registro nuevo queda pendiente de aprobacion en super-admin.
+    let estadoInicial = false;
     if (existeAdmin) {
       const adminDoc = await firstValueFrom(this.firestore.collection('usuarios_bares', ref => ref.where('nombreBar', '==', nombreBusqueda).where('tipo', '==', 'admin')).get());
       const adminData = adminDoc.docs[0].data() as any;
       const codigoSecreto = adminData.codigoRegistroInvitados || "0000";
       if (codigoSecreto.toString() !== codigoIngresado?.toString()) throw new Error("Código incorrecto.");
       tipoAsignado = 'user';
-      estadoInicial = false;
     }
-    return this.firestore.collection('usuarios_bares').add({
+    const usuarioRef = await this.firestore.collection('usuarios_bares').add({
       nombreBar: nombreBusqueda,
       correo: datos.correo.toLowerCase().trim(),
       password: datos.password,
@@ -156,6 +197,24 @@ export class RockolaService {
       fechaHora: firebase.firestore.FieldValue.serverTimestamp(),
       codigoRegistroInvitados: tipoAsignado === 'admin' ? "1234" : "" 
     });
+
+    if (!existeAdmin && tipoAsignado === 'admin') {
+      const idLimpio = this.normalizarNombreBar(nombreBusqueda);
+      await this.firestore.collection('bares_activos').doc(idLimpio).set({
+        nombreBar: nombreVisibleBar || nombreBusqueda,
+        nombreBarVisible: nombreVisibleBar || nombreBusqueda,
+        nitFactura: String(datos.nitFactura || '').trim(),
+        telefonoFactura: String(datos.telefonoFactura || '').trim(),
+        direccionFactura: String(datos.direccionFactura || '').trim(),
+        mensajeFactura: '',
+        logoFactura: '',
+        anchoFacturaCm: 8,
+        servicioHabilitado: true,
+        fechaCreacion: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+
+    return usuarioRef;
   }
 
   async actualizarCodigoDia(nombreBar: string, nuevoCodigo: string, userId: string, nombreBarVisible?: string) {

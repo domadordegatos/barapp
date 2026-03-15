@@ -9,7 +9,14 @@ import { NotificationService } from '../../services/notification.service';
   styleUrls: ['./registro-admin.component.scss']
 })
 export class RegistroAdminComponent implements OnInit {
-  datos = { nombreBar: '', correo: '', password: '' };
+  datos = {
+    nombreBar: '',
+    correo: '',
+    password: '',
+    nitFactura: '',
+    telefonoFactura: '',
+    direccionFactura: ''
+  };
   
   // Captcha
   num1 = Math.floor(Math.random() * 10);
@@ -60,8 +67,16 @@ export class RegistroAdminComponent implements OnInit {
       return;
     }
 
+    // 3. Si se registra un bar nuevo, solicitamos datos de factura obligatorios.
+    if (!this.barExiste) {
+      if (!this.datos.nitFactura.trim() || !this.datos.telefonoFactura.trim() || !this.datos.direccionFactura.trim()) {
+        this.notificationService.warning('Para registrar un bar nuevo debes completar NIT, teléfono y dirección.');
+        return;
+      }
+    }
+
     try {
-      // 3. Llamada al servicio
+      // 4. Llamada al servicio
       await this.rockolaService.registrarUsuarioConValidacion(this.datos, this.codigoRequerido);
       
       this.notificationService.success('Registro exitoso. Tu solicitud fue enviada y debe ser activada por soporte.');

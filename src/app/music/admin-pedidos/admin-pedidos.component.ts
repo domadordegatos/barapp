@@ -1,7 +1,7 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RockolaService } from 'src/app/services/rockola.service';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { NotificationService } from 'src/app/services/notification.service';
 
 @Component({
@@ -9,8 +9,8 @@ import { NotificationService } from 'src/app/services/notification.service';
   templateUrl: './admin-pedidos.component.html',
   styleUrls: ['./admin-pedidos.component.scss']
 })
-export class AdminPedidosComponent implements OnInit {
-  seccionActiva: 'musica' | 'productos' | 'mesas' = 'musica';
+export class AdminPedidosComponent implements OnInit, OnDestroy {
+  seccionActiva: 'musica' | 'productos' | 'mesas' | 'datos-impresion' | 'historial-facturas' = 'musica';
   vistaMovilActiva: 'musica' | 'facturacion' = 'musica';
   nombreBarReal: string = 'Cargando...';
   nombreBarUrl: string = '';
@@ -26,9 +26,11 @@ export class AdminPedidosComponent implements OnInit {
   ultimaActualizacion: Date | null = null;
   codigoNuevo: string = '';
   codigoInvitacionNuevo: string = '';
+  mostrandoModalLogout: boolean = false;
 
   // --- Observable para la lista de pedidos ---
-  pedidos$: Observable<any[]>;
+  pedidos$!: Observable<any[]>;
+  private barSubscription: Subscription | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -55,14 +57,7 @@ export class AdminPedidosComponent implements OnInit {
         this.esAdmin = datosUsuario.tipo === 'admin';
         this.nombreBarReal = datosUsuario.nombreBar;
         
-        const datosBar: any = await this.rockolaService.verificarExistenciaBar(this.nombreBarUrl);
-        if (datosBar) {
-          this.nombreBarReal = datosBar.nombreBarVisible || datosBar.nombreBar || this.nombreBarReal;
-          this.codigoActual = datosBar.codigoSeguridad || '----';
-          if (datosBar.ultimaActualizacion) {
-            this.ultimaActualizacion = datosBar.ultimaActualizacion.toDate();
-          }
-        }
+        await this.sincronizarDatosBar();
 
         this.pedidos$ = this.rockolaService.obtenerPedidosPendientes(this.nombreBarUrl);
 
@@ -72,6 +67,12 @@ export class AdminPedidosComponent implements OnInit {
       }
     } else {
       this.router.navigate(['/']);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.barSubscription) {
+      this.barSubscription.unsubscribe();
     }
   }
 
@@ -91,9 +92,47 @@ export class AdminPedidosComponent implements OnInit {
     this.menuAbierto = false;
   }
 
-  seleccionarSeccion(seccion: 'musica' | 'productos' | 'mesas') {
+  seleccionarSeccion(seccion: 'musica' | 'productos' | 'mesas' | 'datos-impresion' | 'historial-facturas') {
+    const seccionRestringida = seccion === 'mesas' || seccion === 'datos-impresion' || seccion === 'historial-facturas';
+
+    if (seccionRestringida && !this.esAdmin) {
+      this.notificationService.warning('No tienes permisos para acceder a esta sección.');
+      this.seccionActiva = 'musica';
+      this.cerrarMenu();
+      return;
+    }
+
     this.seccionActiva = seccion;
     this.cerrarMenu();
+  }
+
+  private async sincronizarDatosBar() {
+    const datosBar: any = await this.rockolaService.verificarExistenciaBar(this.nombreBarUrl);
+
+    if (datosBar) {
+      this.nombreBarReal = datosBar.nombreBarVisible || datosBar.nombreBar || this.nombreBarReal;
+      this.codigoActual = datosBar.codigoSeguridad || '----';
+      if (datosBar.ultimaActualizacion) {
+        this.ultimaActualizacion = datosBar.ultimaActualizacion.toDate();
+      }
+    }
+
+    if (this.barSubscription) {
+      this.barSubscription.unsubscribe();
+    }
+
+    this.barSubscription = this.rockolaService.observarBar(this.nombreBarUrl).subscribe((bar: any) => {
+      if (!bar) {
+        return;
+      }
+
+      this.nombreBarReal = bar.nombreBarVisible || bar.nombreBar || this.nombreBarReal;
+      this.codigoActual = bar.codigoSeguridad || this.codigoActual;
+
+      if (bar.ultimaActualizacion?.toDate) {
+        this.ultimaActualizacion = bar.ultimaActualizacion.toDate();
+      }
+    });
   }
 
   async guardarCodigo() {
@@ -139,11 +178,18 @@ export class AdminPedidosComponent implements OnInit {
       .catch(err => console.error('Error al cambiar estado del pedido', err));
   }
 
-  logout() {
-    if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-      sessionStorage.removeItem('usuarioAdmin');
-      this.router.navigate(['/']);
-    }
+  solicitarLogout() {
+    this.mostrandoModalLogout = true;
+  }
+
+  cerrarModalLogout() {
+    this.mostrandoModalLogout = false;
+  }
+
+  confirmarLogout() {
+    this.mostrandoModalLogout = false;
+    sessionStorage.removeItem('usuarioAdmin');
+    this.router.navigate(['/']);
   }
 
   volverInicio() {

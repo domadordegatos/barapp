@@ -4,46 +4,77 @@
       <aside class="sidebar" [class.open]="menuAbierto">
         <div class="sidebar-header">
           <div class="sidebar-brand">
-            <span class="brand-mark">♪</span>
+            <span class="brand-mark">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
+              <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6Z"/>
+            </svg>
+          </span>
             <div>
               <p>Panel admin</p>
               <h2>{{ nombreBarReal }}</h2>
             </div>
           </div>
 
-          <button type="button" class="sidebar-close" (click)="cerrarMenu()">×</button>
+          <button type="button" class="sidebar-close" (click)="cerrarMenu()" aria-label="Cerrar menú">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/>
+            </svg>
+          </button>
         </div>
 
         <div class="sidebar-nav">
           <button type="button" [class.active]="seccionActiva === 'musica'" (click)="seleccionarSeccion('musica')">
-            <span>♪</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6Z"/>
+            </svg>
             Música
           </button>
           <button type="button" [class.active]="seccionActiva === 'productos'" (click)="seleccionarSeccion('productos')">
-            <span>◫</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 13h2v-2H3v2Zm0 4h2v-2H3v2Zm0-8h2V7H3v2Zm4 4h14v-2H7v2Zm0 4h14v-2H7v2ZM7 7v2h14V7H7Z"/>
+            </svg>
             Productos
           </button>
-          <button type="button" [class.active]="seccionActiva === 'mesas'" (click)="seleccionarSeccion('mesas')">
-            <span>▣</span>
+          <button *ngIf="esAdmin" type="button" [class.active]="seccionActiva === 'mesas'" (click)="seleccionarSeccion('mesas')">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2ZM8 20H4v-4h4v4Zm0-6H4v-4h4v4Zm0-6H4V4h4v4Zm6 12h-4v-4h4v4Zm0-6h-4v-4h4v4Zm0-6h-4V4h4v4Zm6 12h-4v-4h4v4Zm0-6h-4v-4h4v4Zm0-6h-4V4h4v4Z"/>
+            </svg>
             Mesas
+          </button>
+          <button *ngIf="esAdmin" type="button" [class.active]="seccionActiva === 'datos-impresion'" (click)="seleccionarSeccion('datos-impresion')">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3Zm-3 11H8v-5h8v5Zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1Zm-1-9H6v4h12V3Z"/>
+            </svg>
+            Datos e impresión
+          </button>
+          <button *ngIf="esAdmin" type="button" [class.active]="seccionActiva === 'historial-facturas'" (click)="seleccionarSeccion('historial-facturas')">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M13 3a9 9 0 1 0 8.95 10h-2.02A7 7 0 1 1 13 5v3l4-4-4-4v3Zm-1 5h2v5h-2V8Zm2 7h-2v2h2v-2Z"/>
+            </svg>
+            Historial facturas
           </button>
         </div>
 
-        <button type="button" class="btn-logout" (click)="logout()">
-          <span>↩</span>
+        <button type="button" class="btn-logout" (click)="solicitarLogout()">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5ZM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5Z"/>
+          </svg>
           Salir
         </button>
       </aside>
 
       <div class="sidebar-backdrop" *ngIf="menuAbierto" (click)="cerrarMenu()"></div>
 
-      <main class="admin-main-container">
+      <main class="admin-main-container" [class.modo-scroll-libre]="seccionActiva !== 'musica'">
         <header class="topbar">
           <div class="topbar-left">
             <button type="button" class="menu-toggle" [class.active]="menuAbierto" (click)="alternarMenu()" aria-label="Abrir menú lateral">
-              <span></span>
-              <span></span>
-              <span></span>
+              <svg *ngIf="!menuAbierto" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 18v-2h18v2H3Zm0-5v-2h18v2H3Zm0-5V6h18v2H3Z"/>
+              </svg>
+              <svg *ngIf="menuAbierto" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/>
+              </svg>
             </button>
             <div>
               <p class="topbar-kicker">Gestión operativa</p>
@@ -135,13 +166,26 @@
           </section>
 
           <section class="billing-panel" *ngIf="!esMobile || vistaMovilActiva === 'facturacion'">
-            <app-admin-facturacion [nombreBar]="nombreBarUrl" [nombreBarReal]="nombreBarReal"></app-admin-facturacion>
+            <app-admin-facturacion [nombreBar]="nombreBarUrl" [nombreBarReal]="nombreBarReal" [esAdmin]="esAdmin"></app-admin-facturacion>
           </section>
         </div>
 
         <app-gestion-productos *ngIf="seccionActiva === 'productos'"></app-gestion-productos>
-        <app-gestion-mesas *ngIf="seccionActiva === 'mesas'"></app-gestion-mesas>
+        <app-gestion-mesas *ngIf="seccionActiva === 'mesas' && esAdmin" [esAdmin]="esAdmin"></app-gestion-mesas>
+        <app-datos-impresion *ngIf="seccionActiva === 'datos-impresion' && esAdmin" [nombreBar]="nombreBarUrl" [nombreBarReal]="nombreBarReal"></app-datos-impresion>
+        <app-historial-facturas *ngIf="seccionActiva === 'historial-facturas' && esAdmin" [nombreBar]="nombreBarUrl" [nombreBarReal]="nombreBarReal" [esAdmin]="esAdmin"></app-historial-facturas>
       </main>
+
+      <div class="logout-modal-overlay" *ngIf="mostrandoModalLogout" (click)="cerrarModalLogout()">
+        <div class="logout-modal" (click)="$event.stopPropagation()">
+          <h3>¿Cerrar sesión?</h3>
+          <p>Se cerrará tu sesión actual y volverás a la pantalla de ingreso.</p>
+          <div class="logout-modal-actions">
+            <button type="button" class="btn-cancelar-logout" (click)="cerrarModalLogout()">Cancelar</button>
+            <button type="button" class="btn-confirmar-logout" (click)="confirmarLogout()">Salir</button>
+          </div>
+        </div>
+      </div>
     </div>
   </ng-container>
 

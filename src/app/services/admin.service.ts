@@ -40,4 +40,15 @@ export class AdminService {
          .orderBy('fechaApertura', 'desc')
     ).valueChanges({ idField: 'id' });
   }
+
+  obtenerFacturasFinalizadasPorRango(nombreBar: string, inicio: Date, fin: Date) {
+    const barNorm = nombreBar.toLowerCase().replace(/\s+/g, '');
+    return this.firestore.collection('facturas_finalizadas', ref =>
+      ref.where('nombreBar', '==', barNorm)
+    ).valueChanges({ idField: 'id' });
+  }
+
+  actualizarFacturaFinalizada(idDoc: string, data: any) {
+    return this.firestore.collection('facturas_finalizadas').doc(idDoc).update(data);
+  }
 }

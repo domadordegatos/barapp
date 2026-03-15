@@ -19,21 +19,7 @@ export class ProductosService {
     token: string
   ) {
     const cuentaRef = this.firestore.collection('cuentas_activas').doc(idMesa);
-    
-    const nuevoPedido = {
-      idPedido: this.firestore.createId(),
-      items: items.map(item => ({
-        idProd: item.id,
-        nombre: item.nombre,
-        precioUnit: item.precio,
-        cantidad: item.cantidad,
-        subtotal: item.precio * item.cantidad
-      })),
-      solicitadoPor: 'usuario',
-      horaSolicitud: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
-      fechaSolicitud: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' }),
-      estado: 'pendiente'
-    };
+    const nuevoPedido = this.crearPedidoCuenta(items, 'usuario', 'pendiente');
 
     const doc = await cuentaRef.get().toPromise();
 
@@ -60,6 +46,42 @@ export class ProductosService {
     }
   }
 
+  async guardarPedidoAprobadoEnCuenta(
+    nombreBar: string,
+    idMesa: string,
+    numeroMesa: number,
+    items: any[]
+  ) {
+    const cuentaRef = this.firestore.collection('cuentas_activas').doc(idMesa);
+    const doc = await cuentaRef.get().toPromise();
+
+    if (!doc?.exists) {
+      throw new Error('La cuenta activa no existe para esta mesa.');
+    }
+
+    const cuenta = doc.data() as any;
+
+    if (cuenta?.estado === 'cerrada') {
+      throw new Error('La cuenta de esta mesa ya fue cerrada.');
+    }
+
+    if (Number(cuenta?.numeroMesa) !== Number(numeroMesa)) {
+      throw new Error('El numero de mesa no coincide con la cuenta activa.');
+    }
+
+    const pedidoAdmin = this.crearPedidoCuenta(items, 'admin', 'aceptado');
+    const pedidosActuales = Array.isArray(cuenta?.pedidos) ? cuenta.pedidos : [];
+    const pedidosActualizados = [...pedidosActuales, pedidoAdmin];
+
+    return cuentaRef.update({
+      nombreBar,
+      numeroMesa,
+      pedidos: pedidosActualizados,
+      total: this.calcularTotalCuenta(pedidosActualizados),
+      notificacionPendiente: false
+    });
+  }
+
   obtenerCategorias(nombreBar: string) {
     return this.firestore.collection('categorias_bares', ref => 
       ref.where('nombreBar', '==', nombreBar)
@@ -71,7 +93,6 @@ export class ProductosService {
     return this.firestore.collection('productos', ref => 
       ref.where('nombreBar', '==', nombreBar)
          .where('categoria', '==', categoriaNombre)
-         .where('visible', '==', true)
     ).valueChanges({ idField: 'id' });
   }
 
@@ -79,5 +100,38 @@ export class ProductosService {
     return this.firestore.collection('cuentas_activas').doc(idMesa).valueChanges().pipe(
       map((cuenta: any) => cuenta ? { id: idMesa, ...cuenta } : null)
     );
+  }
+
+  private crearPedidoCuenta(items: any[], solicitadoPor: 'usuario' | 'admin', estado: 'pendiente' | 'aceptado') {
+    return {
+      idPedido: this.firestore.createId(),
+      items: items.map(item => ({
+        idProd: item.idProd || item.id,
+        nombre: item.nombre,
+        precioUnit: item.precioUnit ?? item.precio,
+        valorCompra: item.valorCompra ?? 0,
+        cantidad: item.cantidad,
+        subtotal: (item.precioUnit ?? item.precio) * item.cantidad
+      })),
+      solicitadoPor,
+      horaSolicitud: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      fechaSolicitud: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' }),
+      estado
+    };
+  }
+
+  private calcularTotalCuenta(pedidos: any[]): number {
+    return pedidos.reduce((totalCuenta, pedido) => {
+      if (pedido?.estado === 'pendiente') {
+        return totalCuenta;
+      }
+
+      const items = Array.isArray(pedido?.items) ? pedido.items : [];
+      const subtotalPedido = items.reduce((subtotal: number, item: any) => {
+        return subtotal + ((item?.precioUnit || 0) * (item?.cantidad || 0));
+      }, 0);
+
+      return totalCuenta + subtotalPedido;
+    }, 0);
   }
 }

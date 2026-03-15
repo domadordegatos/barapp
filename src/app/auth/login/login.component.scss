@@ -1,82 +1,154 @@
+:host {
+  display: block;
+}
+
 .login-container {
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
+  align-items: flex-start;
   justify-content: center;
-  align-items: center;
-  background: #121212; // Estilo oscuro tipo Spotify
+  padding: 14px;
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(29, 185, 84, 0.16) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(24, 40, 58, 0.46) 0%, transparent 42%),
+    linear-gradient(145deg, #0f1613 0%, #0b1118 50%, #0f1410 100%);
+}
 
-  .login-box {
-    background: #fff;
-    padding: 30px;
-    border-radius: 15px;
+.login-box {
+  width: min(420px, 100%);
+  margin: auto 0;
+  padding: 15px;
+  border-radius: 22px;
+  background: rgba(246, 250, 247, 0.96);
+  border: 1px solid rgba(222, 233, 226, 0.95);
+  box-shadow: 0 24px 46px rgba(5, 12, 10, 0.34);
+
+  h2 {
+    margin: 0;
+    color: #14211a;
+    font-size: 1.24rem;
+    font-weight: 900;
+  }
+}
+
+.panel-kicker {
+  margin: 0 0 6px;
+  color: #6e8075;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.panel-copy {
+  margin: 6px 0 10px;
+  color: #60736a;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.field-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+
+  span {
+    color: #52645b;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  input {
     width: 100%;
-    max-width: 350px;
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    min-height: 40px;
+    border-radius: 12px;
+    border: 1px solid #d7e2dc;
+    background: #ffffff;
+    padding: 0 12px;
+    color: #18221d;
+    font-size: 0.9rem;
+    outline: none;
+    box-sizing: border-box;
 
-    h2 { color: #1db954; margin-bottom: 20px; }
-    input { 
-      width: 100%; 
-      padding: 12px; 
-      margin: 10px 0; 
-      border-radius: 5px; 
-      border: 1px solid #ddd;
-      box-sizing: border-box;
-    }
-
-    .btn-principal {
-      width: 100%;
-      padding: 12px;
-      background: #1db954;
-      color: white;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-
-    .link {
-      margin-top: 15px;
-      color: #666;
-      font-size: 0.9rem;
-      cursor: pointer;
-      text-decoration: underline;
-      &:hover { color: #1db954; }
+    &:focus {
+      border-color: rgba(29, 185, 84, 0.75);
+      box-shadow: 0 0 0 4px rgba(29, 185, 84, 0.14);
     }
   }
 }
-.opciones-inferiores {
-  margin-top: 20px;
-  border-top: 1px solid #eee;
-  padding-top: 15px;
 
-  p {
-    font-size: 0.85rem;
-    color: #666;
-    margin-bottom: 10px;
-  }
+.btn-principal,
+.btn-secundario,
+.link {
+  width: 100%;
+  min-height: 39px;
+  border-radius: 12px;
+  border: none;
+  font-size: 0.86rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
 
-  hr {
-    border: 0;
-    border-top: 1px solid #f0f0f0;
-    margin: 15px 0;
+.btn-principal {
+  margin-top: 4px;
+  background: linear-gradient(135deg, #1db954 0%, #169447 100%);
+  color: white;
+  box-shadow: 0 12px 20px rgba(22, 148, 71, 0.25);
+
+  &:hover {
+    transform: translateY(-1px);
   }
 }
 
 .btn-secundario {
-  width: 100%;
-  padding: 10px;
-  background: transparent;
-  color: #1db954;
-  border: 2px solid #1db954;
-  border-radius: 25px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: all 0.3s;
+  background: rgba(15, 22, 18, 0.06);
+  color: #1f2b24;
+  border: 1px solid rgba(31, 43, 36, 0.14);
 
   &:hover {
-    background: #1db954;
-    color: white;
+    background: rgba(15, 22, 18, 0.1);
+  }
+}
+
+.opciones-inferiores {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e1e9e4;
+
+  p {
+    margin: 7px 0;
+    text-align: center;
+    color: #61736a;
+    font-size: 0.8rem;
+  }
+}
+
+.link {
+  background: transparent;
+  color: #3d5348;
+  text-decoration: underline;
+
+  &:hover {
+    color: #1b6d3d;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: 10px;
+  }
+
+  .login-box {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .login-box h2 {
+    font-size: 1.16rem;
   }
 }

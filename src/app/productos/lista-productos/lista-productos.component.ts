@@ -92,6 +92,10 @@ export class ListaProductosComponent implements OnInit, OnChanges {
   }
 
   productoDisponible(producto: Producto): boolean {
+    if (producto.visible === false) {
+      return false;
+    }
+
     if (!producto.disponible) {
       return false;
     }
