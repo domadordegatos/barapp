@@ -1,7 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { RockolaService } from '../services/rockola.service';
-import { trigger, transition, style, animate, group, query } from '@angular/animations';
 import { Producto } from '../interfaces/producto.interface';
 import { ProductosService } from '../services/productos.service';
 import { NotificationService } from '../services/notification.service';
@@ -26,33 +25,7 @@ interface HistorialPedidoAprobado {
 @Component({
   selector: 'app-dashboard-mesa',
   templateUrl: './dashboard-mesa.component.html',
-  styleUrls: ['./dashboard-mesa.component.scss'],
-  animations: [
-    trigger('slideContent', [
-      transition('songs => products', [
-        group([
-          query(':enter', [
-            style({ transform: 'translateX(100%)', opacity: 0 }),
-            animate('400ms ease-out', style({ transform: 'translateX(0%)', opacity: 1 }))
-          ], { optional: true }),
-          query(':leave', [
-            animate('400ms ease-out', style({ transform: 'translateX(-100%)', opacity: 0 }))
-          ], { optional: true })
-        ])
-      ]),
-      transition('products => songs', [
-        group([
-          query(':enter', [
-            style({ transform: 'translateX(-100%)', opacity: 0 }),
-            animate('400ms ease-out', style({ transform: 'translateX(0%)', opacity: 1 }))
-          ], { optional: true }),
-          query(':leave', [
-            animate('400ms ease-out', style({ transform: 'translateX(100%)', opacity: 0 }))
-          ], { optional: true })
-        ])
-      ])
-    ])
-  ]
+  styleUrls: ['./dashboard-mesa.component.scss']
 })
 export class DashboardMesaComponent implements OnInit, OnDestroy {
   nombreBarUrl: string = '';
@@ -402,12 +375,14 @@ export class DashboardMesaComponent implements OnInit, OnDestroy {
     if (this.enviandoPedido) return;
     this.enviandoPedido = true;
     try {
+      const operadorMesa = `Mesa #${this.numeroMesaReal || this.idMesaUrl}`;
       await this.productosService.guardarPedidoEnCuenta(
         this.nombreBarUrl,
         this.idMesaUrl,
         this.numeroMesaReal,
         this.carrito,
-        this.codigoAccesoVigente
+        this.codigoAccesoVigente,
+        operadorMesa
       );
       this.notificationService.success('Pedido enviado.');
       this.resetCarritoFlag = true;

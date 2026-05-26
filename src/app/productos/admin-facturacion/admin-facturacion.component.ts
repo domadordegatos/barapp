@@ -46,7 +46,12 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
   servicioHabilitadoBar: boolean = true;
   actualizandoServicio: boolean = false;
   mostrandoModalAgregarPedido: boolean = false;
+  mesaReferencia: any = null;
   guardandoPedidoAdmin: boolean = false;
+  mostrandoModalCierre: boolean = false;
+  propinaCierre: number | null = null;
+  metodoPagoCierre: 'efectivo' | 'tarjeta' | 'mixto' = 'efectivo';
+  cerrandoCuenta: boolean = false;
   busquedaProductoAdmin: string = '';
   mesaPedidoManual: string = '';
   mesaPedidoCoincidente: any | null = null;
@@ -54,6 +59,11 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
   resultadosBusquedaProductos: ProductoDisponibleAdmin[] = [];
   itemsPedidoAdmin: ItemPedidoAdmin[] = [];
   configuracionFactura: ConfiguracionFacturaBar = this.crearConfiguracionFactura();
+  private operadorSesion: string = 'Admin';
+  private operadorIdSesion: string = '';
+
+  parchiandoOperadores: boolean = false;
+  resultadoParche: string = '';
   
   private subscripcion: Subscription | null = null;
   private servicioSubscription: Subscription | null = null;
@@ -70,6 +80,7 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (this.nombreBar) {
+      this.cargarOperadorDeSesion();
       this.cargarProductosDisponibles();
       this.escucharEstadoServicio();
       this.escucharCambiosEnTiempoReal();
@@ -82,8 +93,38 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
     if (this.productosSubscription) this.productosSubscription.unsubscribe();
   }
 
-  private escucharEstadoServicio() {
-    if (this.servicioSubscription) {
+  private cargarOperadorDeSesion(): void {
+    try {
+      const sesion = localStorage.getItem('usuarioAdmin');
+      if (sesion) {
+        const datos = JSON.parse(sesion);
+        this.operadorSesion = String(datos?.nombreUsuarioBar || datos?.correo || 'Admin').trim() || 'Admin';
+        this.operadorIdSesion = String(datos?.id || '').trim();
+      }
+    } catch {
+      this.operadorSesion = 'Admin';
+      this.operadorIdSesion = '';
+    }
+  }
+
+  async ejecutarParcheOperadores(): Promise<void> {
+    if (this.parchiandoOperadores) return;
+    this.parchiandoOperadores = true;
+    this.resultadoParche = '';
+    try {
+      const { actualizados, pedidosActualizados } = await this.adminService.parcharOperadorIds(this.normalizarNombreBar());
+      this.resultadoParche = pedidosActualizados > 0
+        ? `✓ ${pedidosActualizados} pedido(s) actualizados en ${actualizados} cuenta(s).`
+        : '✓ No habia pedidos pendientes de parche.';
+    } catch (error) {
+      console.error(error);
+      this.resultadoParche = '✗ Error al ejecutar el parche.';
+    } finally {
+      this.parchiandoOperadores = false;
+    }
+  }
+
+  private escucharEstadoServicio() {    if (this.servicioSubscription) {
       this.servicioSubscription.unsubscribe();
     }
 
@@ -242,6 +283,7 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
 
   async verDetalle(mesa: any) {
     if (!mesa.ocupada) return;
+    this.mesaReferencia = mesa;
     this.detalleSeleccionado = mesa.cuenta;
     this.observaciones = this.detalleSeleccionado.observaciones || '';
 
@@ -310,6 +352,26 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
   cerrarDetalle() {
     this.detalleSeleccionado = null;
     this.observaciones = '';
+  }
+
+  irAAgregarProductosDesdeCuenta() {
+    const mesa = this.mesaReferencia;
+    this.cerrarDetalle();
+    this.abrirModalAgregarPedido();
+    if (mesa?.numero) {
+      this.mesaPedidoManual = String(mesa.numero);
+      this.actualizarMesaPedidoCoincidente();
+    }
+  }
+
+  irAVerCuentaDesdePedido() {
+    const mesa = this.mesaPedidoCoincidente;
+    if (!mesa?.ocupada) {
+      this.notificationService.warning('Esta mesa no tiene una cuenta activa para visualizar.');
+      return;
+    }
+    this.cerrarModalAgregarPedido();
+    this.verDetalle(mesa);
   }
 
   abrirModalAgregarPedido() {
@@ -403,7 +465,7 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
     }
 
     this.mesaPedidoCoincidente = this.mesasConEstado.find((mesa) => {
-      return mesa.ocupada && Number(mesa.numero) === numeroMesa && mesa.cuenta?.estado === 'abierta';
+      return Number(mesa.numero) === numeroMesa;
     }) || null;
   }
 
@@ -416,8 +478,8 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.mesaPedidoCoincidente?.cuenta?.id) {
-      this.notificationService.warning('Ingresa un numero de mesa con cuenta activa.');
+    if (!this.mesaPedidoCoincidente) {
+      this.notificationService.warning('Ingresa un numero de mesa valido.');
       return;
     }
 
@@ -427,13 +489,16 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
     }
 
     this.guardandoPedidoAdmin = true;
+    const idMesaDestino = this.mesaPedidoCoincidente.cuenta?.id || this.mesaPedidoCoincidente.id;
 
     try {
       await this.productosService.guardarPedidoAprobadoEnCuenta(
         this.normalizarNombreBar(),
-        this.mesaPedidoCoincidente.cuenta.id,
+        idMesaDestino,
         Number(this.mesaPedidoManual),
-        this.itemsPedidoAdmin
+        this.itemsPedidoAdmin,
+        this.operadorSesion,
+        this.operadorIdSesion
       );
 
       this.notificationService.success(`Pedido agregado a la mesa #${this.mesaPedidoCoincidente.numero}.`);
@@ -464,7 +529,9 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
       partes.push(pedido.fechaSolicitud);
     }
 
-    if (pedido?.solicitadoPor) {
+    if (pedido?.operador) {
+      partes.push(pedido.operador);
+    } else if (pedido?.solicitadoPor) {
       partes.push(this.formatearSolicitante(pedido.solicitadoPor));
     }
 
@@ -560,24 +627,42 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
   }
 
   async finalizarCuenta() {
-    if (!confirm('¿Finalizar cuenta y liberar mesa?')) return;
-    
+    if (!this.detalleSeleccionado || this.cerrandoCuenta) return;
+    this.cerrandoCuenta = true;
+
+    const propina = Number(this.propinaCierre || 0);
     const cuentaFinalizada = {
       ...this.detalleSeleccionado,
       estado: 'cerrada',
       total: this.calcularTotalAprobado(),
       observaciones: this.observaciones,
-      fechaCierre: new Date()
+      fechaCierre: new Date(),
+      propina,
+      metodoPago: this.metodoPagoCierre
     };
 
     try {
       await this.adminService.archivarCuenta(cuentaFinalizada);
       this.notificationService.success('Cuenta cerrada y mesa liberada.');
+      this.mostrandoModalCierre = false;
       this.cerrarDetalle();
     } catch (error) {
       console.error(error);
       this.notificationService.error('Error al cerrar cuenta.');
+    } finally {
+      this.cerrandoCuenta = false;
     }
+  }
+
+  abrirModalCierre() {
+    this.propinaCierre = null;
+    this.metodoPagoCierre = 'efectivo';
+    this.mostrandoModalCierre = true;
+  }
+
+  cerrarModalCierre() {
+    if (this.cerrandoCuenta) return;
+    this.mostrandoModalCierre = false;
   }
 
   imprimirFactura() {
@@ -591,8 +676,9 @@ export class AdminFacturacionComponent implements OnInit, OnDestroy {
     let tablaHtml = '';
     this.detalleSeleccionado.pedidos.forEach((p: any) => {
       if (p.estado !== 'pendiente') {
+        const meseroHtml = p.operador ? ` &middot; ${this.escaparHtml(String(p.operador))}` : '';
         p.items.forEach((i: any) => {
-          tablaHtml += `<tr><td>${this.escaparHtml(String(i.cantidad))}</td><td>${this.escaparHtml(i.nombre)} <br><small>${this.escaparHtml(p.horaSolicitud || '')}</small></td><td>${this.formatearMonedaFactura(i.precioUnit)}</td><td style="text-align: right;">${this.formatearMonedaFactura(i.precioUnit * i.cantidad)}</td></tr>`;
+          tablaHtml += `<tr><td>${this.escaparHtml(String(i.cantidad))}</td><td>${this.escaparHtml(i.nombre)} <br><small>${this.escaparHtml(p.horaSolicitud || '')}${meseroHtml}</small></td><td>${this.formatearMonedaFactura(i.precioUnit)}</td><td style="text-align: right;">${this.formatearMonedaFactura(i.precioUnit * i.cantidad)}</td></tr>`;
         });
       }
     });

@@ -25,28 +25,32 @@
 
             <div class="panel-productos" *ngIf="categoriaAbiertaId === cat.id" @accordionBody>
                 <div class="productos-stack" *ngIf="(productos$ | async) as productos" @staggerProducts>
-                    <div
-                        *ngFor="let prod of productosComprables(productos); trackBy: trackByProductoId"
-                        class="card-producto"
-                        [class.activo]="obtenerCantidad(prod.id) > 0"
-                        (click)="sumarProducto(prod)">
-                        <div class="producto-main">
-                            <div class="producto-copy">
-                                <strong class="producto-nombre">{{ prod.nombre | titlecase }}</strong>
-                                <span class="producto-hint">Toca para agregar</span>
+                    <div class="cargando-productos" *ngIf="cargandoProductos">Cargando productos...</div>
+
+                    <ng-container *ngIf="productosComprables(productos) as comprables">
+                        <div
+                            *ngFor="let prod of comprables; trackBy: trackByProductoId"
+                            class="card-producto"
+                            [class.activo]="obtenerCantidad(prod.id) > 0"
+                            (click)="sumarProducto(prod)">
+                            <div class="producto-main">
+                                <div class="producto-copy">
+                                    <strong class="producto-nombre">{{ prod.nombre | titlecase }}</strong>
+                                    <span class="producto-hint">Toca para agregar</span>
+                                </div>
+                                <span class="producto-precio">{{ prod.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                             </div>
-                            <span class="producto-precio">{{ prod.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+
+                            <div class="producto-side" *ngIf="obtenerCantidad(prod.id) > 0">
+                                <span class="cantidad-chip">{{ obtenerCantidad(prod.id) }}</span>
+                                <button class="btn-cantidad" type="button" (click)="$event.stopPropagation(); restarProducto(prod)">−</button>
+                            </div>
                         </div>
 
-                        <div class="producto-side" *ngIf="obtenerCantidad(prod.id) > 0">
-                            <span class="cantidad-chip">{{ obtenerCantidad(prod.id) }}</span>
-                            <button class="btn-cantidad" type="button" (click)="$event.stopPropagation(); restarProducto(prod)">−</button>
+                        <div class="sin-productos" *ngIf="!cargandoProductos && comprables.length === 0">
+                            No hay productos disponibles en esta categoria.
                         </div>
-                    </div>
-
-                    <div class="sin-productos" *ngIf="productosComprables(productos).length === 0">
-                        No hay productos disponibles en esta categoria.
-                    </div>
+                    </ng-container>
                 </div>
             </div>
         </div>

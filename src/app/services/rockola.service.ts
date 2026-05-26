@@ -194,6 +194,7 @@ export class RockolaService {
       password: datos.password,
       tipo: tipoAsignado,
       estado: estadoInicial,
+      estadoBarActivo: true,
       fechaHora: firebase.firestore.FieldValue.serverTimestamp(),
       codigoRegistroInvitados: tipoAsignado === 'admin' ? "1234" : "" 
     });
@@ -239,11 +240,84 @@ export class RockolaService {
     return !snapshot.empty;
   }
 
+  async crearUsuarioDesdeAdmin(datos: { correo: string; password: string; nombreUsuarioBar: string }, nombreBar: string): Promise<void> {
+    const correoLimpio = datos.correo.toLowerCase().trim();
+    const barLimpio = this.normalizarNombreBar(nombreBar);
+
+    if (!correoLimpio || !datos.password || !barLimpio) {
+      throw new Error('Datos incompletos para crear el usuario.');
+    }
+
+    const existe = await firstValueFrom(
+      this.firestore.collection('usuarios_bares', ref =>
+        ref.where('correo', '==', correoLimpio).limit(1)
+      ).get()
+    );
+    if (!existe.empty) {
+      throw new Error('Ya existe un usuario registrado con ese correo.');
+    }
+
+    await this.firestore.collection('usuarios_bares').add({
+      correo: correoLimpio,
+      password: datos.password,
+      nombreBar: barLimpio,
+      tipo: 'user',
+      estado: false,
+      estadoBarActivo: true,
+      nombreUsuarioBar: String(datos.nombreUsuarioBar || '').trim(),
+      codigoRegistroInvitados: '',
+      fechaHora: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  obtenerUsuariosPorBar(nombreBar: string): Observable<any[]> {
+    const bar = this.normalizarNombreBar(nombreBar);
+    return this.firestore.collection('usuarios_bares').snapshotChanges().pipe(
+      map(actions => actions
+        .map(a => ({ id: a.payload.doc.id, ...a.payload.doc.data() as any }))
+        .filter((usuario: any) => {
+          if (String(usuario?.correo || '') === this.CORREO_MASTER) return false;
+          if (usuario?.eliminado === true) return false;
+          return this.normalizarNombreBar(String(usuario?.nombreBar || '')) === bar;
+        })
+      )
+    );
+  }
+
+  async eliminarUsuarioDeBar(userId: string): Promise<void> {
+    await this.firestore.collection('usuarios_bares').doc(userId).update({
+      eliminado: true,
+      estadoBarActivo: false
+    });
+  }
+
+  async actualizarEstadoUsuarioBar(userId: string, estadoBarActivo: boolean, nombreUsuarioBar?: string): Promise<void> {
+    const payload: any = { estadoBarActivo };
+
+    if (typeof nombreUsuarioBar === 'string') {
+      payload.nombreUsuarioBar = nombreUsuarioBar.trim();
+    }
+
+    await this.firestore.collection('usuarios_bares').doc(userId).update(payload);
+  }
+
+  async obtenerUsuarioPorId(userId: string): Promise<any | null> {
+    const doc = await firstValueFrom(this.firestore.collection('usuarios_bares').doc(userId).get());
+    return doc.exists ? { id: doc.id, ...(doc.data() as any) } : null;
+  }
+
+  observarUsuario(userId: string): Observable<any | null> {
+    return this.firestore.collection('usuarios_bares').doc(userId).valueChanges().pipe(
+      map((data: any) => data ? { id: userId, ...data } : null)
+    );
+  }
+
   async loginUsuario(correo: string, pass: string) {
     const snapshot = await firstValueFrom(this.firestore.collection('usuarios_bares', ref => ref.where('correo', '==', correo).where('password', '==', pass)).get());
     if (snapshot.empty) throw new Error("Credenciales incorrectas.");
     const userData = snapshot.docs[0].data() as any;
     if (userData.estado === false) throw new Error("Cuenta inactiva.");
+    if (userData.estadoBarActivo === false) throw new Error("Tu usuario esta inactivo en este bar. Contacta al administrador del establecimiento.");
     return { id: snapshot.docs[0].id, ...userData };
   }
 

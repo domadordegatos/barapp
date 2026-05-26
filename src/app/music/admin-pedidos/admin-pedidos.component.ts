@@ -10,13 +10,14 @@ import { NotificationService } from 'src/app/services/notification.service';
   styleUrls: ['./admin-pedidos.component.scss']
 })
 export class AdminPedidosComponent implements OnInit, OnDestroy {
-  seccionActiva: 'musica' | 'productos' | 'mesas' | 'datos-impresion' | 'historial-facturas' = 'musica';
+  seccionActiva: 'musica' | 'productos' | 'mesas' | 'datos-impresion' | 'historial-facturas' | 'usuarios-bar' = 'musica';
   vistaMovilActiva: 'musica' | 'facturacion' = 'musica';
   nombreBarReal: string = 'Cargando...';
   nombreBarUrl: string = '';
   barValido: boolean = false;
   errorMensaje: string = '';
   esAdmin: boolean = false;
+  nombreUsuarioActivo: string = 'Usuario';
   userId: string = '';
   menuAbierto: boolean = false;
   esMobile: boolean = false;
@@ -31,6 +32,7 @@ export class AdminPedidosComponent implements OnInit, OnDestroy {
   // --- Observable para la lista de pedidos ---
   pedidos$!: Observable<any[]>;
   private barSubscription: Subscription | null = null;
+  private sesionSubscription: Subscription | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -45,11 +47,33 @@ export class AdminPedidosComponent implements OnInit, OnDestroy {
     const barUrl = this.route.snapshot.paramMap.get('nombreBar') || '';
     this.nombreBarUrl = barUrl.toLowerCase().replace(/\s+/g, '');
 
-    const sesion = sessionStorage.getItem('usuarioAdmin');
+    const sesion = localStorage.getItem('usuarioAdmin');
 
     if (sesion) {
       const datosUsuario = JSON.parse(sesion);
       const barSesionNorm = datosUsuario.nombreBar.toLowerCase().replace(/\s+/g, '');
+      this.nombreUsuarioActivo = String(datosUsuario?.nombreUsuarioBar || datosUsuario?.correo || 'Usuario').trim() || 'Usuario';
+
+      if (datosUsuario?.correo !== this.rockolaService.CORREO_MASTER) {
+        const usuarioActual = await this.rockolaService.obtenerUsuarioPorId(String(datosUsuario?.id || ''));
+
+        if (!usuarioActual || usuarioActual?.estado !== true) {
+          localStorage.removeItem('usuarioAdmin');
+          this.notificationService.error('Tu cuenta ya no tiene acceso global.');
+          this.router.navigate(['/']);
+          return;
+        }
+
+        if (usuarioActual?.estadoBarActivo === false) {
+          localStorage.removeItem('usuarioAdmin');
+          this.notificationService.error('Tu acceso esta inactivo en este bar.');
+          this.router.navigate(['/']);
+          return;
+        }
+
+        localStorage.setItem('usuarioAdmin', JSON.stringify({ ...datosUsuario, ...usuarioActual }));
+        this.nombreUsuarioActivo = String(usuarioActual?.nombreUsuarioBar || datosUsuario?.nombreUsuarioBar || datosUsuario?.correo || 'Usuario').trim() || 'Usuario';
+      }
 
       if (barSesionNorm === this.nombreBarUrl) {
         this.barValido = true;
@@ -61,6 +85,10 @@ export class AdminPedidosComponent implements OnInit, OnDestroy {
 
         this.pedidos$ = this.rockolaService.obtenerPedidosPendientes(this.nombreBarUrl);
 
+        if (datosUsuario?.correo !== this.rockolaService.CORREO_MASTER) {
+          this.iniciarVigilanciaDeSession(datosUsuario.id);
+        }
+
       } else {
         this.barValido = false;
         this.errorMensaje = `No tienes permisos para gestionar "${barUrl}".`;
@@ -70,9 +98,40 @@ export class AdminPedidosComponent implements OnInit, OnDestroy {
     }
   }
 
+  private iniciarVigilanciaDeSession(userId: string): void {
+    if (this.sesionSubscription) {
+      this.sesionSubscription.unsubscribe();
+    }
+
+    let primeraEmision = true;
+
+    this.sesionSubscription = this.rockolaService.observarUsuario(userId).subscribe((usuario: any) => {
+      if (primeraEmision) {
+        primeraEmision = false;
+        return;
+      }
+
+      if (!usuario || usuario?.estado === false) {
+        localStorage.removeItem('usuarioAdmin');
+        this.notificationService.error('Tu cuenta fue desactivada. La sesion ha sido cerrada.');
+        this.router.navigate(['/']);
+        return;
+      }
+
+      if (usuario?.estadoBarActivo === false) {
+        localStorage.removeItem('usuarioAdmin');
+        this.notificationService.error('Tu acceso a este bar fue desactivado.');
+        this.router.navigate(['/']);
+      }
+    });
+  }
+
   ngOnDestroy(): void {
     if (this.barSubscription) {
       this.barSubscription.unsubscribe();
+    }
+    if (this.sesionSubscription) {
+      this.sesionSubscription.unsubscribe();
     }
   }
 
@@ -92,8 +151,8 @@ export class AdminPedidosComponent implements OnInit, OnDestroy {
     this.menuAbierto = false;
   }
 
-  seleccionarSeccion(seccion: 'musica' | 'productos' | 'mesas' | 'datos-impresion' | 'historial-facturas') {
-    const seccionRestringida = seccion === 'mesas' || seccion === 'datos-impresion' || seccion === 'historial-facturas';
+  seleccionarSeccion(seccion: 'musica' | 'productos' | 'mesas' | 'datos-impresion' | 'historial-facturas' | 'usuarios-bar') {
+    const seccionRestringida = seccion === 'mesas' || seccion === 'datos-impresion' || seccion === 'historial-facturas' || seccion === 'usuarios-bar';
 
     if (seccionRestringida && !this.esAdmin) {
       this.notificationService.warning('No tienes permisos para acceder a esta sección.');
@@ -188,7 +247,7 @@ export class AdminPedidosComponent implements OnInit, OnDestroy {
 
   confirmarLogout() {
     this.mostrandoModalLogout = false;
-    sessionStorage.removeItem('usuarioAdmin');
+    localStorage.removeItem('usuarioAdmin');
     this.router.navigate(['/']);
   }
 

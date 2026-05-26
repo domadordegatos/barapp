@@ -17,7 +17,7 @@ export class AuthGuard implements CanActivate {
 // auth.guard.ts
 
 canActivate(route: ActivatedRouteSnapshot): boolean {
-  const sesion = sessionStorage.getItem('usuarioAdmin');
+  const sesion = localStorage.getItem('usuarioAdmin');
   if (!sesion) {
     this.router.navigate(['/']);
     return false;
@@ -27,8 +27,15 @@ canActivate(route: ActivatedRouteSnapshot): boolean {
   const esMaster = usuario?.correo === this.rockolaService.CORREO_MASTER;
 
   if (!esMaster && usuario?.estado === false) {
-    sessionStorage.removeItem('usuarioAdmin');
+    localStorage.removeItem('usuarioAdmin');
     this.notificationService.error('Tu cuenta esta pendiente de activacion por Super Admin.');
+    this.router.navigate(['/']);
+    return false;
+  }
+
+  if (!esMaster && usuario?.estadoBarActivo === false) {
+    localStorage.removeItem('usuarioAdmin');
+    this.notificationService.error('Tu usuario esta inactivo en este bar.');
     this.router.navigate(['/']);
     return false;
   }

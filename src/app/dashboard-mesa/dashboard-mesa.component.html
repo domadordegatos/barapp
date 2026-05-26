@@ -71,11 +71,12 @@
         </div>
       </div>
 
-      <div class="window-slider" [@slideContent]="vistaActual">
-        <div class="slide-section" *ngIf="vistaActual === 'songs'">
+      <div class="window-slider" [class.products-active]="vistaActual === 'products'">
+        <div class="window-track">
+        <div class="slide-section" [class.vista-activa]="vistaActual === 'songs'" [attr.aria-hidden]="vistaActual !== 'songs'">
           <app-buscar-canciones [nombreBarUrl]="nombreBarUrl" [idMesaUrl]="idMesaUrl" [numeroMesaReal]="numeroMesaReal" [nombreBarReal]="nombreBarReal"></app-buscar-canciones>
         </div>
-        <div class="slide-section" *ngIf="vistaActual === 'products'">
+        <div class="slide-section" [class.vista-activa]="vistaActual === 'products'" [attr.aria-hidden]="vistaActual !== 'products'">
           <app-lista-productos 
             [nombreBarUrl]="nombreBarUrl" 
             [idMesaUrl]="idMesaUrl" 
@@ -85,13 +86,13 @@
             (carritoActualizado)="onCarritoActualizado($event)">
           </app-lista-productos>
         </div>
+        </div>
       </div>
 
       <button
         type="button"
         class="btn-historial-cuenta"
         *ngIf="vistaActual === 'products'"
-        [class.with-footer]="carrito.length > 0"
         (click)="abrirHistorialCuenta()"
         title="Ver historial de consumo">
         <svg viewBox="0 0 24 24" aria-hidden="true">

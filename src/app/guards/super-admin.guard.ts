@@ -15,7 +15,7 @@ export class SuperAdminGuard implements CanActivate {
 
   canActivate(): boolean {
     // 1. Obtenemos el usuario que se guardó en el login
-    const sesion = sessionStorage.getItem('usuarioAdmin');
+    const sesion = localStorage.getItem('usuarioAdmin');
 
     if (sesion) {
       const user = JSON.parse(sesion);

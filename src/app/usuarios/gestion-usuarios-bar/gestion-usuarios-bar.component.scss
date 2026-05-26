@@ -1,0 +1,560 @@
+.usuarios-bar-shell {
+  border-radius: 18px;
+  border: 1px solid #d7e6dd;
+  background: linear-gradient(180deg, #f9fcfa 0%, #eff6f2 100%);
+  padding: 18px;
+}
+
+.usuarios-header {
+  h2 {
+    margin: 0;
+    color: #1f3d2f;
+  }
+}
+
+.usuarios-kicker {
+  margin: 0 0 6px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2f7a53;
+}
+
+.usuarios-subcopy {
+  margin: 8px 0 0;
+  color: #4d6b5b;
+  font-size: 0.84rem;
+}
+
+.usuarios-toolbar {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid #c9ddcf;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.86rem;
+    background: #ffffff;
+
+    &:focus {
+      outline: none;
+      border-color: #1db954;
+      box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.16);
+    }
+  }
+}
+
+.btn-recargar {
+  border: none;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-weight: 700;
+  background: #2a6f4b;
+  color: #fff;
+  cursor: pointer;
+}
+
+.estado-carga {
+  margin-top: 14px;
+  color: #355746;
+  font-weight: 700;
+  font-size: 0.84rem;
+}
+
+.tabla-wrap {
+  margin-top: 14px;
+  overflow-x: auto;
+}
+
+.tabla-usuarios {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 920px;
+
+  th,
+  td {
+    padding: 10px;
+    border-bottom: 1px solid #deebe3;
+    text-align: left;
+    font-size: 0.82rem;
+    color: #28493a;
+  }
+
+  th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #507664;
+  }
+}
+
+.input-nombre-usuario {
+  width: 100%;
+  min-width: 180px;
+  border: 1px solid #c9ddcf;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 0.8rem;
+  color: #28493a;
+  background: #ffffff;
+
+  &:focus {
+    outline: none;
+    border-color: #1db954;
+    box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.14);
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.badge-ok {
+  background: rgba(29, 185, 84, 0.14);
+  color: #1e7a47;
+}
+
+.badge-off {
+  background: rgba(212, 69, 69, 0.14);
+  color: #9a3535;
+}
+
+.badge-admin {
+  background: rgba(90, 60, 200, 0.13);
+  color: #4a36a0;
+}
+
+.badge-user {
+  background: rgba(29, 100, 185, 0.13);
+  color: #1a4f8a;
+}
+
+.btn-estado {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn-estado-on {
+  background: #dff7e9;
+  color: #1f7d49;
+}
+
+.btn-estado-off {
+  background: #f9e3e3;
+  color: #9a3b3b;
+}
+
+.btn-estado-bloqueado {
+  background: #f0f0f0;
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.td-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-guardar {
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  background: linear-gradient(135deg, #1db954, #169447);
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sin-resultados {
+  text-align: center !important;
+  color: #678a79 !important;
+}
+
+.btn-baja {
+  border: 1.5px solid #e0bcbc;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #fff5f5;
+  color: #9a3b3b;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover:not(:disabled) {
+    background: #fde8e8;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.baja-confirm {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.baja-confirm-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #7a2121;
+  white-space: nowrap;
+}
+
+.btn-baja-si {
+  border: none;
+  border-radius: 6px;
+  padding: 5px 9px;
+  background: #c0392b;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-baja-no {
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  padding: 5px 9px;
+  background: #fff;
+  color: #555;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: #f5f5f5;
+  }
+}
+
+.btn-crear-usuario {
+  border: none;
+  border-radius: 10px;
+  padding: 0 16px;
+  height: 40px;
+  font-weight: 800;
+  font-size: 0.82rem;
+  background: linear-gradient(135deg, #1db954, #169447);
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 0.88;
+  }
+}
+
+// ─── Modales ───────────────────────────────────────────────────
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9900;
+  background: rgba(0, 0, 0, 0.52);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeInOverlay 0.18s ease;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-card {
+  position: relative;
+  background: #fff;
+  border-radius: 18px;
+  padding: 32px 28px 28px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.22);
+  animation: slideUpModal 0.22s ease;
+
+  &--success {
+    border-top: 4px solid #1db954;
+  }
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: #789a8a;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 6px;
+
+  &:hover {
+    background: #f0f5f2;
+    color: #1f3d2f;
+  }
+}
+
+.modal-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+
+  svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  &--create {
+    background: rgba(29, 185, 84, 0.1);
+    color: #1db954;
+  }
+
+  &--success {
+    background: rgba(29, 185, 84, 0.15);
+    color: #169447;
+  }
+}
+
+.modal-title {
+  margin: 0 0 6px;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1f3d2f;
+}
+
+.modal-subtitle {
+  margin: 0 0 20px;
+  text-align: center;
+  font-size: 0.84rem;
+  color: #56776a;
+  line-height: 1.5;
+}
+
+// ─── Formulario creación ────────────────────────────────────────
+
+.form-crear {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #355746;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.form-input {
+  border: 1px solid #c9ddcf;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.86rem;
+  color: #1f3d2f;
+  background: #f9fcfa;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    outline: none;
+    border-color: #1db954;
+    box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.16);
+    background: #fff;
+  }
+}
+
+.form-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #c0392b;
+  background: rgba(192, 57, 43, 0.07);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-weight: 600;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn-cancelar {
+  flex: 1;
+  border: 1.5px solid #c9ddcf;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+  color: #4d6b5b;
+  font-weight: 700;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover:not(:disabled) {
+    background: #f0f5f2;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-confirmar {
+  flex: 2;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  background: linear-gradient(135deg, #1db954, #169447);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:hover:not(:disabled) {
+    opacity: 0.88;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &--full {
+    width: 100%;
+    margin-top: 8px;
+    padding: 12px;
+  }
+}
+
+// ─── Modal éxito: caja de información ─────────────────────────
+
+.modal-info-box {
+  background: #f5faf7;
+  border: 1px solid #d7e9df;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.modal-info-label {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #507664;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.modal-info-value {
+  margin: 0 0 10px;
+}
+
+.modal-info-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #4d6b5b;
+  line-height: 1.55;
+}
+
+.modal-contact {
+  background: #fff8e1;
+  border: 1px solid #f0dda0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 4px;
+}
+
+.modal-contact-label {
+  margin: 0 0 4px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #7a5c10;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modal-contact-value {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #6b4e10;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .usuarios-bar-shell {
+    padding: 14px;
+  }
+
+  .usuarios-toolbar {
+    flex-direction: column;
+  }
+
+  .btn-recargar,
+  .btn-crear-usuario {
+    height: 40px;
+    width: 100%;
+  }
+
+  .modal-card {
+    padding: 24px 18px 20px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-cancelar,
+  .btn-confirmar {
+    flex: none;
+    width: 100%;
+  }
+}

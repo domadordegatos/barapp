@@ -23,6 +23,19 @@
     </button>
   </div>
 
+  <div class="vista-tabs" *ngIf="historialFacturas.length > 0">
+    <button type="button" class="tab-btn" [class.tab-activa]="vistaActiva === 'lista'" (click)="vistaActiva = 'lista'">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5A1.5 1.5 0 0 1 6 5h12a1.5 1.5 0 0 1 0 3H6a1.5 1.5 0 0 1-1.5-1.5Zm0 5A1.5 1.5 0 0 1 6 10h12a1.5 1.5 0 0 1 0 3H6a1.5 1.5 0 0 1-1.5-1.5Zm0 5A1.5 1.5 0 0 1 6 15h12a1.5 1.5 0 0 1 0 3H6a1.5 1.5 0 0 1-1.5-1.5Z"/></svg>
+      Lista de facturas
+      <span class="tab-badge">{{ historialFacturas.length }}</span>
+    </button>
+    <button type="button" class="tab-btn" [class.tab-activa]="vistaActiva === 'analitica'" (click)="vistaActiva = 'analitica'">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h2v8H3v-8Zm4-5h2v13H7V8Zm4-3h2v16h-2V5Zm4 6h2v10h-2V11Zm4-7h2v17h-2V4Z"/></svg>
+      Analítica
+      <span class="tab-badge">{{ totalFacturasSeleccionadas }} selec.</span>
+    </button>
+  </div>
+
   <div class="resumen-totales" *ngIf="historialFacturas.length > 0">
     <div class="resumen-card">
       <span>Facturas en lista</span>
@@ -38,7 +51,7 @@
     </div>
   </div>
 
-  <div class="tabla-facturas" *ngIf="historialFacturas.length > 0; else estadoVacio">
+  <div class="tabla-facturas" *ngIf="historialFacturas.length > 0 && vistaActiva === 'lista'">
     <div class="tabla-encabezado">
       <label class="check-global">
         <input
@@ -68,16 +81,153 @@
         <span class="col-hora col-hora-cierre" [class.col-hora-noche]="esCierreNocturno(factura.fechaCierre)">{{ turnoIcono(factura.fechaCierre) }} {{ factura.fechaCierre | date:'hh:mm a' }}</span>
         <span class="col-obs" *ngIf="factura.observaciones">{{ factura.observaciones }}</span>
         <span class="col-obs" *ngIf="!factura.observaciones">Sin observaciones</span>
+        <span class="col-metodo" *ngIf="factura.metodoPago" [class]="'mp-badge mp-badge-' + factura.metodoPago">{{ factura.metodoPago }}</span>
+        <span class="col-propina" *ngIf="factura.propina > 0" title="Propina">+{{ factura.propina | currency:'USD':'symbol':'1.0-0' }}</span>
         <strong class="col-total">{{ factura.total | currency:'USD':'symbol':'1.0-0' }}</strong>
       </div>
     </div>
   </div>
 
-  <ng-template #estadoVacio>
-    <div class="estado-vacio" *ngIf="!cargandoHistorial">
-      Aun no hay resultados. Selecciona un rango de fechas y pulsa buscar.
+  <!-- VISTA ANALITICA -->
+  <div class="analitica-shell" *ngIf="historialFacturas.length > 0 && vistaActiva === 'analitica'">
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-card-primary">
+        <span class="kpi-label">Total facturado</span>
+        <strong class="kpi-valor">{{ kpiAnalitica.totalFacturado | currency:'USD':'symbol':'1.0-0' }}</strong>
+        <span class="kpi-sub">{{ kpiAnalitica.mesasAtendidas }} mesas &middot; {{ kpiAnalitica.totalUnidadesVendidas }} unidades vendidas</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Ticket promedio</span>
+        <strong class="kpi-valor">{{ kpiAnalitica.ticketPromedio | currency:'USD':'symbol':'1.0-0' }}</strong>
+        <span class="kpi-sub">por mesa cerrada</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Tiempo promedio</span>
+        <strong class="kpi-valor">{{ kpiAnalitica.tiempoPromedioMin > 0 ? (kpiAnalitica.tiempoPromedioMin | number:'1.0-0') + ' min' : '--' }}</strong>
+        <span class="kpi-sub">{{ kpiAnalitica.tiempoPromedioMin > 0 ? 'de permanencia en mesa' : 'sin datos de apertura' }}</span>
+      </div>
+      <ng-container *ngIf="kpiAnalitica.tienesDatosCosto">
+        <div class="kpi-card kpi-card-costo">
+          <span class="kpi-label">Costo estimado</span>
+          <strong class="kpi-valor">{{ kpiAnalitica.totalCosto | currency:'USD':'symbol':'1.0-0' }}</strong>
+          <span class="kpi-sub">basado en valor de compra</span>
+        </div>
+        <div class="kpi-card kpi-card-margen">
+          <span class="kpi-label">Margen bruto</span>
+          <strong class="kpi-valor">{{ kpiAnalitica.margenBruto | currency:'USD':'symbol':'1.0-0' }}</strong>
+          <div class="kpi-pill-margen">{{ kpiAnalitica.margenPct | number:'1.0-1' }}% de margen</div>
+        </div>
+      </ng-container>
+      <div class="kpi-card kpi-card-propina" *ngIf="kpiAnalitica.tienePropinas">
+        <span class="kpi-label">Total propinas</span>
+        <strong class="kpi-valor">{{ kpiAnalitica.totalPropinas | currency:'USD':'symbol':'1.0-0' }}</strong>
+        <span class="kpi-sub">ingresos adicionales a la cuenta</span>
+      </div>
+      <div class="kpi-card kpi-card-metodo" *ngIf="kpiAnalitica.tieneDatosMetodoPago">
+        <span class="kpi-label">M&#xe9;todos de pago</span>
+        <div class="metodo-minibar">
+          <div class="metodo-row" *ngIf="kpiAnalitica.distribMetodoPago.efectivo > 0">
+            <span class="metodo-dot mp-efectivo"></span>
+            <span class="metodo-nombre">Efectivo</span>
+            <strong>{{ kpiAnalitica.distribMetodoPago.efectivo }}</strong>
+          </div>
+          <div class="metodo-row" *ngIf="kpiAnalitica.distribMetodoPago.tarjeta > 0">
+            <span class="metodo-dot mp-tarjeta"></span>
+            <span class="metodo-nombre">Tarjeta</span>
+            <strong>{{ kpiAnalitica.distribMetodoPago.tarjeta }}</strong>
+          </div>
+          <div class="metodo-row" *ngIf="kpiAnalitica.distribMetodoPago.mixto > 0">
+            <span class="metodo-dot mp-mixto"></span>
+            <span class="metodo-nombre">Mixto</span>
+            <strong>{{ kpiAnalitica.distribMetodoPago.mixto }}</strong>
+          </div>
+        </div>
+      </div>
     </div>
-  </ng-template>
+
+    <!-- COLUMNAS: TOP PRODUCTOS + RANKING MESEROS -->
+    <div class="analitica-cols">
+
+      <div class="analitica-panel">
+        <div class="panel-header">
+          <h4>Top 10 productos</h4>
+          <div class="toggle-pills">
+            <button type="button" [class.pill-activa]="ordenTopProd === 'unidades'" (click)="ordenTopProd = 'unidades'">Unidades</button>
+            <button type="button" [class.pill-activa]="ordenTopProd === 'ingresos'" (click)="ordenTopProd = 'ingresos'">Ingresos</button>
+          </div>
+        </div>
+        <div class="ranking-lista">
+          <div class="ranking-item" *ngFor="let prod of topProductosAnalitica; let i = index">
+            <span class="ranking-pos">{{ i + 1 }}</span>
+            <div class="ranking-copy">
+              <span class="ranking-nombre">{{ prod.nombre }}</span>
+              <div class="ranking-bar-track">
+                <div class="ranking-bar" [style.width.%]="prod.pct"></div>
+              </div>
+            </div>
+            <div class="ranking-vals">
+              <strong *ngIf="ordenTopProd === 'unidades'">{{ prod.unidades }} u.</strong>
+              <strong *ngIf="ordenTopProd === 'ingresos'">{{ prod.ingresos | currency:'USD':'symbol':'1.0-0' }}</strong>
+              <span class="m-badge" *ngIf="ordenTopProd === 'ingresos' && prod.costo > 0">{{ prod.margenPct | number:'1.0-0' }}%</span>
+            </div>
+          </div>
+          <div class="ranking-vacio" *ngIf="topProductosAnalitica.length === 0">Sin datos de productos.</div>
+        </div>
+      </div>
+
+      <div class="analitica-panel">
+        <div class="panel-header">
+          <h4>Ranking meseros</h4>
+          <span class="panel-sub">por ingresos generados</span>
+        </div>
+        <div class="ranking-lista">
+          <div class="ranking-item" *ngFor="let op of rankingOperadoresAnalitica; let i = index">
+            <span class="ranking-pos">{{ i + 1 }}</span>
+            <div class="ranking-copy">
+              <span class="ranking-nombre">{{ op.nombre }}</span>
+              <div class="ranking-bar-track">
+                <div class="ranking-bar ranking-bar-op" [style.width.%]="op.pct"></div>
+              </div>
+            </div>
+            <div class="ranking-vals">
+              <strong>{{ op.ingresos | currency:'USD':'symbol':'1.0-0' }}</strong>
+              <span class="m-badge-muted">{{ op.pedidos }} ped. &middot; {{ op.ticketPromedio | currency:'USD':'symbol':'1.0-0' }} avg</span>
+            </div>
+          </div>
+          <div class="ranking-vacio" *ngIf="rankingOperadoresAnalitica.length === 0">Sin datos de meseros.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DISTRIBUCION HORARIA -->
+    <div class="analitica-panel horas-panel">
+      <div class="panel-header">
+        <h4>Distribución horaria de cierres</h4>
+        <span class="panel-sub">actividad por hora del día</span>
+      </div>
+      <div class="horas-grid">
+        <div class="hora-col" *ngFor="let h of distribucionHorasAnalitica">
+          <span class="hora-cant" *ngIf="h.cantidad > 0">{{ h.cantidad }}</span>
+          <div class="hora-bar-track">
+            <div class="hora-bar-fill"
+              [style.height.%]="h.pct"
+              [class.pico-alto]="h.pct >= 75"
+              [class.pico-medio]="h.pct >= 35 && h.pct < 75">
+            </div>
+          </div>
+          <span class="hora-label">{{ h.label }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="estado-vacio" *ngIf="historialFacturas.length === 0 && !cargandoHistorial">
+    Aún no hay resultados. Selecciona un rango de fechas y pulsa buscar.
+  </div>
 
   <div class="modal-overlay" *ngIf="facturaDetalle" (click)="cerrarDetalleFactura()">
     <div class="modal-detalle-factura" (click)="$event.stopPropagation()">
@@ -108,6 +258,7 @@
               <span>{{ pedido.estado || 'sin estado' }}</span>
               <span>{{ pedido.horaSolicitud }}</span>
               <span>{{ pedido.fechaSolicitud }}</span>
+              <span *ngIf="pedido.operador" class="pedido-operador">{{ pedido.operador }}</span>
             </div>
             <div class="ticket-item" *ngFor="let item of pedido.items">
               <span class="cant">{{ item.cantidad }}</span>

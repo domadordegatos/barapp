@@ -24,7 +24,7 @@ export class GestionMusicaComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    const sesion = sessionStorage.getItem('usuarioAdmin');
+    const sesion = localStorage.getItem('usuarioAdmin');
     if (sesion) {
       const datos = JSON.parse(sesion);
       // Guardamos los datos de sesión necesarios

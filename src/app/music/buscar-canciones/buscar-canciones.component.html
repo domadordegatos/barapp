@@ -1,13 +1,16 @@
 <div class="vista-autorizada">
   
   <div class="header-bar">
-    <div class="search-box">
+    <div class="search-box" [class.buscando]="buscando">
       <input type="text" [(ngModel)]="query" (input)="onSearchChange()" placeholder="Busca tu canción favorita y pídela...">
+      <button class="btn-clear" *ngIf="query.length > 0" (click)="limpiarBusqueda()" type="button" aria-label="Limpiar búsqueda">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
       <div class="resultados-busqueda" *ngIf="tracks.length > 0" @listaResultados>
         <div *ngFor="let track of tracks; let idx = index" 
              class="item-resultado" 
              (click)="abrirConfirmacion(track)"
-             [@itemAnim]="{value: '', params: {delay: idx * 50}}">
+             [@itemAnim]="{value: '', params: {delay: idx * 30}}">
           <img [src]="track.album.images[2]?.url" class="foto-resultado">
           <div class="info-resultado">
             <strong>{{ track.name }}</strong>

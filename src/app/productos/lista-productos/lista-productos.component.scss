@@ -147,12 +147,25 @@ $border-soft: #e6ede7;
 
 .panel-productos {
   padding: 0 12px 12px;
+  contain: layout paint;
+  will-change: transform, opacity;
 }
 
 .productos-stack {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.cargando-productos {
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px dashed rgba(24, 32, 28, 0.14);
+  background: rgba(255, 255, 255, 0.76);
+  color: $ink-700;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .card-producto {
@@ -166,6 +179,7 @@ $border-soft: #e6ede7;
   background: linear-gradient(180deg, #ffffff 0%, #fbfdfb 100%);
   cursor: pointer;
   transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+  will-change: transform, opacity;
 
   &:hover {
     transform: translateY(-1px);

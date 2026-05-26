@@ -4,6 +4,7 @@ import { Producto } from '../../interfaces/producto.interface';
 import { Categoria } from '../../interfaces/categoria.interface';
 import { ProductosService } from '../../services/productos.service';
 import { animate, query, stagger, style, transition, trigger } from '@angular/animations';
+import { catchError, shareReplay, take, tap } from 'rxjs/operators';
 
 type ProductoConIdYCantidad = Producto & { id: string; cantidad: number };
 
@@ -14,20 +15,20 @@ type ProductoConIdYCantidad = Producto & { id: string; cantidad: number };
   animations: [
     trigger('accordionBody', [
       transition(':enter', [
-        style({ opacity: 0, height: 0, transform: 'translateY(-10px)' }),
-        animate('240ms ease-out', style({ opacity: 1, height: '*', transform: 'translateY(0)' }))
+        style({ opacity: 0, transform: 'translateY(-6px)' }),
+        animate('170ms cubic-bezier(0.2, 0, 0, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
       ]),
       transition(':leave', [
-        style({ opacity: 1, height: '*', transform: 'translateY(0)' }),
-        animate('180ms ease-in', style({ opacity: 0, height: 0, transform: 'translateY(-8px)' }))
+        style({ opacity: 1, transform: 'translateY(0)' }),
+        animate('120ms ease-in', style({ opacity: 0, transform: 'translateY(-4px)' }))
       ])
     ]),
     trigger('staggerProducts', [
       transition(':enter', [
         query('.card-producto', [
-          style({ opacity: 0, transform: 'translateY(10px)' }),
-          stagger(55, [
-            animate('220ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+          style({ opacity: 0, transform: 'translateY(6px)' }),
+          stagger(18, [
+            animate('150ms cubic-bezier(0.2, 0, 0, 1)', style({ opacity: 1, transform: 'translateY(0)' }))
           ])
         ], { optional: true })
       ])
@@ -49,8 +50,10 @@ export class ListaProductosComponent implements OnInit, OnChanges {
   public categorias$: Observable<Categoria[]> = of([]);
   public productos$: Observable<(Producto & { id: string })[]> = of([]);
   public categoriaAbiertaId: string | null = null;
+  public cargandoProductos: boolean = false;
 
   private carrito = new Map<string, ProductoConIdYCantidad>();
+  private productosPorCategoria = new Map<string, Observable<(Producto & { id: string })[]>>();
 
   constructor(private productosService: ProductosService) { }
 
@@ -62,6 +65,9 @@ export class ListaProductosComponent implements OnInit, OnChanges {
     if (changes['nombreBarUrl'] && !changes['nombreBarUrl'].firstChange) {
       this.cargarCategorias();
       this.limpiarCarritoLocal();
+      this.categoriaAbiertaId = null;
+      this.productos$ = of([]);
+      this.productosPorCategoria.clear();
     }
     
     // Si el padre cambia 'resetCarrito' a true, limpiamos
@@ -76,17 +82,27 @@ export class ListaProductosComponent implements OnInit, OnChanges {
   }
 
   cargarCategorias() {
-    this.categorias$ = this.productosService.obtenerCategorias(this.nombreBarUrl) as Observable<any[]>;
+    this.categorias$ = (this.productosService.obtenerCategorias(this.nombreBarUrl) as Observable<Categoria[]>).pipe(
+      tap((categorias: Categoria[]) => this.precargarCategorias(categorias))
+    );
   }
 
   toggleCategoria(categoria: Categoria) {
     if (this.categoriaAbiertaId === categoria.id) {
       this.categoriaAbiertaId = null;
+      this.cargandoProductos = false;
       this.productos$ = of([]);
     } else {
       this.categoriaAbiertaId = categoria.id;
       if (categoria.id && this.nombreBarUrl) {
-        this.productos$ = this.productosService.obtenerProductosPorCategoria(this.nombreBarUrl, categoria.nombre) as Observable<(Producto & { id: string })[]>;
+        this.cargandoProductos = true;
+
+        const productosCategoria$ = this.obtenerProductosCategoriaCached(categoria);
+        this.productos$ = productosCategoria$.pipe(
+          tap(() => {
+            this.cargandoProductos = false;
+          })
+        );
       }
     }
   }
@@ -149,6 +165,32 @@ export class ListaProductosComponent implements OnInit, OnChanges {
 
   trackByProductoId(index: number, producto: Producto & { id: string }): string {
     return producto.id;
+  }
+
+  private obtenerProductosCategoriaCached(categoria: Categoria): Observable<(Producto & { id: string })[]> {
+    const cacheKey = categoria.id;
+    const cached = this.productosPorCategoria.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const stream$ = (this.productosService.obtenerProductosPorCategoria(this.nombreBarUrl, categoria.nombre) as Observable<(Producto & { id: string })[]>).pipe(
+      catchError(() => of([])),
+      shareReplay(1)
+    );
+
+    this.productosPorCategoria.set(cacheKey, stream$);
+    return stream$;
+  }
+
+  private precargarCategorias(categorias: Categoria[]): void {
+    categorias.forEach((categoria: Categoria) => {
+      if (!categoria?.id || !categoria?.nombre) {
+        return;
+      }
+
+      this.obtenerProductosCategoriaCached(categoria).pipe(take(1)).subscribe();
+    });
   }
 
   private emitirCarrito() {

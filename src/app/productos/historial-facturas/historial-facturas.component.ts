@@ -11,6 +11,47 @@ interface FacturaItemView {
   precioUnit: number;
   cantidad: number;
   subtotal: number;
+  valorCompra: number;
+}
+
+interface KpiAnalitica {
+  totalFacturado: number;
+  totalCosto: number;
+  tienesDatosCosto: boolean;
+  margenBruto: number;
+  margenPct: number;
+  mesasAtendidas: number;
+  ticketPromedio: number;
+  tiempoPromedioMin: number;
+  totalUnidadesVendidas: number;
+  totalPropinas: number;
+  tienePropinas: boolean;
+  distribMetodoPago: { efectivo: number; tarjeta: number; mixto: number; sinDato: number };
+  tieneDatosMetodoPago: boolean;
+}
+
+interface TopProductoAnalitica {
+  nombre: string;
+  unidades: number;
+  ingresos: number;
+  costo: number;
+  margenPct: number;
+  pct: number;
+}
+
+interface OperadorAnalitica {
+  nombre: string;
+  pedidos: number;
+  ingresos: number;
+  ticketPromedio: number;
+  pct: number;
+}
+
+interface HoraPicoAnalitica {
+  hora: number;
+  label: string;
+  cantidad: number;
+  pct: number;
 }
 
 interface FacturaPedidoView {
@@ -18,6 +59,7 @@ interface FacturaPedidoView {
   estado: string;
   horaSolicitud: string;
   fechaSolicitud: string;
+  operador: string;
   items: FacturaItemView[];
 }
 
@@ -25,6 +67,8 @@ interface FacturaHistorialView {
   id: string;
   numeroMesa: number;
   total: number;
+  propina: number;
+  metodoPago: string;
   fechaApertura: Date | null;
   fechaCierre: Date;
   observaciones: string;
@@ -52,6 +96,8 @@ export class HistorialFacturasComponent implements OnChanges, OnDestroy {
   @Input() nombreBarReal: string = '';
   @Input() esAdmin: boolean = false;
 
+  vistaActiva: 'lista' | 'analitica' = 'lista';
+  ordenTopProd: 'unidades' | 'ingresos' = 'unidades';
   fechaInicio: string = '';
   fechaFin: string = '';
   cargandoHistorial: boolean = false;
@@ -69,12 +115,15 @@ export class HistorialFacturasComponent implements OnChanges, OnDestroy {
     private notificationService: NotificationService,
     private rockolaService: RockolaService
   ) {
-    this.fechaFin = this.formatearFechaInput(new Date());
+    const hoy = this.formatearFechaInput(new Date());
+    this.fechaInicio = hoy;
+    this.fechaFin = hoy;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['nombreBar'] && this.nombreBar) {
       this.escucharConfiguracionFactura();
+      this.buscarHistorialPorRango();
     }
   }
 
@@ -96,6 +145,108 @@ export class HistorialFacturasComponent implements OnChanges, OnDestroy {
 
   get seleccionTotalActiva(): boolean {
     return this.historialFacturas.length > 0 && this.historialFacturas.every((factura) => factura.seleccionada);
+  }
+
+  get kpiAnalitica(): KpiAnalitica {
+    const fs = this.historialFacturas.filter((f) => f.seleccionada);
+    let totalFacturado = 0, totalCosto = 0, totalUnidadesVendidas = 0, totalMinMesa = 0, mesasConTiempo = 0;
+    let tienesDatosCosto = false;
+    let totalPropinas = 0, tienePropinas = false;
+    const distribMetodoPago = { efectivo: 0, tarjeta: 0, mixto: 0, sinDato: 0 };
+    let tieneDatosMetodoPago = false;
+    for (const factura of fs) {
+      totalFacturado += factura.total;
+      if (factura.propina > 0) { totalPropinas += factura.propina; tienePropinas = true; }
+      if (factura.metodoPago) {
+        tieneDatosMetodoPago = true;
+        if (factura.metodoPago === 'tarjeta') distribMetodoPago.tarjeta++;
+        else if (factura.metodoPago === 'mixto') distribMetodoPago.mixto++;
+        else distribMetodoPago.efectivo++;
+      } else { distribMetodoPago.sinDato++; }
+      if (factura.fechaApertura && factura.fechaCierre) {
+        const min = (factura.fechaCierre.getTime() - factura.fechaApertura.getTime()) / 60000;
+        if (min > 0 && min < 600) { totalMinMesa += min; mesasConTiempo++; }
+      }
+      for (const pedido of factura.pedidos) {
+        if (pedido.estado === 'pendiente') continue;
+        for (const item of pedido.items) {
+          totalUnidadesVendidas += item.cantidad;
+          if (item.valorCompra > 0) { tienesDatosCosto = true; totalCosto += item.valorCompra * item.cantidad; }
+        }
+      }
+    }
+    const margenBruto = totalFacturado - totalCosto;
+    return {
+      totalFacturado, totalCosto, tienesDatosCosto, margenBruto,
+      margenPct: totalFacturado > 0 ? (margenBruto / totalFacturado) * 100 : 0,
+      mesasAtendidas: fs.length,
+      ticketPromedio: fs.length > 0 ? totalFacturado / fs.length : 0,
+      tiempoPromedioMin: mesasConTiempo > 0 ? totalMinMesa / mesasConTiempo : 0,
+      totalUnidadesVendidas, totalPropinas, tienePropinas, distribMetodoPago, tieneDatosMetodoPago
+    };
+  }
+
+  get topProductosAnalitica(): TopProductoAnalitica[] {
+    const fs = this.historialFacturas.filter((f) => f.seleccionada);
+    const mapa = new Map<string, { nombre: string; unidades: number; ingresos: number; costo: number }>();
+    for (const factura of fs) {
+      for (const pedido of factura.pedidos) {
+        if (pedido.estado === 'pendiente') continue;
+        for (const item of pedido.items) {
+          const existing = mapa.get(item.nombre);
+          const ingreso = item.precioUnit * item.cantidad;
+          const costo = (item.valorCompra || 0) * item.cantidad;
+          if (existing) { existing.unidades += item.cantidad; existing.ingresos += ingreso; existing.costo += costo; }
+          else { mapa.set(item.nombre, { nombre: item.nombre, unidades: item.cantidad, ingresos: ingreso, costo }); }
+        }
+      }
+    }
+    const sorted = Array.from(mapa.values()).sort((a, b) =>
+      this.ordenTopProd === 'unidades' ? b.unidades - a.unidades : b.ingresos - a.ingresos
+    );
+    const top = sorted.slice(0, 10);
+    const maxVal = this.ordenTopProd === 'unidades' ? (top[0]?.unidades || 1) : (top[0]?.ingresos || 1);
+    return top.map((p) => ({
+      nombre: p.nombre, unidades: p.unidades, ingresos: p.ingresos, costo: p.costo,
+      margenPct: p.ingresos > 0 ? ((p.ingresos - p.costo) / p.ingresos) * 100 : 0,
+      pct: Math.round(((this.ordenTopProd === 'unidades' ? p.unidades : p.ingresos) / maxVal) * 100)
+    }));
+  }
+
+  get rankingOperadoresAnalitica(): OperadorAnalitica[] {
+    const fs = this.historialFacturas.filter((f) => f.seleccionada);
+    const mapa = new Map<string, { nombre: string; pedidos: number; ingresos: number }>();
+    for (const factura of fs) {
+      for (const pedido of factura.pedidos) {
+        if (pedido.estado === 'pendiente') continue;
+        const nombre = pedido.operador?.trim() || 'Sin operador';
+        const ingreso = pedido.items.reduce((s, i) => s + i.precioUnit * i.cantidad, 0);
+        const existing = mapa.get(nombre);
+        if (existing) { existing.pedidos++; existing.ingresos += ingreso; }
+        else { mapa.set(nombre, { nombre, pedidos: 1, ingresos: ingreso }); }
+      }
+    }
+    const lista = Array.from(mapa.values()).sort((a, b) => b.ingresos - a.ingresos);
+    const maxIng = lista[0]?.ingresos || 1;
+    return lista.map((op) => ({
+      nombre: op.nombre, pedidos: op.pedidos, ingresos: op.ingresos,
+      ticketPromedio: op.pedidos > 0 ? op.ingresos / op.pedidos : 0,
+      pct: Math.round((op.ingresos / maxIng) * 100)
+    }));
+  }
+
+  get distribucionHorasAnalitica(): HoraPicoAnalitica[] {
+    const conteo = new Array(24).fill(0) as number[];
+    for (const factura of this.historialFacturas.filter((f) => f.seleccionada)) {
+      conteo[factura.fechaCierre.getHours()]++;
+    }
+    const max = Math.max(...conteo, 1);
+    return conteo.map((cantidad, hora) => ({
+      hora,
+      label: `${String(hora).padStart(2, '0')}h`,
+      cantidad,
+      pct: Math.round((cantidad / max) * 100)
+    }));
   }
 
   turnoIcono(fecha: Date | null): string {
@@ -144,6 +295,8 @@ export class HistorialFacturasComponent implements OnChanges, OnDestroy {
           id: String(factura?.id || ''),
           numeroMesa: Number(factura?.numeroMesa || 0),
           total: Number(factura?.total || 0),
+          propina: Number(factura?.propina || 0),
+          metodoPago: String(factura?.metodoPago || ''),
           fechaApertura: this.normalizarFechaFirestoreOpcional(factura?.fechaApertura),
           fechaCierre: this.normalizarFechaFirestore(factura?.fechaCierre || factura?.fechaArchivo),
           observaciones: String(factura?.observaciones || '').trim(),
@@ -308,8 +461,9 @@ export class HistorialFacturasComponent implements OnChanges, OnDestroy {
         return;
       }
 
+      const meseroHtml = pedido.operador ? ` &middot; ${this.escaparHtml(String(pedido.operador))}` : '';
       pedido.items.forEach((item) => {
-        tablaHtml += `<tr><td>${this.escaparHtml(String(item.cantidad))}</td><td>${this.escaparHtml(item.nombre)}<br><small>${this.escaparHtml(pedido.horaSolicitud || '')}</small></td><td>${this.formatearMoneda(item.precioUnit)}</td><td style="text-align:right;">${this.formatearMoneda(item.cantidad * item.precioUnit)}</td></tr>`;
+        tablaHtml += `<tr><td>${this.escaparHtml(String(item.cantidad))}</td><td>${this.escaparHtml(item.nombre)}<br><small>${this.escaparHtml(pedido.horaSolicitud || '')}${meseroHtml}</small></td><td>${this.formatearMoneda(item.precioUnit)}</td><td style="text-align:right;">${this.formatearMoneda(item.cantidad * item.precioUnit)}</td></tr>`;
       });
     });
 
@@ -381,12 +535,14 @@ export class HistorialFacturasComponent implements OnChanges, OnDestroy {
         estado: String(pedido?.estado || ''),
         horaSolicitud: String(pedido?.horaSolicitud || ''),
         fechaSolicitud: String(pedido?.fechaSolicitud || ''),
+        operador: String(pedido?.operador || ''),
         items: items.map((item: any, indexItem: number) => ({
           idProd: String(item?.idProd || `item-${indexItem}`),
           nombre: String(item?.nombre || ''),
           precioUnit: Number(item?.precioUnit || 0),
           cantidad: Math.max(0, Number(item?.cantidad || 0)),
-          subtotal: Number(item?.subtotal || 0)
+          subtotal: Number(item?.subtotal || 0),
+          valorCompra: Number(item?.valorCompra || 0)
         }))
       };
     });

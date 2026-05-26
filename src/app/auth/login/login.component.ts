@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RockolaService } from '../../services/rockola.service';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../services/notification.service';
@@ -8,7 +8,7 @@ import { NotificationService } from '../../services/notification.service';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   correo: string = '';
   pass: string = '';
   olvidoModo: boolean = false; // Para alternar entre login y recuperación
@@ -22,6 +22,23 @@ export class LoginComponent {
     private router: Router,
     private notificationService: NotificationService
   ) {}
+
+  ngOnInit(): void {
+    try {
+      const sesion = localStorage.getItem('usuarioAdmin');
+      if (sesion) {
+        const user = JSON.parse(sesion);
+        if (user?.correo === this.rockolaService.CORREO_MASTER) {
+          this.router.navigate(['/super-admin-panel']);
+        } else if (user?.nombreBar) {
+          const nombreUrl = user.nombreBar.toLowerCase().trim().replace(/\s+/g, '');
+          this.router.navigate([nombreUrl, 'admin', 'gestion']);
+        }
+      }
+    } catch {
+      localStorage.removeItem('usuarioAdmin');
+    }
+  }
 
 async recuperar() {
   try {
@@ -51,7 +68,7 @@ async confirmarCambio() {
 async entrar() {
   try {
     const user = await this.rockolaService.loginUsuario(this.correo, this.pass);
-    sessionStorage.setItem('usuarioAdmin', JSON.stringify(user));
+    localStorage.setItem('usuarioAdmin', JSON.stringify(user));
 
     if (user.correo === this.rockolaService.CORREO_MASTER) {
       this.router.navigate(['/super-admin-panel']);

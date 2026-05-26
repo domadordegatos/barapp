@@ -1,0 +1,212 @@
+<section class="usuarios-bar-shell">
+  <header class="usuarios-header">
+    <p class="usuarios-kicker">Control por establecimiento</p>
+    <h2>Usuarios operativos del bar</h2>
+    <p class="usuarios-subcopy">
+      Aqui puedes activar o pausar usuarios tipo user para vender, facturar y operar en este bar,
+      sin afectar la aprobacion global de Super Admin.
+    </p>
+  </header>
+
+  <div class="usuarios-toolbar">
+    <input
+      type="text"
+      [(ngModel)]="filtroCorreo"
+      placeholder="Filtrar por correo..."
+      aria-label="Filtrar usuarios por correo">
+
+    <button type="button" class="btn-recargar" (click)="cargarUsuarios()" [disabled]="cargandoUsuarios">
+      {{ cargandoUsuarios ? 'Actualizando...' : 'Recargar' }}
+    </button>
+
+    <button type="button" class="btn-crear-usuario" (click)="abrirFormCrear()">
+      + Crear usuario
+    </button>
+  </div>
+
+  <div class="estado-carga" *ngIf="cargandoUsuarios">Cargando usuarios del bar...</div>
+
+  <div class="tabla-wrap" *ngIf="!cargandoUsuarios">
+    <table class="tabla-usuarios">
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Correo</th>
+          <th>Nombre asignado</th>
+          <th>Estado global</th>
+          <th>Estado en bar</th>
+          <th>Accion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let usuario of usuariosFiltrados">
+          <td>
+            <span class="badge" [class.badge-admin]="usuario.tipo === 'admin'" [class.badge-user]="usuario.tipo !== 'admin'">
+              {{ usuario.tipo === 'admin' ? 'Admin' : 'Usuario' }}
+            </span>
+          </td>
+          <td>{{ usuario.correo }}</td>
+          <td>
+            <input
+              type="text"
+              class="input-nombre-usuario"
+              [(ngModel)]="usuario.nombreUsuarioBar"
+              maxlength="40"
+              placeholder="Ej: Cajero 1 o Laura">
+          </td>
+          <td>
+            <span class="badge" [class.badge-ok]="usuario.estado" [class.badge-off]="!usuario.estado">
+              {{ usuario.estado ? 'Aprobado' : 'Pendiente' }}
+            </span>
+          </td>
+          <td>
+            <button
+              type="button"
+              class="btn-estado"
+              [class.btn-estado-on]="usuario.estadoBarActivo && !esPropioAdmin(usuario)"
+              [class.btn-estado-off]="!usuario.estadoBarActivo && !esPropioAdmin(usuario)"
+              [class.btn-estado-bloqueado]="esPropioAdmin(usuario)"
+              [disabled]="esPropioAdmin(usuario)"
+              [title]="esPropioAdmin(usuario) ? 'No puedes desactivarte a ti mismo' : ''"
+              (click)="alternarEstadoBarLocal(usuario)">
+              <ng-container *ngIf="!esPropioAdmin(usuario)">{{ usuario.estadoBarActivo ? 'Activo en bar' : 'Inactivo en bar' }}</ng-container>
+              <ng-container *ngIf="esPropioAdmin(usuario)">&#128274; Tu cuenta</ng-container>
+            </button>
+          </td>
+          <td class="td-acciones">
+            <button
+              type="button"
+              class="btn-guardar"
+              [disabled]="guardandoId === usuario.id || eliminandoId === usuario.id"
+              (click)="guardarEstadoUsuarioBar(usuario)">
+              {{ guardandoId === usuario.id ? 'Guardando...' : 'Guardar' }}
+            </button>
+
+            <ng-container *ngIf="usuario.tipo !== 'admin'">
+              <ng-container *ngIf="confirmarEliminarId !== usuario.id; else confirmBaja">
+                <button
+                  type="button"
+                  class="btn-baja"
+                  [disabled]="eliminandoId === usuario.id"
+                  (click)="iniciarEliminar(usuario)">
+                  Dar de baja
+                </button>
+              </ng-container>
+              <ng-template #confirmBaja>
+                <div class="baja-confirm">
+                  <span class="baja-confirm-text">¿Dar de baja?</span>
+                  <button type="button" class="btn-baja-si" [disabled]="eliminandoId === usuario.id" (click)="confirmarEliminar(usuario)">
+                    {{ eliminandoId === usuario.id ? '...' : 'Si' }}
+                  </button>
+                  <button type="button" class="btn-baja-no" (click)="cancelarEliminar()">No</button>
+                </div>
+              </ng-template>
+            </ng-container>
+          </td>
+        </tr>
+
+        <tr *ngIf="usuariosFiltrados.length === 0">
+          <td colspan="6" class="sin-resultados">No hay usuarios para este bar.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Modal: Formulario de creación de usuario -->
+<div class="modal-overlay" *ngIf="mostrandoFormCrear" (click)="cerrarFormCrear()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <button type="button" class="modal-close" (click)="cerrarFormCrear()" aria-label="Cerrar">&#10005;</button>
+
+    <div class="modal-icon modal-icon--create">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        <line x1="18" y1="10" x2="22" y2="10"/>
+        <line x1="20" y1="8" x2="20" y2="12"/>
+      </svg>
+    </div>
+
+    <h3 class="modal-title">Crear nuevo usuario</h3>
+    <p class="modal-subtitle">El usuario sera registrado para <strong>{{ nombreBar }}</strong> y quedara pendiente de activacion.</p>
+
+    <div class="form-crear">
+      <label class="form-label">
+        Correo electronico
+        <input
+          type="email"
+          class="form-input"
+          [(ngModel)]="nuevoCorreo"
+          placeholder="usuario@ejemplo.com"
+          autocomplete="off">
+      </label>
+
+      <label class="form-label">
+        Contraseña
+        <input
+          type="password"
+          class="form-input"
+          [(ngModel)]="nuevoPassword"
+          placeholder="Mínimo 6 caracteres"
+          autocomplete="new-password">
+      </label>
+
+      <label class="form-label">
+        Nombre asignado (como aparecera en pedidos)
+        <input
+          type="text"
+          class="form-input"
+          [(ngModel)]="nuevoNombreAsignado"
+          maxlength="40"
+          placeholder="Ej: Cajero 1, Laura M.">
+      </label>
+
+      <p class="form-error" *ngIf="errorCrearForm">{{ errorCrearForm }}</p>
+
+      <div class="form-actions">
+        <button type="button" class="btn-cancelar" (click)="cerrarFormCrear()" [disabled]="creandoUsuario">
+          Cancelar
+        </button>
+        <button type="button" class="btn-confirmar" (click)="crearNuevoUsuario()" [disabled]="creandoUsuario">
+          {{ creandoUsuario ? 'Creando...' : 'Crear usuario' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Usuario creado exitosamente -->
+<div class="modal-overlay" *ngIf="mostrandoModalPendiente" (click)="cerrarModalPendiente()">
+  <div class="modal-card modal-card--success" (click)="$event.stopPropagation()">
+    <button type="button" class="modal-close" (click)="cerrarModalPendiente()" aria-label="Cerrar">&#10005;</button>
+
+    <div class="modal-icon modal-icon--success">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="9 12 11 14 15 10"/>
+      </svg>
+    </div>
+
+    <h3 class="modal-title">Usuario creado</h3>
+    <p class="modal-subtitle">El usuario fue registrado correctamente en el sistema y puede iniciar sesion con sus credenciales.</p>
+
+    <div class="modal-info-box">
+      <p class="modal-info-label">Estado inicial</p>
+      <p class="modal-info-value">
+        <span class="badge badge-off">Pendiente de activacion</span>
+      </p>
+      <p class="modal-info-hint">
+        El usuario no podra operar hasta que el creador de la plataforma apruebe su cuenta. Una vez aprobado, podras habilitarlo o deshabilitarlo desde este panel.
+      </p>
+    </div>
+
+    <div class="modal-contact">
+      <p class="modal-contact-label">¿Necesitas activacion urgente?</p>
+      <p class="modal-contact-value">Contacta al soporte de la plataforma para solicitar la aprobacion.</p>
+    </div>
+
+    <button type="button" class="btn-confirmar btn-confirmar--full" (click)="cerrarModalPendiente()">
+      Entendido
+    </button>
+  </div>
+</div>

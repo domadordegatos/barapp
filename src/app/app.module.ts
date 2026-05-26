@@ -24,6 +24,7 @@ import { AdminFacturacionComponent } from './productos/admin-facturacion/admin-f
 import { GestionMesasComponent } from './productos/gestion-mesas/gestion-mesas.component';
 import { DatosImpresionComponent } from './configuracion/datos-impresion/datos-impresion.component';
 import { HistorialFacturasComponent } from './productos/historial-facturas/historial-facturas.component';
+import { GestionUsuariosBarComponent } from './usuarios/gestion-usuarios-bar/gestion-usuarios-bar.component';
 
 @NgModule({
   declarations: [
@@ -42,7 +43,8 @@ import { HistorialFacturasComponent } from './productos/historial-facturas/histo
     AdminFacturacionComponent,
     GestionMesasComponent,
     DatosImpresionComponent,
-    HistorialFacturasComponent
+    HistorialFacturasComponent,
+    GestionUsuariosBarComponent
   ],
   imports: [
     BrowserModule,

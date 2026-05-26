@@ -30,6 +30,8 @@
         <span class="estado-dot"></span>
         {{ servicioHabilitadoBar ? 'Servicio activo' : 'Servicio pausado' }}
       </button>
+
+      <!-- TEMPORAL: parche de operadorId en pedidos existentes -->
     </div>
   </div>
 
@@ -105,6 +107,10 @@
           <h3>Mesa #{{ detalleSeleccionado.numeroMesa }}</h3>
         </div>
         <div class="botones-header">
+           <button class="btn-nav-modal" type="button" (click)="irAAgregarProductosDesdeCuenta()" title="Agregar productos a esta mesa">
+             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2h-5v5a1 1 0 1 1-2 0v-5H6a1 1 0 1 1 0-2h5V6a1 1 0 0 1 1-1Z"/></svg>
+             Agregar productos
+           </button>
            <button class="btn-imprimir" (click)="imprimirFactura()">🖨️ Imprimir</button>
            <button class="btn-cerrar-modal" (click)="cerrarDetalle()">×</button>
         </div>
@@ -150,8 +156,83 @@
         </div>
         <div class="acciones-finales">
           <button (click)="guardarCambiosFinales()" class="btn-guardar-cambios">Guardar Cambios</button>
-          <button (click)="finalizarCuenta()" class="btn-finalizar-cuenta">Cerrar Mesa</button>
+          <button (click)="abrirModalCierre()" class="btn-finalizar-cuenta">Cerrar Mesa</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CIERRE DE MESA -->
+  <div class="modal-overlay modal-overlay-cierre" *ngIf="mostrandoModalCierre && detalleSeleccionado" (click)="cerrarModalCierre()">
+    <div class="modal-cierre" (click)="$event.stopPropagation()">
+      <div class="modal-cierre-header">
+        <div>
+          <span class="cierre-kicker">Cerrar mesa</span>
+          <h3>Mesa #{{ detalleSeleccionado.numeroMesa }}</h3>
+        </div>
+        <button type="button" class="btn-cerrar-modal" [disabled]="cerrandoCuenta" (click)="cerrarModalCierre()">&#x2715;</button>
+      </div>
+
+      <div class="modal-cierre-body">
+
+        <div class="cierre-total-row">
+          <span class="cierre-total-label">Total de la cuenta</span>
+          <strong class="cierre-total-valor">{{ calcularTotalAprobado() | currency:'USD':'symbol':'1.0-0' }}</strong>
+        </div>
+
+        <div class="cierre-section">
+          <label class="cierre-label">M&#xe9;todo de pago</label>
+          <div class="metodo-pago-pills">
+            <button type="button" class="mp-pill" [class.mp-activo]="metodoPagoCierre === 'efectivo'" (click)="metodoPagoCierre = 'efectivo'">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7Zm2-.5a.5.5 0 0 0-.5.5v1.5h17V7a.5.5 0 0 0-.5-.5H4Zm16.5 4H3.5v6.5c0 .28.22.5.5.5h16a.5.5 0 0 0 .5-.5V10.5ZM6 14a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H7a1 1 0 0 1-1-1Z"/></svg>
+              Efectivo
+            </button>
+            <button type="button" class="mp-pill" [class.mp-activo]="metodoPagoCierre === 'tarjeta'" (click)="metodoPagoCierre = 'tarjeta'">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V8Zm3-1.5A1.5 1.5 0 0 0 3.5 8v1h17V8A1.5 1.5 0 0 0 19 6.5H5ZM3.5 11.5V16A1.5 1.5 0 0 0 5 17.5h14A1.5 1.5 0 0 0 20.5 16v-4.5h-17ZM6 14.5h3a.75.75 0 0 1 0 1.5H6a.75.75 0 0 1 0-1.5Z"/></svg>
+              Tarjeta
+            </button>
+            <button type="button" class="mp-pill" [class.mp-activo]="metodoPagoCierre === 'mixto'" (click)="metodoPagoCierre = 'mixto'">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18A9 9 0 0 0 12 3ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm10-5a1 1 0 0 1 1 1v3h2a1 1 0 1 1 0 2h-2v3a1 1 0 1 1-2 0v-3H9a1 1 0 1 1 0-2h2V8a1 1 0 0 1 1-1Z"/></svg>
+              Mixto
+            </button>
+          </div>
+        </div>
+
+        <div class="cierre-section">
+          <label class="cierre-label" for="inputPropina">
+            Propina
+            <span class="cierre-label-hint">(opcional)</span>
+          </label>
+          <div class="propina-input-wrap">
+            <span class="propina-prefix">$</span>
+            <input
+              id="inputPropina"
+              type="number"
+              min="0"
+              inputmode="numeric"
+              placeholder="0"
+              [(ngModel)]="propinaCierre"
+              class="input-propina">
+          </div>
+        </div>
+
+        <div class="cierre-resumen" *ngIf="propinaCierre && propinaCierre > 0">
+          <span>Total + propina</span>
+          <strong>{{ (calcularTotalAprobado() + (propinaCierre || 0)) | currency:'USD':'symbol':'1.0-0' }}</strong>
+        </div>
+
+        <div class="cierre-aviso">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2Zm0 1.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17ZM12 7a1 1 0 0 1 1 1v5a1 1 0 1 1-2 0V8a1 1 0 0 1 1-1Zm0 9.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>
+          La mesa quedar&#xe1; libre y la cuenta pasar&#xe1; al historial de facturas.
+        </div>
+
+      </div>
+
+      <div class="modal-cierre-footer">
+        <button type="button" class="btn-cierre-cancelar" [disabled]="cerrandoCuenta" (click)="cerrarModalCierre()">Cancelar</button>
+        <button type="button" class="btn-cierre-confirmar" [disabled]="cerrandoCuenta" (click)="finalizarCuenta()">
+          {{ cerrandoCuenta ? 'Cerrando...' : 'Confirmar cierre' }}
+        </button>
       </div>
     </div>
   </div>
@@ -164,6 +245,15 @@
           <h3>Cargar pedido aprobado</h3>
         </div>
         <div class="botones-header">
+          <button
+            class="btn-nav-modal"
+            type="button"
+            (click)="irAVerCuentaDesdePedido()"
+            [disabled]="!mesaPedidoCoincidente?.ocupada"
+            title="{{ mesaPedidoCoincidente?.ocupada ? 'Ver cuenta de mesa #' + mesaPedidoCoincidente.numero : 'No hay cuenta activa para esta mesa' }}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h15A1.5 1.5 0 0 1 21 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5v-15ZM4.5 4.5v15h15v-15h-15Zm3.25 4.75a.75.75 0 0 1 .75-.75h7a.75.75 0 0 1 0 1.5h-7a.75.75 0 0 1-.75-.75Zm0 4a.75.75 0 0 1 .75-.75h4a.75.75 0 0 1 0 1.5h-4a.75.75 0 0 1-.75-.75Z"/></svg>
+            Ver cuenta
+          </button>
           <button class="btn-cerrar-modal" type="button" (click)="cerrarModalAgregarPedido()">×</button>
         </div>
       </div>
@@ -182,10 +272,15 @@
 
           <div class="estado-mesa-pedido" [class.valida]="mesaPedidoCoincidente" [class.invalida]="mesaPedidoManual && !mesaPedidoCoincidente">
             <ng-container *ngIf="mesaPedidoCoincidente; else mesaNoValida">
-              Cuenta activa encontrada para mesa #{{ mesaPedidoCoincidente.numero }}.
+              <ng-container *ngIf="mesaPedidoCoincidente.ocupada">
+                Mesa #{{ mesaPedidoCoincidente.numero }} — cuenta activa encontrada.
+              </ng-container>
+              <ng-container *ngIf="!mesaPedidoCoincidente.ocupada">
+                Mesa #{{ mesaPedidoCoincidente.numero }} — disponible. Se abrirá una nueva cuenta al guardar.
+              </ng-container>
             </ng-container>
             <ng-template #mesaNoValida>
-              <span *ngIf="mesaPedidoManual">La mesa debe coincidir con una cuenta activa existente.</span>
+              <span *ngIf="mesaPedidoManual">Mesa no encontrada. Verifica el numero.</span>
               <span *ngIf="!mesaPedidoManual">Ingresa la mesa a la que se cargará el pedido.</span>
             </ng-template>
           </div>

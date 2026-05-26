@@ -51,4 +51,59 @@ export class AdminService {
   actualizarFacturaFinalizada(idDoc: string, data: any) {
     return this.firestore.collection('facturas_finalizadas').doc(idDoc).update(data);
   }
+
+  async parcharOperadorIds(nombreBar: string): Promise<{ actualizados: number; pedidosActualizados: number }> {
+    const barNorm = nombreBar.toLowerCase().replace(/\s+/g, '');
+
+    const usuariosSnap = await this.firestore.collection('usuarios_bares').ref
+      .where('nombreBar', '==', barNorm).get();
+
+    const mapNombre = new Map<string, string>();
+    const mapCorreo = new Map<string, string>();
+
+    usuariosSnap.docs.forEach(doc => {
+      const data = doc.data() as any;
+      const nombre = String(data?.nombreUsuarioBar || '').toLowerCase().trim();
+      const correo = String(data?.correo || '').toLowerCase().trim();
+      if (nombre) mapNombre.set(nombre, doc.id);
+      if (correo) mapCorreo.set(correo, doc.id);
+    });
+
+    let actualizados = 0;
+    let pedidosActualizados = 0;
+
+    for (const col of ['cuentas_activas', 'facturas_finalizadas']) {
+      const snap = await this.firestore.collection(col).ref
+        .where('nombreBar', '==', barNorm).get();
+
+      const updates: Promise<any>[] = [];
+
+      for (const docSnap of snap.docs) {
+        const data = docSnap.data() as any;
+        const pedidos = Array.isArray(data?.pedidos) ? data.pedidos.map((p: any) => ({ ...p })) : [];
+        let modified = false;
+
+        for (const pedido of pedidos) {
+          if (!pedido.operadorId && pedido.operador) {
+            const key = String(pedido.operador).toLowerCase().trim();
+            const id = mapNombre.get(key) || mapCorreo.get(key);
+            if (id) {
+              pedido.operadorId = id;
+              modified = true;
+              pedidosActualizados++;
+            }
+          }
+        }
+
+        if (modified) {
+          updates.push(docSnap.ref.update({ pedidos }));
+          actualizados++;
+        }
+      }
+
+      await Promise.all(updates);
+    }
+
+    return { actualizados, pedidosActualizados };
+  }
 }

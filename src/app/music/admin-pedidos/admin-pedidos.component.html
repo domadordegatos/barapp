@@ -53,6 +53,17 @@
             </svg>
             Historial facturas
           </button>
+          <button *ngIf="esAdmin" type="button" [class.active]="seccionActiva === 'usuarios-bar'" (click)="seleccionarSeccion('usuarios-bar')">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3Zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3Zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13Zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.98 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5Z"/>
+            </svg>
+            Usuarios bar
+          </button>
+        </div>
+
+        <div class="sidebar-user-chip" title="Usuario activo">
+          <span class="sidebar-user-label">Usuario activo</span>
+          <strong>{{ nombreUsuarioActivo }}</strong>
         </div>
 
         <button type="button" class="btn-logout" (click)="solicitarLogout()">
@@ -68,15 +79,17 @@
       <main class="admin-main-container" [class.modo-scroll-libre]="seccionActiva !== 'musica'">
         <header class="topbar">
           <div class="topbar-left">
-            <button type="button" class="menu-toggle" [class.active]="menuAbierto" (click)="alternarMenu()" aria-label="Abrir menú lateral">
-              <svg *ngIf="!menuAbierto" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M3 18v-2h18v2H3Zm0-5v-2h18v2H3Zm0-5V6h18v2H3Z"/>
-              </svg>
-              <svg *ngIf="menuAbierto" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/>
-              </svg>
-            </button>
-            <div>
+            <div class="topbar-menu-user">
+              <button type="button" class="menu-toggle" [class.active]="menuAbierto" (click)="alternarMenu()" aria-label="Abrir menú lateral">
+                <svg *ngIf="!menuAbierto" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 18v-2h18v2H3Zm0-5v-2h18v2H3Zm0-5V6h18v2H3Z"/>
+                </svg>
+                <svg *ngIf="menuAbierto" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="topbar-copy">
               <p class="topbar-kicker">Gestión operativa</p>
               <h1>{{ nombreBarReal }}</h1>
             </div>
@@ -174,6 +187,7 @@
         <app-gestion-mesas *ngIf="seccionActiva === 'mesas' && esAdmin" [esAdmin]="esAdmin"></app-gestion-mesas>
         <app-datos-impresion *ngIf="seccionActiva === 'datos-impresion' && esAdmin" [nombreBar]="nombreBarUrl" [nombreBarReal]="nombreBarReal"></app-datos-impresion>
         <app-historial-facturas *ngIf="seccionActiva === 'historial-facturas' && esAdmin" [nombreBar]="nombreBarUrl" [nombreBarReal]="nombreBarReal" [esAdmin]="esAdmin"></app-historial-facturas>
+        <app-gestion-usuarios-bar *ngIf="seccionActiva === 'usuarios-bar' && esAdmin" [nombreBar]="nombreBarUrl" [esAdmin]="esAdmin"></app-gestion-usuarios-bar>
       </main>
 
       <div class="logout-modal-overlay" *ngIf="mostrandoModalLogout" (click)="cerrarModalLogout()">

@@ -16,10 +16,12 @@ export class ProductosService {
     idMesa: string, 
     numeroMesa: number | null, 
     items: any[],
-    token: string
+    token: string,
+    operador?: string,
+    operadorId?: string
   ) {
     const cuentaRef = this.firestore.collection('cuentas_activas').doc(idMesa);
-    const nuevoPedido = this.crearPedidoCuenta(items, 'usuario', 'pendiente');
+    const nuevoPedido = this.crearPedidoCuenta(items, 'usuario', 'pendiente', operador, operadorId);
 
     const doc = await cuentaRef.get().toPromise();
 
@@ -50,13 +52,28 @@ export class ProductosService {
     nombreBar: string,
     idMesa: string,
     numeroMesa: number,
-    items: any[]
+    items: any[],
+    operador?: string,
+    operadorId?: string
   ) {
     const cuentaRef = this.firestore.collection('cuentas_activas').doc(idMesa);
     const doc = await cuentaRef.get().toPromise();
 
     if (!doc?.exists) {
-      throw new Error('La cuenta activa no existe para esta mesa.');
+      const pedidoAdmin = this.crearPedidoCuenta(items, 'admin', 'aceptado', operador, operadorId);
+      return cuentaRef.set({
+        idMesa,
+        numeroMesa,
+        nombreBar,
+        tokenSesion: '',
+        idSesion: `SES-ADMIN-${Date.now()}`,
+        estado: 'abierta',
+        fechaApertura: new Date(),
+        total: this.calcularTotalCuenta([pedidoAdmin]),
+        notificacionPendiente: false,
+        visibilidadPreciosUsuario: false,
+        pedidos: [pedidoAdmin]
+      });
     }
 
     const cuenta = doc.data() as any;
@@ -69,7 +86,7 @@ export class ProductosService {
       throw new Error('El numero de mesa no coincide con la cuenta activa.');
     }
 
-    const pedidoAdmin = this.crearPedidoCuenta(items, 'admin', 'aceptado');
+    const pedidoAdmin = this.crearPedidoCuenta(items, 'admin', 'aceptado', operador, operadorId);
     const pedidosActuales = Array.isArray(cuenta?.pedidos) ? cuenta.pedidos : [];
     const pedidosActualizados = [...pedidosActuales, pedidoAdmin];
 
@@ -102,9 +119,11 @@ export class ProductosService {
     );
   }
 
-  private crearPedidoCuenta(items: any[], solicitadoPor: 'usuario' | 'admin', estado: 'pendiente' | 'aceptado') {
+  private crearPedidoCuenta(items: any[], solicitadoPor: 'usuario' | 'admin', estado: 'pendiente' | 'aceptado', operador?: string, operadorId?: string) {
     return {
       idPedido: this.firestore.createId(),
+      operador: (operador || '').trim() || (solicitadoPor === 'usuario' ? 'Cliente' : 'Admin'),
+      operadorId: (operadorId || '').trim(),
       items: items.map(item => ({
         idProd: item.idProd || item.id,
         nombre: item.nombre,

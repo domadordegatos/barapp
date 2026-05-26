@@ -65,7 +65,7 @@ export class SuperAdminComponent implements OnInit {
 
   logout() {
   if (confirm('¿Deseas salir del Panel Maestro?')) {
-    sessionStorage.removeItem('usuarioAdmin'); // Limpiamos la sesión
+    localStorage.removeItem('usuarioAdmin'); // Limpiamos la sesión
     this.router.navigate(['/']); // Redirigimos al Login
   }
 }
@@ -107,6 +107,7 @@ export class SuperAdminComponent implements OnInit {
         nombreBar: String(u.nombreBar || '').trim(),
         correo: String(u.correo || '').trim().toLowerCase(),
         estado: u.estado,
+        estadoBarActivo: u.estadoBarActivo === false ? false : true,
         tipo: u.tipo,
         codigoRegistroInvitados: u.tipo === 'admin'
           ? String(u.codigoRegistroInvitados || '1234').trim()
